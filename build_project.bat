@@ -1,0 +1,1 @@
+pyinstaller --add-data TekkenData;TekkenData  GUI_FrameDataOverlay.py
