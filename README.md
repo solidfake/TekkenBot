@@ -15,10 +15,10 @@ A basic Tkinter, always on top window that can go over the game to display real 
 ## Bots
 Currently in progress.
 
-###Frame Trap Bot
+### Frame Trap Bot
 Pushes jab or a user inputted move when getting out of block stun.
 
-###Punisher Bot
+### Punisher Bot
 Attempts to punish negative attacks with the best avaiable punish. Punishes are listed in the character's file in the /TekkenData folder.
 
 
