@@ -1,1 +1,1 @@
-pyinstaller --add-data TekkenData;TekkenData  GUI_FrameDataOverlay.py
+pyinstaller --clean --icon=TekkenData/tekken_bot_close.ico --add-data TekkenData;TekkenData  --name TEKKENBOT_FrameDataOverlay GUI_FrameDataOverlay.py
