@@ -12,6 +12,7 @@ import BotTezukaZone
 import BotData
 import BotGameplan
 from BotFrameTrap import BotFrameTrap
+from BotPunisher import BotPunisher
 
 #print("ADMIN STATUS: " + str(c.windll.shell32.IsUserAnAdmin()))
 
@@ -26,6 +27,7 @@ class TekkenBotLauncher:
         self.frameRateCounter = 0
         self.frameRate = 0
         self.isPlayerOne = isPlayerOne
+        self.doMashAccept = False #before turning this on, make sure that your 'accept' key and your '3' key are different in GameControllerInputter.
 
     def Update(self):
         successfulUpdate = self.gameState.Update()
@@ -43,11 +45,8 @@ class TekkenBotLauncher:
             if not self.isPlayerOne:
                 self.gameState.FlipMirror()
 
-        elif self.gameState.IsForegroundPID():
-            if(random.randint(0, 1) == 0):
-                ArtificalKeyboard.PressKey(GameInputter.Keys.A)
-            else:
-                ArtificalKeyboard.ReleaseKey(GameInputter.Keys.A)
+        if self.doMashAccept:
+            self.MashAccept()
 
 
         elapsedTime = time.time() - self.benchmarkTime
@@ -62,8 +61,15 @@ class TekkenBotLauncher:
     def GetBot(self):
         return self.botBrain
 
+    def MashAccept(self): #Useful for Treasure Mode
+        if self.gameState.IsForegroundPID():
+            if (random.randint(0, 1) == 0):
+                ArtificalKeyboard.PressKey(GameInputter.Keys.A)
+            else:
+                ArtificalKeyboard.ReleaseKey(GameInputter.Keys.A)
+
 if __name__ == "__main__":
-    launcher = TekkenBotLauncher(BotFrameTrap, True)
+    launcher = TekkenBotLauncher(BotPunisher, True)
     while(True):
         launcher.Update()
         time.sleep(.005)

@@ -26,7 +26,7 @@ class Keys:
 class GameControllerInputter:
     BUTTON_1 = Keys.X
     BUTTON_2 = Keys.Y
-    BUTTON_3 = Keys.RB
+    BUTTON_3 = Keys.A
     BUTTON_4 = Keys.B
     BUTTON_LEFT = Keys.LEFT
     BUTTON_RIGHT = Keys.RIGHT
