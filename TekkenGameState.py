@@ -226,7 +226,7 @@ class BotSnapshot:
         return self.startup_end - self.startup + 1
 
     def IsAttackWhiffing(self):
-        return self.complex_state in {ComplexMoveStates.ATTACK_ENDING, ComplexMoveStates.STILL, ComplexMoveStates.RECOVERING, ComplexMoveStates.RECOVERING_17}
+        return self.complex_state in {ComplexMoveStates.ATTACK_ENDING, ComplexMoveStates.STILL, ComplexMoveStates.RECOVERING, ComplexMoveStates.RECOVERING_17, ComplexMoveStates.SIDESTEP}
 
     def IsOnGround(self):
         return self.simple_state in {SimpleMoveStates.GROUND_FACEDOWN, SimpleMoveStates.GROUND_FACEUP}
