@@ -7,7 +7,7 @@ from tkinter import *
 from tkinter.ttk import *
 from _FrameDataLauncher import FrameDataLauncher
 import sys
-
+from ConfigReader import ConfigReader
 
 
 
@@ -71,6 +71,9 @@ class TextRedirector(object):
 class GUI_FrameDataOverlay(Tk):
     def __init__(self):
         print("Tekken Bot Starting...")
+
+        self.tekken_config = ConfigReader("frame_data_overlay")
+
         self.launcher = FrameDataLauncher()
 
         self.overlay_visible = False
@@ -167,8 +170,9 @@ class GUI_FrameDataOverlay(Tk):
         self.after(7, self.update_launcher)
 
     def hide(self):
-        self.withdraw()
-        self.overlay_visible = False
+        if self.tekken_config.get_property("minimize_on_lost_focus", True):
+            self.withdraw()
+            self.overlay_visible = False
 
     def show(self):
         self.deiconify()
