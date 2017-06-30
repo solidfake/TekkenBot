@@ -9,11 +9,8 @@ from TekkenGameState import TekkenGameState
 class TekkenEncyclopedia:
     def __init__(self, isPlayerOne = False):
         self.FrameData = {}
-        self.previous_bot_id = -1
-        self.previous_opp_id = -1
         self.isPlayerOne = isPlayerOne
-        self.previous_bot_move_timer = -1
-        self.previous_opp_move_timer = -1
+        self.active_frame_wait = 1
 
     def GetFrameAdvantage(self, moveId, isOnBlock = True):
         if moveId in self.FrameData:
@@ -37,72 +34,72 @@ class TekkenEncyclopedia:
 
         if (gameState.IsOppWhiffing()) and (gameState.IsBotBlocking()  or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotStartedBeingJuggled() or gameState.IsBotBeingKnockedDown() or gameState.IsBotJustGrounded()):
 
-            if bot_id != self.previous_bot_id  or bot_timer < self.previous_bot_move_timer: #or (opp_id != self.previous_opp_id and (100 < opp_id < 10000))
-                if opp_id in self.FrameData:
-                    frameDataEntry = self.FrameData[opp_id]
+            if gameState.DidBotIdChangeXMovesAgo(self.active_frame_wait)  or gameState.DidBotTimerReduceXMovesAgo(self.active_frame_wait): #or (opp_id != self.previous_opp_id and (100 < opp_id < 10000))
+                if not self.active_frame_wait >= gameState.GetOppActiveFrames() + 1:
+                    self.active_frame_wait += 1
                 else:
-                    frameDataEntry = FrameDataEntry()
-                    self.FrameData[opp_id] = frameDataEntry
+                    self.active_frame_wait = 1
 
-                frameDataEntry.currentFrameAdvantage = '??'
-                frameDataEntry.move_id = opp_id
-                frameDataEntry.damage = gameState.GetMostRecentOppDamage()
+                    if opp_id in self.FrameData:
+                        frameDataEntry = self.FrameData[opp_id]
+                    else:
+                        frameDataEntry = FrameDataEntry()
+                        self.FrameData[opp_id] = frameDataEntry
 
-                if gameState.GetOppStartup() > 0:
-                    frameDataEntry.startup = gameState.GetOppStartup()
-                    frameDataEntry.activeFrames = gameState.GetOppActiveFrames()
-                    frameDataEntry.hitType = AttackType(gameState.GetOppAttackType()).name
-                    if gameState.IsOppAttackThrow():
-                        frameDataEntry.hitType += "_THROW"
-                    oldRecovery = 0
-                else:
-                    snapshotOpp = gameState.GetLastOppWithDifferentMoveId()
-                    if snapshotOpp != None:
-                        frameDataEntry.startup = snapshotOpp.startup
-                        frameDataEntry.activeFrames = snapshotOpp.GetActiveFrames()
-                        frameDataEntry.hitType = AttackType(snapshotOpp.attack_type).name
-                        if snapshotOpp.IsAttackThrow():
+                    frameDataEntry.currentFrameAdvantage = '??'
+                    frameDataEntry.move_id = opp_id
+                    frameDataEntry.damage = gameState.GetMostRecentOppDamage()
+
+                    if gameState.GetOppStartup() > 0:
+                        frameDataEntry.startup = gameState.GetOppStartup()
+                        frameDataEntry.activeFrames = gameState.GetOppActiveFrames()
+                        frameDataEntry.hitType = AttackType(gameState.GetOppAttackType()).name
+                        if gameState.IsOppAttackThrow():
                             frameDataEntry.hitType += "_THROW"
-                        oldRecovery = snapshotOpp.recovery
-                try:
-                    frameDataEntry.recovery = gameState.GetOppRecovery() - frameDataEntry.startup - frameDataEntry.activeFrames + 1
-                except:
-                    frameDataEntry.recovery = "?!"
+                        oldRecovery = 0
+                    else:
+                        snapshotOpp = gameState.GetLastOppWithDifferentMoveId()
+                        if snapshotOpp != None:
+                            frameDataEntry.startup = snapshotOpp.startup
+                            frameDataEntry.activeFrames = snapshotOpp.GetActiveFrames()
+                            frameDataEntry.hitType = AttackType(snapshotOpp.attack_type).name
+                            if snapshotOpp.IsAttackThrow():
+                                frameDataEntry.hitType += "_THROW"
+                            oldRecovery = snapshotOpp.recovery
 
-                if gameState.IsBotBlocking():
-                    frameDataEntry.onBlock = gameState.GetBotRecovery() + frameDataEntry.startup - gameState.GetOppRecovery()
-                    if oldRecovery > gameState.GetOppRecovery():  #ankle breaker moves and a few others have a split recovery
-                        frameDataEntry.onBlock -= frameDataEntry.startup
+                    try:
+                        frameDataEntry.recovery = gameState.GetOppRecovery() - frameDataEntry.startup - frameDataEntry.activeFrames + 1
+                    except:
+                        frameDataEntry.recovery = "?!"
 
-                    frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onBlock)
-                    frameDataEntry.blockFrames = frameDataEntry.recovery - frameDataEntry.startup
-
-
-                elif gameState.IsBotGettingHit():
-                    frameDataEntry.onNormalHit = gameState.GetFrameDataOfCurrentOppMove()
-                    frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onNormalHit)
-                elif gameState.IsBotStartedBeingJuggled():
-                    frameDataEntry.onNormalHit = "JUGG"
-                elif gameState.IsBotBeingKnockedDown():
-                    frameDataEntry.onNormalHit = "KDWN"
-                elif gameState.IsBotJustGrounded():
-                    frameDataEntry.onNormalHit = "GRND"
-                elif gameState.IsBotBeingThrown():
-                    pass
-
-                if self.isPlayerOne:
-                    prefix = "p1: "
-                else:
-                    prefix = 'p2: '
+                    if gameState.IsBotBlocking():
+                        frameDataEntry.onBlock = gameState.GetBotRecovery() + frameDataEntry.startup - gameState.GetOppRecovery()
+                        if oldRecovery > gameState.GetOppRecovery():  #ankle breaker moves and a few others have a split recovery
+                            frameDataEntry.onBlock -= frameDataEntry.startup
 
 
-                print(prefix + str(frameDataEntry))
+                        frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onBlock)
+                        frameDataEntry.blockFrames = frameDataEntry.recovery - frameDataEntry.startup
 
-        self.previous_bot_id = bot_id
-        self.previous_opp_id = opp_id
-        self.previous_bot_move_timer = bot_timer
-        self.previous_opp_move_timer = opp_timer
+                    elif gameState.IsBotGettingHit():
+                        frameDataEntry.onNormalHit = gameState.GetFrameDataOfCurrentOppMove()
+                        frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onNormalHit)
+                    elif gameState.IsBotStartedBeingJuggled():
+                        frameDataEntry.onNormalHit = "JUGG"
+                    elif gameState.IsBotBeingKnockedDown():
+                        frameDataEntry.onNormalHit = "KDWN"
+                    elif gameState.IsBotJustGrounded():
+                        frameDataEntry.onNormalHit = "GRND"
+                    elif gameState.IsBotBeingThrown():
+                        pass
 
+                    if self.isPlayerOne:
+                        prefix = "p1: "
+                    else:
+                        prefix = 'p2: '
+
+
+                    print(prefix + str(frameDataEntry))
 
         if self.isPlayerOne:
             gameState.FlipMirror()

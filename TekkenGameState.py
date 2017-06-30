@@ -558,6 +558,20 @@ class TekkenGameState:
         else:
             return False
 
+    def DidBotTimerReduceXMovesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].bot.move_timer < self.stateLog[0 - framesAgo - 1].bot.move_timer
+        else:
+            return False
+
+    def DidBotIdChangeXMovesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].bot.move_id != self.stateLog[0 - framesAgo - 1].bot.move_id
+        else:
+            return False
+
+
+
     def GetFramesSinceBotTookDamage(self):
         damage_taken = self.stateLog[-1].bot.damage_taken
         for i, state in enumerate(reversed(self.stateLog)):
