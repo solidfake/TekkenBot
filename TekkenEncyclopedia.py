@@ -74,7 +74,8 @@ class TekkenEncyclopedia:
 
                     if gameState.IsBotBlocking():
                         frameDataEntry.onBlock = gameState.GetBotRecovery() + frameDataEntry.startup - gameState.GetOppRecovery()
-                        if oldRecovery > gameState.GetOppRecovery():  #ankle breaker moves and a few others have a split recovery
+                        split_recovery_breakpoint = 3 #below this number are split recovery moves that don't need startup subtracted, like Steve's ff+2, above it are Lili's d/b+4 or Alisa's d+3+4
+                        if oldRecovery > gameState.GetOppRecovery() + split_recovery_breakpoint:  #ankle breaker moves and a few others have a split recovery
                             frameDataEntry.onBlock -= frameDataEntry.startup
 
 
