@@ -83,5 +83,6 @@ class ComplexMoveStates(Enum):  #these seem difficult to pin down what they are 
     RECOVERING_17 = 17  # f+4 with Ling
 
     UNKNOWN_22 = 22 #Eddy move
+    UNKNOWN_23 = 23 #Steve 3+4, 1
 
     SIDEWALK = 28 #left or right
