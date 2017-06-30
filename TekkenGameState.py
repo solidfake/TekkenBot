@@ -23,6 +23,7 @@ import ModuleEnumerator
 import PIDSearcher
 from MoveInfoEnums import *
 from MemoryAddressEnum import *
+from ConfigReader import ConfigReader
 
 #player_data_pointer_offset = 0x03360450 #pc patch 1
 #player_data_pointer_offset = 0x0337A450 #pc patch 0
@@ -59,6 +60,8 @@ class TekkenGameReader:
         self.needReacquireModule = True
         self.module_address = 0
         self.original_facing = None
+        self.config_reader = ConfigReader('memory_address')
+        self.player_data_pointer_offset = self.config_reader.get_property('player_data_pointer_offset', MemoryAddressOffsets.player_data_pointer_offset.value, lambda x: int(x, 16))
 
     def GetValueFromAddress(self, processHandle, address, isFloat=False, is64bit=False):
         data = c.c_ulonglong()
@@ -124,7 +127,7 @@ class TekkenGameReader:
         if self.module_address != None:
             processHandle = OpenProcess(0x10, False, self.pid)
             try:
-                player_data_base_address = self.GetValueFromAddress(processHandle, self.module_address + MemoryAddressOffsets.player_data_pointer_offset.value, is64bit = True)
+                player_data_base_address = self.GetValueFromAddress(processHandle, self.module_address + self.player_data_pointer_offset, is64bit = True)
                 if player_data_base_address == 0:
                     print("No fight detected. Gamestate not updated.")
                     self.needReaquireGameState = True

@@ -170,7 +170,7 @@ class GUI_FrameDataOverlay(Tk):
         self.after(7, self.update_launcher)
 
     def hide(self):
-        if self.tekken_config.get_property("minimize_on_lost_focus", True):
+        if self.tekken_config.get_property("minimize_on_lost_focus", True, lambda x: not "0" in str(x) ):
             self.withdraw()
             self.overlay_visible = False
 

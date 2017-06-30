@@ -17,14 +17,15 @@ class ConfigReader:
                 if '=' in line and not '#' in line:
                     split = line.split("=")
                     key = split[0].strip()
-                    value = not '0' in split[1]
-                    self.values[key] = value
+                    raw_value = split[1].strip()
+                    self.values[key] = raw_value
         except:
             print("Error reading config data from " + path + ". Using default values.")
 
-    def get_property(self, property_string, default_value):
+
+    def get_property(self, property_string, default_value, func):
         if property_string in self.values:
-            return self.values[property_string]
+            return func(self.values[property_string])
         else:
             return default_value
 
