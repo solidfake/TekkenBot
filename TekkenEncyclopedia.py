@@ -5,6 +5,7 @@ Collects information from TekkenGameState over time in hopes of synthesizing it 
 
 from MoveInfoEnums import AttackType
 from TekkenGameState import TekkenGameState
+import sys
 
 class TekkenEncyclopedia:
     def __init__(self, isPlayerOne = False):
@@ -72,33 +73,41 @@ class TekkenEncyclopedia:
                     except:
                         frameDataEntry.recovery = "?!"
 
+                    time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
+                    time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
+                    new_frame_advantage_calc = time_till_recovery_bot - time_till_recovery_opp
+                    old_frame_advantage_calc = None
+
                     if gameState.IsBotBlocking():
-                        frameDataEntry.onBlock = gameState.GetBotRecovery() + frameDataEntry.startup - gameState.GetOppRecovery()
+                        old_frame_advantage_calc = gameState.GetBotRecovery() + frameDataEntry.startup - gameState.GetOppRecovery()
                         split_recovery_breakpoint = 3 #below this number are split recovery moves that don't need startup subtracted, like Steve's ff+2, above it are Lili's d/b+4 or Alisa's d+3+4
                         if oldRecovery > gameState.GetOppRecovery() + split_recovery_breakpoint:  #ankle breaker moves and a few others have a split recovery
-                            frameDataEntry.onBlock -= frameDataEntry.startup
-
+                            old_frame_advantage_calc -= frameDataEntry.startup
+                        frameDataEntry.onBlock = new_frame_advantage_calc
 
                         frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onBlock)
                         frameDataEntry.blockFrames = frameDataEntry.recovery - frameDataEntry.startup
 
-                    elif gameState.IsBotGettingHit():
-                        frameDataEntry.onNormalHit = gameState.GetFrameDataOfCurrentOppMove()
+                    else:# gameState.IsBotGettingHit() or :
+                        old_frame_advantage_calc = gameState.GetFrameDataOfCurrentOppMove()
+                        frameDataEntry.onNormalHit = new_frame_advantage_calc
                         frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onNormalHit)
-                    elif gameState.IsBotStartedBeingJuggled():
-                        frameDataEntry.onNormalHit = "JUGG"
-                    elif gameState.IsBotBeingKnockedDown():
-                        frameDataEntry.onNormalHit = "KDWN"
-                    elif gameState.IsBotJustGrounded():
-                        frameDataEntry.onNormalHit = "GRND"
-                    elif gameState.IsBotBeingThrown():
-                        pass
+                    #elif gameState.IsBotStartedBeingJuggled():
+                        #frameDataEntry.onNormalHit = "JUGG"
+                    #elif gameState.IsBotBeingKnockedDown():
+                        #frameDataEntry.onNormalHit = "KDWN"
+                    #elif gameState.IsBotJustGrounded():
+                     #   frameDataEntry.onNormalHit = "GRND"
+                    #elif gameState.IsBotBeingThrown():
+                     #   pass
 
                     if self.isPlayerOne:
                         prefix = "p1: "
                     else:
                         prefix = 'p2: '
 
+                    if old_frame_advantage_calc != new_frame_advantage_calc:
+                        print("Frame advantage inconsistent calculation.  Old = " + str(old_frame_advantage_calc) + " New: " + str(new_frame_advantage_calc), file=sys.stderr)
 
                     print(prefix + str(frameDataEntry))
 
