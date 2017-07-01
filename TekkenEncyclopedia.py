@@ -138,8 +138,8 @@ class FrameDataEntry:
             return str(value)
 
     def __repr__(self):
-        return "#" + str(self.move_id) + " | " + str(self.hitType) +  " | " + str(self.startup) + " | " + str(self.damage) + " | " + self.WithPlusIfNeeded(self.onBlock) + " | " \
-               + self.WithPlusIfNeeded(self.onNormalHit) +  " | " + str(self.activeFrames) \
+        return "#" + str(self.move_id) + " | " + str(self.hitType)[:7] +  " | " + str(self.startup).center(len('startup')) + " | " + str(self.damage).center(len('  damage  ')) + " | " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + " | " \
+               + self.WithPlusIfNeeded(self.onNormalHit) +  " | " + str(self.activeFrames).center(len(' active ')) \
                + " NOW:" + str(self.currentFrameAdvantage)
 
                 #+ " Recovery: " + str(self.recovery)

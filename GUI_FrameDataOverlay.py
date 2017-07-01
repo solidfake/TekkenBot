@@ -25,8 +25,8 @@ class TextRedirector(object):
         self.stdout.write(output_str)
 
         lines = int(self.widget.index('end-1c').split('.')[0])
-        if lines > 5:
-            r = lines - 5
+        if lines > 3:
+            r = lines - 3
             for _ in range(r):
                 self.widget.configure(state="normal")
                 self.widget.delete('2.0', '3.0')
@@ -35,10 +35,10 @@ class TextRedirector(object):
         if 'NOW:' in output_str:
 
             attack_type = output_str.split('|')[1]
-            if 'p1' in output_str:
-                self.at_p1_var.set(attack_type)
-            else:
-                self.at_p2_var.set(attack_type)
+            #if 'p1' in output_str:
+                #self.at_p1_var.set(attack_type)
+            #else:
+                #self.at_p2_var.set(attack_type)
             out = output_str.split('NOW:')[0]
             fa = output_str.split('NOW:')[1][:3]
             if '?' not in fa:
@@ -64,7 +64,7 @@ class TextRedirector(object):
         self.widget.configure(state="normal")
         self.widget.insert("end", out)
         self.widget.configure(state="disabled")
-        self.widget.see(END)
+        self.widget.see('0.0')
 
 
 
@@ -86,7 +86,9 @@ class GUI_FrameDataOverlay(Tk):
         self.wm_attributes("-transparentcolor", "white")
         self.attributes("-topmost", True)
         self.attributes("-alpha", "0.75")
-        self.geometry('720x120')
+        self.w = 820
+        self.h = 80
+        self.geometry( str(self.w) + 'x' + str(self.h))
 
         self.iconbitmap('TekkenData/tekken_bot_close.ico')
         if not self.is_draggable_window:
@@ -108,15 +110,15 @@ class GUI_FrameDataOverlay(Tk):
         self.fa_p2_var = self.create_frame_advantage_label(2)
 
 
-        self.at_p1_var = self.create_attack_type_label(0)
-        self.at_p2_var = self.create_attack_type_label(2)
+        #self.at_p1_var = self.create_attack_type_label(0)
+        #self.at_p2_var = self.create_attack_type_label(2)
 
         self.text = self.create_textbox()
 
         self.stdout = sys.stdout
-        self.redirector = TextRedirector(self.stdout, self.text, self.s, self.fa_p1_var, self.fa_p2_var, self.at_p1_var, self.at_p2_var)
+        self.redirector = TextRedirector(self.stdout, self.text, self.s, self.fa_p1_var, self.fa_p2_var, None, None)
         self.redirect_stdout()
-        print("move | type | startup | damage | block | hit | active")
+        print("id                | type | startup | damage | block | hit | active")
         self.restore_stdout()
 
     def redirect_stdout(self):
@@ -130,19 +132,19 @@ class GUI_FrameDataOverlay(Tk):
         frame_advantage_var.set('??')
         frame_advantage_label = Label(self, textvariable=frame_advantage_var, font=("Consolas", 44), width=4, anchor='c',
                                         borderwidth=4, relief='ridge')
-        frame_advantage_label.grid(row=0, column=col, sticky=E + W + N)
+        frame_advantage_label.grid(row=0, column=col, sticky=E + W + S)
         return frame_advantage_var
 
     def create_attack_type_label(self, col):
         attack_type_var = StringVar()
         attack_type_var.set('??')
-        attack_type_label = Label(self, textvariable=attack_type_var, font=("Verdana", 14), width=9, anchor='c',
+        attack_type_label = Label(self, textvariable=attack_type_var, font=("Verdana", 12), width=10, anchor='c',
                                     borderwidth=4, relief='ridge')
         attack_type_label.grid(row=1, column=col)
         return attack_type_var
 
     def create_textbox(self):
-        textbox = Text(self, font=("Consolas, 13"), wrap="word", highlightthickness=2, relief='ridge')
+        textbox = Text(self, font=("Consolas, 14"), wrap="word", highlightthickness=2, relief='ridge')
         # self.text.pack(side="top", fill="both", expand=True)
         textbox.grid(row=0, column=1, rowspan=2, sticky=N + S + W + E)
         textbox.configure(background='black')
@@ -156,11 +158,9 @@ class GUI_FrameDataOverlay(Tk):
         if not self.is_draggable_window:
             tekken_rect = self.launcher.gameState.gameReader.GetWindowRect()
             if tekken_rect != None:
-                w = 720
-                h = 120
-                x = (tekken_rect.right + tekken_rect.left)/2 - w/2
+                x = (tekken_rect.right + tekken_rect.left)/2 - self.w/2
                 y = tekken_rect.top
-                self.geometry('%dx%d+%d+%d' % (w, h, x, y))
+                self.geometry('%dx%d+%d+%d' % (self.w, self.h, x, y))
                 if not self.overlay_visible:
                     self.show()
             else:
