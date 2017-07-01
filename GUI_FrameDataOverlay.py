@@ -73,6 +73,8 @@ class GUI_FrameDataOverlay(Tk):
         print("Tekken Bot Starting...")
 
         self.tekken_config = ConfigReader("frame_data_overlay")
+        self.is_draggable_window = self.tekken_config.get_property("indepedent_window_mode", True, lambda x: not "0" in str(x))
+        self.is_minimize_on_lost_focus = self.tekken_config.get_property("minimize_on_lost_focus", True, lambda x: not "0" in str(x))
 
         self.launcher = FrameDataLauncher()
 
@@ -84,9 +86,11 @@ class GUI_FrameDataOverlay(Tk):
         self.wm_attributes("-transparentcolor", "white")
         self.attributes("-topmost", True)
         self.attributes("-alpha", "0.75")
+        self.geometry('720x120')
 
         self.iconbitmap('TekkenData/tekken_bot_close.ico')
-        self.overrideredirect(True)
+        if not self.is_draggable_window:
+            self.overrideredirect(True)
         self.configure(background='white')
 
         self.s = Style()
@@ -149,18 +153,19 @@ class GUI_FrameDataOverlay(Tk):
     def update_launcher(self):
         self.launcher.Update()
 
-        tekken_rect = self.launcher.gameState.gameReader.GetWindowRect()
-        if tekken_rect != None:
-            w = 720
-            h = 120
-            x = (tekken_rect.right + tekken_rect.left)/2 - w/2
-            y = tekken_rect.top
-            self.geometry('%dx%d+%d+%d' % (w, h, x, y))
-            if not self.overlay_visible:
-                self.show()
-        else:
-            if self.overlay_visible:
-                self.hide()
+        if not self.is_draggable_window:
+            tekken_rect = self.launcher.gameState.gameReader.GetWindowRect()
+            if tekken_rect != None:
+                w = 720
+                h = 120
+                x = (tekken_rect.right + tekken_rect.left)/2 - w/2
+                y = tekken_rect.top
+                self.geometry('%dx%d+%d+%d' % (w, h, x, y))
+                if not self.overlay_visible:
+                    self.show()
+            else:
+                if self.overlay_visible:
+                    self.hide()
 
         if self.launcher.gameState.gameReader.GetNeedReacquireState():
             self.restore_stdout()
@@ -170,7 +175,7 @@ class GUI_FrameDataOverlay(Tk):
         self.after(7, self.update_launcher)
 
     def hide(self):
-        if self.tekken_config.get_property("minimize_on_lost_focus", True, lambda x: not "0" in str(x) ):
+        if self.is_minimize_on_lost_focus and not self.is_draggable_window:
             self.withdraw()
             self.overlay_visible = False
 
