@@ -25,8 +25,8 @@ class TextRedirector(object):
         self.stdout.write(output_str)
 
         lines = int(self.widget.index('end-1c').split('.')[0])
-        if lines > 3:
-            r = lines - 3
+        if lines > 4:
+            r = lines - 4
             for _ in range(r):
                 self.widget.configure(state="normal")
                 self.widget.delete('2.0', '3.0')
@@ -92,7 +92,7 @@ class GUI_FrameDataOverlay(Tk):
             self.attributes("-alpha", "0.75")
 
         self.w = 820
-        self.h = 80
+        self.h = 100
         self.geometry( str(self.w) + 'x' + str(self.h))
 
         self.iconbitmap('TekkenData/tekken_bot_close.ico')
@@ -122,9 +122,11 @@ class GUI_FrameDataOverlay(Tk):
 
         self.stdout = sys.stdout
         self.redirector = TextRedirector(self.stdout, self.text, self.s, self.fa_p1_var, self.fa_p2_var, None, None)
-        self.redirect_stdout()
-        print("id                | type | startup | damage | block | hit | active")
-        self.restore_stdout()
+        self.text.configure(state="normal")
+        self.text.delete("1.0", "end")
+        self.text.insert("1.0", "id                | type | startup | damage | block | hit | active\n")
+
+        self.text.configure(state="disabled")
 
     def redirect_stdout(self):
         sys.stdout = self.redirector
@@ -137,7 +139,7 @@ class GUI_FrameDataOverlay(Tk):
         frame_advantage_var.set('??')
         frame_advantage_label = Label(self, textvariable=frame_advantage_var, font=("Consolas", 44), width=4, anchor='c',
                                         borderwidth=4, relief='ridge')
-        frame_advantage_label.grid(row=0, column=col, sticky=E + W + S)
+        frame_advantage_label.grid(row=0, column=col, sticky=E + W )
         return frame_advantage_var
 
     def create_attack_type_label(self, col):
@@ -149,10 +151,11 @@ class GUI_FrameDataOverlay(Tk):
         return attack_type_var
 
     def create_textbox(self):
-        textbox = Text(self, font=("Consolas, 14"), wrap="word", highlightthickness=2, relief='ridge')
+        textbox = Text(self, font=("Consolas, 14"), wrap=NONE, highlightthickness=0, relief='flat')
         # self.text.pack(side="top", fill="both", expand=True)
         textbox.grid(row=0, column=1, rowspan=2, sticky=N + S + W + E)
         textbox.configure(background='black')
+        #textbox.configure(background='white')
         textbox.configure(foreground='green')
         return textbox
 
