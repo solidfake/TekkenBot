@@ -75,6 +75,7 @@ class GUI_FrameDataOverlay(Tk):
         self.tekken_config = ConfigReader("frame_data_overlay")
         self.is_draggable_window = self.tekken_config.get_property("indepedent_window_mode", True, lambda x: not "0" in str(x))
         self.is_minimize_on_lost_focus = self.tekken_config.get_property("minimize_on_lost_focus", True, lambda x: not "0" in str(x))
+        self.is_transparency = self.tekken_config.get_property("transparency", True, lambda x: not "0" in str(x))
 
         self.launcher = FrameDataLauncher()
 
@@ -83,9 +84,13 @@ class GUI_FrameDataOverlay(Tk):
         Tk.__init__(self)
 
         self.wm_title("Tekken Bot: Frame Data Overlay")
-        self.wm_attributes("-transparentcolor", "white")
+
         self.attributes("-topmost", True)
-        self.attributes("-alpha", "0.75")
+
+        if self.is_transparency:
+            self.wm_attributes("-transparentcolor", "white")
+            self.attributes("-alpha", "0.75")
+
         self.w = 820
         self.h = 80
         self.geometry( str(self.w) + 'x' + str(self.h))
