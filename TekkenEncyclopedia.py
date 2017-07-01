@@ -28,14 +28,11 @@ class TekkenEncyclopedia:
         if self.isPlayerOne:
             gameState.FlipMirror()
 
-        bot_id = gameState.GetBotMoveId()
         opp_id = gameState.GetOppMoveId()
-        bot_timer = gameState.GetBotMoveTimer()
-        opp_timer = gameState.GetOppMoveTimer()
 
-        if (gameState.IsOppWhiffing()) and (gameState.IsBotBlocking()  or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotStartedBeingJuggled() or gameState.IsBotBeingKnockedDown() or gameState.IsBotJustGrounded()):
-
-            if gameState.DidBotIdChangeXMovesAgo(self.active_frame_wait)  or gameState.DidBotTimerReduceXMovesAgo(self.active_frame_wait): #or (opp_id != self.previous_opp_id and (100 < opp_id < 10000))
+        if (gameState.IsOppWhiffingXFramesAgo(self.active_frame_wait + 1)) and (gameState.IsBotBlocking()  or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotStartedBeingJuggled() or gameState.IsBotBeingKnockedDown() or gameState.IsBotJustGrounded()):
+            if gameState.DidBotIdChangeXMovesAgo(self.active_frame_wait)  or gameState.DidBotTimerReduceXMovesAgo(self.active_frame_wait):# or gameState.DidOppIdChangeXMovesAgo(self.active_frame_wait):
+                gameState.BackToTheFuture(self.active_frame_wait)
                 if not self.active_frame_wait >= gameState.GetOppActiveFrames() + 1:
                     self.active_frame_wait += 1
                 else:
@@ -73,11 +70,13 @@ class TekkenEncyclopedia:
                     except:
                         frameDataEntry.recovery = "?!"
 
+                    gameState.ReturnToPresent()
                     time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
                     time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
                     new_frame_advantage_calc = time_till_recovery_bot - time_till_recovery_opp
                     old_frame_advantage_calc = None
 
+                    #gameState.ReturnToPresent()
                     if gameState.IsBotBlocking():
                         old_frame_advantage_calc = gameState.GetBotRecovery() + frameDataEntry.startup - gameState.GetOppRecovery()
                         split_recovery_breakpoint = 3 #below this number are split recovery moves that don't need startup subtracted, like Steve's ff+2, above it are Lili's d/b+4 or Alisa's d+3+4
@@ -110,7 +109,8 @@ class TekkenEncyclopedia:
                         print("Frame advantage inconsistent calculation.  Old = " + str(old_frame_advantage_calc) + " New: " + str(new_frame_advantage_calc), file=sys.stderr)
 
                     print(prefix + str(frameDataEntry))
-
+                    gameState.BackToTheFuture(self.active_frame_wait)
+                gameState.ReturnToPresent()
         if self.isPlayerOne:
             gameState.FlipMirror()
 

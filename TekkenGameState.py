@@ -63,6 +63,7 @@ class TekkenGameReader:
         self.config_reader = ConfigReader('memory_address')
         self.player_data_pointer_offset = self.config_reader.get_property('player_data_pointer_offset', MemoryAddressOffsets.player_data_pointer_offset.value, lambda x: int(x, 16))
 
+
     def GetValueFromAddress(self, processHandle, address, isFloat=False, is64bit=False):
         data = c.c_ulonglong()
         bytesRead = c.c_ulonglong()
@@ -282,6 +283,8 @@ class TekkenGameState:
 
         self.isMirrored = False
 
+        self.futureStateLog = None
+
     def Update(self):
         gameData = self.gameReader.GetUpdatedState()
 
@@ -312,6 +315,20 @@ class TekkenGameState:
         self.mirroredStateLog = self.stateLog
         self.stateLog = tempLog
         self.isMirrored = not self.isMirrored
+
+    def BackToTheFuture(self, frames):
+        if self.futureStateLog != None:
+            raise AssertionError('Already called BackToTheFuture, need to return to the present first, Marty')
+        else:
+            self.futureStateLog = self.stateLog[0 - frames:]
+            self.stateLog = self.stateLog[:0 - frames]
+
+    def ReturnToPresent(self):
+        if self.futureStateLog == None:
+            raise AssertionError("We're already in the present, Marty, what are you doing?")
+        else:
+            self.stateLog += self.futureStateLog
+            self.futureStateLog = None
 
     def IsGameHappening(self):
         return not self.gameReader.GetNeedReacquireState()
@@ -445,6 +462,11 @@ class TekkenGameState:
             #print(framesSpentBlocking)
             return framesSpentBlocking
 
+    def IsOppWhiffingXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.IsAttackWhiffing()
+        else:
+            return False
 
     def IsOppWhiffing(self):
         return self.stateLog[-1].opp.IsAttackWhiffing()
@@ -483,6 +505,12 @@ class TekkenGameState:
 
     def GetOppActiveFrames(self):
         return self.stateLog[-1].opp.GetActiveFrames()
+
+    def GetOppActiveFramesXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.GetActiveFrames()
+        else:
+            return 0
 
     def GetOppRecovery(self):
         return self.stateLog[-1].opp.recovery
@@ -570,6 +598,12 @@ class TekkenGameState:
     def DidBotIdChangeXMovesAgo(self, framesAgo):
         if len(self.stateLog) > framesAgo:
             return self.stateLog[0 - framesAgo].bot.move_id != self.stateLog[0 - framesAgo - 1].bot.move_id
+        else:
+            return False
+
+    def DidOppIdChangeXMovesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.move_id != self.stateLog[0 - framesAgo - 1].opp.move_id
         else:
             return False
 
