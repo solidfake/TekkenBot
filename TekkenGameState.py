@@ -418,7 +418,7 @@ class TekkenGameState:
     def IsOppAttacking(self):
         return self.stateLog[-1].opp.IsAttackStarting()
 
-    def IsOppMoveInterrupted(self):
+    def GetOppMoveInterruptedFrames(self): #only finds landing canceled moves?
         if len(self.stateLog) > 3:
             if self.stateLog[-1].opp.move_timer == 1:
                 interruptedFrames = self.stateLog[-2].opp.move_timer - (self.stateLog[-3].opp.move_timer + 1)

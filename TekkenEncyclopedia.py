@@ -14,12 +14,10 @@ class TekkenEncyclopedia:
         self.active_frame_wait = 1
         self.second_opinion = False
         self.second_opinion_timer = 0
-        self.stored_opp_recovery = 0
-        self.stored_bot_recovery = 0
-        self.stored_opp_fa = 0
-        self.stored_frame_data = ""
         self.stored_prefix = ""
         self.stored_opp_id = 0
+        self.stored_opp_recovery = 0
+        self.stored_bot_recovery = 0
 
     def GetFrameAdvantage(self, moveId, isOnBlock = True):
         if moveId in self.FrameData:
@@ -36,31 +34,23 @@ class TekkenEncyclopedia:
         if self.isPlayerOne:
             gameState.FlipMirror()
 
-
         opp_id = gameState.GetOppMoveId()
-
-        #if self.isPlayerOne:
-            #print(gameState.GetOppMoveTimer())
-
-
-        interruptedFrames = gameState.IsOppMoveInterrupted()
-        if (interruptedFrames > 0):
-            pass
-            #gameState.BackToTheFuture(1)
-            #print("MOVE INTERRUPTED ADJUST BY: " + str(interruptedFrames))
-            #print("New Recovery is off by: " + str( self.stored_opp_fa - ((gameState.GetOppRecovery() - gameState.GetOppMoveTimer()) - self.stored_opp_recovery)))
-            #gameState.ReturnToPresent()
 
         if self.second_opinion:
             self.second_opinion_timer += 1
-            if interruptedFrames > 0:
+            landingCanceledFrames = gameState.GetOppMoveInterruptedFrames()
+            if landingCanceledFrames > 0:
                 bot_recovery = (gameState.GetBotRecovery() - gameState.GetBotMoveTimer())
                 opp_recovery = (gameState.GetOppRecovery() - gameState.GetOppMoveTimer())
                 #fa = (self.stored_bot_recovery - self.second_opinion_timer) - opp_recovery
-                fa = bot_recovery - opp_recovery
-                #if (fa <- 0 and gameState.GetOppMoveTimer() == 1) or (fa >= 0 and gameState.GetBotMoveTimer() == 1):
+                if self.second_opinion_timer < self.stored_bot_recovery:
+                    fa = bot_recovery - opp_recovery
+                else:
+                    fa = (self.stored_bot_recovery - self.second_opinion_timer) - opp_recovery
                 fa_string = self.FrameData[self.stored_opp_id].WithPlusIfNeeded(fa)
+
                 print(self.stored_prefix + "JUMP CANCELED -> " + fa_string + " NOW:" + fa_string)
+
                 self.second_opinion = False
                 self.second_opinion_timer = 0
 
@@ -94,7 +84,7 @@ class TekkenEncyclopedia:
                         frameDataEntry.hitType = AttackType(gameState.GetOppAttackType()).name
                         if gameState.IsOppAttackThrow():
                             frameDataEntry.hitType += "_THROW"
-                        oldRecovery = 0
+
                     else:
                         snapshotOpp = gameState.GetLastOppWithDifferentMoveId()
                         if snapshotOpp != None:
@@ -103,7 +93,6 @@ class TekkenEncyclopedia:
                             frameDataEntry.hitType = AttackType(snapshotOpp.attack_type).name
                             if snapshotOpp.IsAttackThrow():
                                 frameDataEntry.hitType += "_THROW"
-                            oldRecovery = snapshotOpp.recovery
 
                     try:
                         frameDataEntry.recovery = gameState.GetOppRecovery() - frameDataEntry.startup - frameDataEntry.activeFrames + 1
@@ -112,50 +101,30 @@ class TekkenEncyclopedia:
 
                     gameState.ReturnToPresent()
 
-
                     time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
                     time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
                     new_frame_advantage_calc = time_till_recovery_bot - time_till_recovery_opp
-                    old_frame_advantage_calc = None
 
-                    #gameState.ReturnToPresent()
                     if gameState.IsBotBlocking():
-                        old_frame_advantage_calc = gameState.GetBotRecovery() + frameDataEntry.startup - gameState.GetOppRecovery()
-                        split_recovery_breakpoint = 3 #below this number are split recovery moves that don't need startup subtracted, like Steve's ff+2, above it are Lili's d/b+4 or Alisa's d+3+4
-                        if oldRecovery > gameState.GetOppRecovery() + split_recovery_breakpoint:  #ankle breaker moves and a few others have a split recovery
-                            old_frame_advantage_calc -= frameDataEntry.startup
                         frameDataEntry.onBlock = new_frame_advantage_calc
-
                         frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onBlock)
                         frameDataEntry.blockFrames = frameDataEntry.recovery - frameDataEntry.startup
 
-                    else:# gameState.IsBotGettingHit() or :
-                        old_frame_advantage_calc = gameState.GetFrameDataOfCurrentOppMove()
+                    else:
                         frameDataEntry.onNormalHit = new_frame_advantage_calc
                         frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onNormalHit)
-                    #elif gameState.IsBotStartedBeingJuggled():
-                        #frameDataEntry.onNormalHit = "JUGG"
-                    #elif gameState.IsBotBeingKnockedDown():
-                        #frameDataEntry.onNormalHit = "KDWN"
-                    #elif gameState.IsBotJustGrounded():
-                     #   frameDataEntry.onNormalHit = "GRND"
-                    #elif gameState.IsBotBeingThrown():
-                     #   pass
 
                     if self.isPlayerOne:
                         prefix = "p1: "
                     else:
-                        prefix = 'p2: '
+                        prefix = "p2: "
 
-                    if old_frame_advantage_calc != new_frame_advantage_calc:
-                        print("Frame advantage inconsistent calculation.  Old = " + str(old_frame_advantage_calc) + " New: " + str(new_frame_advantage_calc), file=sys.stderr)
 
                     print(prefix + str(frameDataEntry))
+
                     self.second_opinion = True
-                    self.stored_opp_recovery = time_till_recovery_opp
-                    self.stored_opp_fa = int(frameDataEntry.currentFrameAdvantage)
                     self.stored_bot_recovery = time_till_recovery_bot
-                    self.stored_frame_data = prefix + str(frameDataEntry)
+                    self.stored_opp_recovery = time_till_recovery_opp
                     self.stored_prefix = prefix
                     self.stored_opp_id = opp_id
 
