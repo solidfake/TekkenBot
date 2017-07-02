@@ -34,6 +34,9 @@ class TekkenEncyclopedia:
         if self.isPlayerOne:
             gameState.FlipMirror()
 
+
+        #print(gameState.GetOppMoveTimer())
+
         opp_id = gameState.GetOppMoveId()
 
         if self.second_opinion:
@@ -60,8 +63,13 @@ class TekkenEncyclopedia:
 
 
         if (gameState.IsOppWhiffingXFramesAgo(self.active_frame_wait + 1)) and (gameState.IsBotBlocking()  or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotStartedBeingJuggled() or gameState.IsBotBeingKnockedDown() or gameState.IsBotJustGrounded()):
+
+
             if gameState.DidBotIdChangeXMovesAgo(self.active_frame_wait)  or gameState.DidBotTimerReduceXMovesAgo(self.active_frame_wait):# or gameState.DidOppIdChangeXMovesAgo(self.active_frame_wait):
                 gameState.BackToTheFuture(self.active_frame_wait)
+
+
+
 
                 if not self.active_frame_wait >= gameState.GetOppActiveFrames() + 1:
                     self.active_frame_wait += 1
@@ -93,6 +101,11 @@ class TekkenEncyclopedia:
                             frameDataEntry.hitType = AttackType(snapshotOpp.attack_type).name
                             if snapshotOpp.IsAttackThrow():
                                 frameDataEntry.hitType += "_THROW"
+
+                    fastestRageMoveFrames = 120
+                    if frameDataEntry.startup > fastestRageMoveFrames and gameState.DidOpponentUseRageRecently(frameDataEntry.startup):
+                        frameDataEntry.startup = gameState.GetBotElapsedFramesOfRageMove(frameDataEntry.startup)
+
 
                     try:
                         frameDataEntry.recovery = gameState.GetOppRecovery() - frameDataEntry.startup - frameDataEntry.activeFrames + 1

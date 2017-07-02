@@ -247,6 +247,9 @@ class BotSnapshot:
     def IsWallSplat(self):
         return self.move_id == 2396 or self.move_id == 2387 or self.move_id == 2380 or self.move_id == 2382 #TODO: use the wall splat states in ComplexMoveStates #move ids may be different for 'big' characters
 
+    def IsInRage(self):
+        return self.rage_flag > 0
+
     def IsAttackStarting(self):
         #return self.complex_state in {ComplexMoveStates.ATTACK_STARTING_1, ComplexMoveStates.ATTACK_STARTING_2, ComplexMoveStates.ATTACK_STARTING_3, ComplexMoveStates.ATTACK_STARTING_5, ComplexMoveStates.ATTACK_STARTING_6, ComplexMoveStates.ATTACK_STARTING_7} #doesn't work on several of Kazuya's moves, maybe others
         if self.startup > 0:
@@ -615,7 +618,26 @@ class TekkenGameState:
         else:
             return False
 
+    def GetBotElapsedFramesOfRageMove(self, rage_move_startup):
+        frozenFrames = 0
+        last_move_timer = -1
+        for state in reversed(self.stateLog[-rage_move_startup:]):
+            if state.bot.move_timer == last_move_timer:
+                frozenFrames +=1
+            last_move_timer = state.bot.move_timer
+        return rage_move_startup - frozenFrames
 
+
+
+    def IsOppInRage(self):
+        return self.stateLog[-1].opp.IsInRage()
+
+    def DidOpponentUseRageRecently(self, recentlyFrames):
+        if not self.IsOppInRage():
+            for state in reversed(self.stateLog[-recentlyFrames:]):
+                if state.opp.IsInRage():
+                    return True
+        return False
 
     def GetFramesSinceBotTookDamage(self):
         damage_taken = self.stateLog[-1].bot.damage_taken
