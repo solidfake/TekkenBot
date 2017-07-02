@@ -103,7 +103,7 @@ class TekkenEncyclopedia:
                                 frameDataEntry.hitType += "_THROW"
 
                     fastestRageMoveFrames = 120
-                    if frameDataEntry.startup > fastestRageMoveFrames and gameState.DidOpponentUseRageRecently(frameDataEntry.startup):
+                    if frameDataEntry.startup > fastestRageMoveFrames and gameState.DidOpponentUseRageRecently(frameDataEntry.startup - 1):
                         frameDataEntry.startup = gameState.GetBotElapsedFramesOfRageMove(frameDataEntry.startup)
 
 
