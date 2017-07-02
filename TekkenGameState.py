@@ -369,9 +369,9 @@ class TekkenGameState:
 
     def IsBotComingOutOfBlock(self):
         if(len(self.stateLog) >= 2):
-            previousState = self.stateLog[-2].bot.block_flags
-            currentState = self.stateLog[-1].bot.block_flags
-            return previousState == 11 and currentState != 11
+            previousState = self.stateLog[-2].bot.IsBlocking()
+            currentState = self.stateLog[-1].bot.IsBlocking()
+            return previousState and not currentState
         else:
             return False
 
@@ -417,6 +417,14 @@ class TekkenGameState:
 
     def IsOppAttacking(self):
         return self.stateLog[-1].opp.IsAttackStarting()
+
+    def IsOppMoveInterrupted(self):
+        if len(self.stateLog) > 3:
+            if self.stateLog[-1].opp.move_timer == 1:
+                interruptedFrames = self.stateLog[-2].opp.move_timer - (self.stateLog[-3].opp.move_timer + 1)
+                if interruptedFrames > 0: #landing animation causes move_timer to go *up* to the end of the move
+                    return interruptedFrames
+        return 0
 
     def GetFramesUntilOutOfBlock(self):
         #print(self.stateLog[-1].bot.block_flags)

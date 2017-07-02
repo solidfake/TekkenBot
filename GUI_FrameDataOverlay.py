@@ -12,13 +12,11 @@ from ConfigReader import ConfigReader
 
 
 class TextRedirector(object):
-    def __init__(self, stdout, widget, style, fa_p1_var, fa_p2_var, at_p1_var, at_p2_var):
+    def __init__(self, stdout, widget, style, fa_p1_var, fa_p2_var):
         self.stdout = stdout
         self.widget = widget
         self.fa_p1_var = fa_p1_var
         self.fa_p2_var = fa_p2_var
-        self.at_p1_var = at_p1_var
-        self.at_p2_var = at_p2_var
         self.style = style
 
     def write(self, output_str):
@@ -33,12 +31,6 @@ class TextRedirector(object):
                 self.widget.configure(state="disabled")
 
         if 'NOW:' in output_str:
-
-            attack_type = output_str.split('|')[1]
-            #if 'p1' in output_str:
-                #self.at_p1_var.set(attack_type)
-            #else:
-                #self.at_p2_var.set(attack_type)
             out = output_str.split('NOW:')[0]
             fa = output_str.split('NOW:')[1][:3]
             if '?' not in fa:
@@ -121,7 +113,7 @@ class GUI_FrameDataOverlay(Tk):
         self.text = self.create_textbox()
 
         self.stdout = sys.stdout
-        self.redirector = TextRedirector(self.stdout, self.text, self.s, self.fa_p1_var, self.fa_p2_var, None, None)
+        self.redirector = TextRedirector(self.stdout, self.text, self.s, self.fa_p1_var, self.fa_p2_var)
         self.text.configure(state="normal")
         self.text.delete("1.0", "end")
         self.text.insert("1.0", "id                | type | startup | damage | block | hit | active\n")

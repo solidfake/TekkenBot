@@ -12,6 +12,14 @@ class TekkenEncyclopedia:
         self.FrameData = {}
         self.isPlayerOne = isPlayerOne
         self.active_frame_wait = 1
+        self.second_opinion = False
+        self.second_opinion_timer = 0
+        self.stored_opp_recovery = 0
+        self.stored_bot_recovery = 0
+        self.stored_opp_fa = 0
+        self.stored_frame_data = ""
+        self.stored_prefix = ""
+        self.stored_opp_id = 0
 
     def GetFrameAdvantage(self, moveId, isOnBlock = True):
         if moveId in self.FrameData:
@@ -28,11 +36,43 @@ class TekkenEncyclopedia:
         if self.isPlayerOne:
             gameState.FlipMirror()
 
+
         opp_id = gameState.GetOppMoveId()
+
+        #if self.isPlayerOne:
+            #print(gameState.GetOppMoveTimer())
+
+
+        interruptedFrames = gameState.IsOppMoveInterrupted()
+        if (interruptedFrames > 0):
+            pass
+            #gameState.BackToTheFuture(1)
+            #print("MOVE INTERRUPTED ADJUST BY: " + str(interruptedFrames))
+            #print("New Recovery is off by: " + str( self.stored_opp_fa - ((gameState.GetOppRecovery() - gameState.GetOppMoveTimer()) - self.stored_opp_recovery)))
+            #gameState.ReturnToPresent()
+
+        if self.second_opinion:
+            self.second_opinion_timer += 1
+            if interruptedFrames > 0:
+                bot_recovery = (gameState.GetBotRecovery() - gameState.GetBotMoveTimer())
+                opp_recovery = (gameState.GetOppRecovery() - gameState.GetOppMoveTimer())
+                #fa = (self.stored_bot_recovery - self.second_opinion_timer) - opp_recovery
+                fa = bot_recovery - opp_recovery
+                #if (fa <- 0 and gameState.GetOppMoveTimer() == 1) or (fa >= 0 and gameState.GetBotMoveTimer() == 1):
+                fa_string = self.FrameData[self.stored_opp_id].WithPlusIfNeeded(fa)
+                print(self.stored_prefix + "JUMP CANCELED -> " + fa_string + " NOW:" + fa_string)
+                self.second_opinion = False
+                self.second_opinion_timer = 0
+
+            if self.second_opinion_timer > self.stored_opp_recovery:
+                self.second_opinion = False
+                self.second_opinion_timer = 0
+
 
         if (gameState.IsOppWhiffingXFramesAgo(self.active_frame_wait + 1)) and (gameState.IsBotBlocking()  or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotStartedBeingJuggled() or gameState.IsBotBeingKnockedDown() or gameState.IsBotJustGrounded()):
             if gameState.DidBotIdChangeXMovesAgo(self.active_frame_wait)  or gameState.DidBotTimerReduceXMovesAgo(self.active_frame_wait):# or gameState.DidOppIdChangeXMovesAgo(self.active_frame_wait):
                 gameState.BackToTheFuture(self.active_frame_wait)
+
                 if not self.active_frame_wait >= gameState.GetOppActiveFrames() + 1:
                     self.active_frame_wait += 1
                 else:
@@ -71,6 +111,8 @@ class TekkenEncyclopedia:
                         frameDataEntry.recovery = "?!"
 
                     gameState.ReturnToPresent()
+
+
                     time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
                     time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
                     new_frame_advantage_calc = time_till_recovery_bot - time_till_recovery_opp
@@ -109,6 +151,14 @@ class TekkenEncyclopedia:
                         print("Frame advantage inconsistent calculation.  Old = " + str(old_frame_advantage_calc) + " New: " + str(new_frame_advantage_calc), file=sys.stderr)
 
                     print(prefix + str(frameDataEntry))
+                    self.second_opinion = True
+                    self.stored_opp_recovery = time_till_recovery_opp
+                    self.stored_opp_fa = int(frameDataEntry.currentFrameAdvantage)
+                    self.stored_bot_recovery = time_till_recovery_bot
+                    self.stored_frame_data = prefix + str(frameDataEntry)
+                    self.stored_prefix = prefix
+                    self.stored_opp_id = opp_id
+
                     gameState.BackToTheFuture(self.active_frame_wait)
                 gameState.ReturnToPresent()
         if self.isPlayerOne:
