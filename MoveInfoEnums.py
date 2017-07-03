@@ -86,3 +86,41 @@ class ComplexMoveStates(Enum):  #these seem difficult to pin down what they are 
     UNKNOWN_23 = 23 #Steve 3+4, 1
 
     SIDEWALK = 28 #left or right
+
+class InputDirectionCodes(Enum):
+    FIGHT_START = 0
+
+    N = 32
+
+    u = 256
+    ub = 128
+    uf = 512
+
+    f = 64
+    b = 16
+
+    d = 4
+    df = 8
+    db = 2
+
+class InputAttackCodes(Enum):
+    N = 0
+    x1 = 512
+    x2 = 1024
+    x3 = 2048
+    x4 = 4096
+    x1x2 = 1536
+    x1x3 = 2560
+    x1x4 = 4608
+    x2x3 = 3072
+    x2x4 = 5120
+    x3x4 = 6144
+    x1x2x3 = 3584
+    x1x2x4 = 5632
+    x1x3x4 = 6656
+    x2x3x4 = 7168
+    x1x2x3x4 = 7680
+    xRAGE = 8192
+
+
+

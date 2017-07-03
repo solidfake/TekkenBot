@@ -204,6 +204,13 @@ class BotSnapshot:
         self.char_id = d[PlayerDataAddress.char_id]
         self.throw_flag = d[PlayerDataAddress.throw_flag]
         self.rage_flag = d[PlayerDataAddress.rage_flag]
+        self.input_counter = d[PlayerDataAddress.input_counter]
+        self.input_direction = InputDirectionCodes(d[PlayerDataAddress.input_direction])
+        self.input_button = InputAttackCodes(d[PlayerDataAddress.input_attack] % InputAttackCodes.xRAGE.value)
+        self.rage_button_flag = d[PlayerDataAddress.input_attack] >= InputAttackCodes.xRAGE.value
+
+    def GetInputState(self):
+        return (self.input_direction, self.input_button)
 
     def IsBlocking(self):
         return self.complex_state == ComplexMoveStates.BLOCK
@@ -675,6 +682,9 @@ class TekkenGameState:
 
     def GetLastOppWithDifferentMoveId(self):
         return self.GetLastOppSnapshotWithDifferentMoveId().opp
+
+    def GetOppLastMoveInput(self):
+        return self.GetLastOppWithDifferentMoveId().GetInputState()
 
     def GetFrameDataOfCurrentOppMove(self):
         if self.stateLog[-1].opp.startup > 0:

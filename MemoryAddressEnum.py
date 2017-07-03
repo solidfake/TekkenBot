@@ -32,6 +32,11 @@ class PlayerDataAddress(Enum):
     throw_flag = 0x3F8
     rage_flag = 0x988
 
+    #raw_array_start = 0xABC #this is the raw 'buttons' pressed before they are assigned to 1,2,3,4, 1+2, etc
+    input_counter = 0x14D8  #goes up one every new input state, caps at 0x27
+    input_attack = 0x14DC
+    input_direction = 0x14E0
+
     #super meter p1 0x9E4
 
 def IsDataAFloat(dataEnum):

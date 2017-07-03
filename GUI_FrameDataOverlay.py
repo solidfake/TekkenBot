@@ -45,10 +45,12 @@ class TextRedirector(object):
                     self.style.configure('.', background='#ccff33')
                 else:
                     self.style.configure('.', background='#0099ff')
-                if "p1" in output_str:
+                if "p1:" in output_str:
                     self.fa_p1_var.set(fa)
+                    out = out.replace('p1:', '')
                 else:
                     self.fa_p2_var.set(fa)
+                    out = out.replace('p2:', '')
 
         else:
             out = output_str
@@ -106,17 +108,13 @@ class GUI_FrameDataOverlay(Tk):
         self.fa_p1_var = self.create_frame_advantage_label(0)
         self.fa_p2_var = self.create_frame_advantage_label(2)
 
-
-        #self.at_p1_var = self.create_attack_type_label(0)
-        #self.at_p2_var = self.create_attack_type_label(2)
-
         self.text = self.create_textbox()
 
         self.stdout = sys.stdout
         self.redirector = TextRedirector(self.stdout, self.text, self.s, self.fa_p1_var, self.fa_p2_var)
         self.text.configure(state="normal")
         self.text.delete("1.0", "end")
-        self.text.insert("1.0", "id                | type | startup | damage | block | hit | active\n")
+        self.text.insert("1.0", "input | type | startup | damage | block | hit | active\n")
 
         self.text.configure(state="disabled")
 

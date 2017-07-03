@@ -95,9 +95,11 @@ class TekkenEncyclopedia:
                     except:
                         frameDataEntry.recovery = "?!"
 
+                    frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
                     gameState.ReturnToPresent()
 
                     frameDataEntry.currentActiveFrame = gameState.GetLastActiveFrameHitWasOn(frameDataEntry.activeFrames)
+
 
                     time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
                     time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
@@ -151,6 +153,7 @@ class FrameDataEntry:
         self.activeFrames = '??'
         self.currentFrameAdvantage = '??'
         self.currentActiveFrame = '??'
+        self.input = '??'
 
     def WithPlusIfNeeded(self, value):
         try:
@@ -161,8 +164,11 @@ class FrameDataEntry:
         except:
             return str(value)
 
+    def InputTupleToInputString(self, inputTuple):
+        return (inputTuple[0].name + inputTuple[1].name.replace('x', '+')).replace('N', '')
+
     def __repr__(self):
-        return "#" + str(self.move_id) + " | " + str(self.hitType)[:7] +  " | " + str(self.startup).center(len('startup')) + " | " + str(self.damage).center(len('  damage  ')) + " | " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + " | " \
+        return "" + str(self.input) + " | " + str(self.hitType)[:7] +  " | " + str(self.startup).center(len('startup')) + " | " + str(self.damage).center(len('  damage  ')) + " | " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + " | " \
                + self.WithPlusIfNeeded(self.onNormalHit) +  " | " + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) \
                + " NOW:" + str(self.currentFrameAdvantage)
 
