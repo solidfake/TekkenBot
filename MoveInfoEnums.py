@@ -2,14 +2,14 @@ from enum import Enum
 
 class AttackType(Enum):
     ANTIAIR_ONLY = 11 #Doesn't hit characters on the ground? Very rare, appears on Alisa's chainsaw stance f+2
-    THROW_TECH = 10  #this is only the attack type *during* the throw animation
+    THROW_ANIM = 10  #this is only the attack type *during* the throw animation
     LOW_UNBLOCKABLE = 9 #Yoshimitsu's 10 hit combo 2 has one
     HIGH_UNBLOCKABLE = 8  #Akuma's focus attack
     MID_UNBLOCKABLE = 7
     #UNKNOWN_6 = 6 #????? may not exist
     HIGH = 5
     SMID = 4
-    PROJECTILE = 3 #Also on Akuma's dps and one of King's throws. Shows as a special mid in practice mode, unknown what properties this has that are different than smid
+    PROJ = 3 #Also on Akuma's dps and one of King's throws. Shows as a special mid in practice mode, unknown what properties this has that are different than smid
     MID = 2
     LOW = 1
     NA = 0 #This move is not an attack

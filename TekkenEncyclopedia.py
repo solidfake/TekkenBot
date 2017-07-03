@@ -34,9 +34,6 @@ class TekkenEncyclopedia:
         if self.isPlayerOne:
             gameState.FlipMirror()
 
-
-        #print(gameState.GetOppMoveTimer())
-
         opp_id = gameState.GetOppMoveId()
 
         if self.second_opinion:
@@ -64,12 +61,8 @@ class TekkenEncyclopedia:
 
         if (gameState.IsOppWhiffingXFramesAgo(self.active_frame_wait + 1)) and (gameState.IsBotBlocking()  or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotStartedBeingJuggled() or gameState.IsBotBeingKnockedDown() or gameState.IsBotJustGrounded()):
 
-
             if gameState.DidBotIdChangeXMovesAgo(self.active_frame_wait)  or gameState.DidBotTimerReduceXMovesAgo(self.active_frame_wait):# or gameState.DidOppIdChangeXMovesAgo(self.active_frame_wait):
                 gameState.BackToTheFuture(self.active_frame_wait)
-
-
-
 
                 if not self.active_frame_wait >= gameState.GetOppActiveFrames() + 1:
                     self.active_frame_wait += 1
@@ -86,26 +79,16 @@ class TekkenEncyclopedia:
                     frameDataEntry.move_id = opp_id
                     frameDataEntry.damage = gameState.GetMostRecentOppDamage()
 
-                    if gameState.GetOppStartup() > 0:
-                        frameDataEntry.startup = gameState.GetOppStartup()
-                        frameDataEntry.activeFrames = gameState.GetOppActiveFrames()
-                        frameDataEntry.hitType = AttackType(gameState.GetOppAttackType()).name
-                        if gameState.IsOppAttackThrow():
-                            frameDataEntry.hitType += "_THROW"
 
-                    else:
-                        snapshotOpp = gameState.GetLastOppWithDifferentMoveId()
-                        if snapshotOpp != None:
-                            frameDataEntry.startup = snapshotOpp.startup
-                            frameDataEntry.activeFrames = snapshotOpp.GetActiveFrames()
-                            frameDataEntry.hitType = AttackType(snapshotOpp.attack_type).name
-                            if snapshotOpp.IsAttackThrow():
-                                frameDataEntry.hitType += "_THROW"
+                    frameDataEntry.startup = gameState.GetOppStartup()
+                    frameDataEntry.activeFrames = gameState.GetOppActiveFrames()
+                    frameDataEntry.hitType = AttackType(gameState.GetOppAttackType()).name
+                    if gameState.IsOppAttackThrow():
+                        frameDataEntry.hitType += "_THROW"
 
                     fastestRageMoveFrames = 120
                     if frameDataEntry.startup > fastestRageMoveFrames and gameState.DidOpponentUseRageRecently(frameDataEntry.startup - 1):
                         frameDataEntry.startup = gameState.GetBotElapsedFramesOfRageMove(frameDataEntry.startup)
-
 
                     try:
                         frameDataEntry.recovery = gameState.GetOppRecovery() - frameDataEntry.startup - frameDataEntry.activeFrames + 1
@@ -113,6 +96,8 @@ class TekkenEncyclopedia:
                         frameDataEntry.recovery = "?!"
 
                     gameState.ReturnToPresent()
+
+                    frameDataEntry.currentActiveFrame = gameState.GetLastActiveFrameHitWasOn(frameDataEntry.activeFrames)
 
                     time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
                     time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
@@ -132,7 +117,6 @@ class TekkenEncyclopedia:
                     else:
                         prefix = "p2: "
 
-
                     print(prefix + str(frameDataEntry))
 
                     self.second_opinion = True
@@ -140,6 +124,13 @@ class TekkenEncyclopedia:
                     self.stored_opp_recovery = time_till_recovery_opp
                     self.stored_prefix = prefix
                     self.stored_opp_id = opp_id
+
+
+
+
+                    #print(opp_id)
+                    #print(time_till_recovery_bot)
+
 
                     gameState.BackToTheFuture(self.active_frame_wait)
                 gameState.ReturnToPresent()
@@ -159,6 +150,7 @@ class FrameDataEntry:
         self.blockFrames = '??'
         self.activeFrames = '??'
         self.currentFrameAdvantage = '??'
+        self.currentActiveFrame = '??'
 
     def WithPlusIfNeeded(self, value):
         try:
@@ -171,7 +163,7 @@ class FrameDataEntry:
 
     def __repr__(self):
         return "#" + str(self.move_id) + " | " + str(self.hitType)[:7] +  " | " + str(self.startup).center(len('startup')) + " | " + str(self.damage).center(len('  damage  ')) + " | " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + " | " \
-               + self.WithPlusIfNeeded(self.onNormalHit) +  " | " + str(self.activeFrames).center(len(' active ')) \
+               + self.WithPlusIfNeeded(self.onNormalHit) +  " | " + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) \
                + " NOW:" + str(self.currentFrameAdvantage)
 
                 #+ " Recovery: " + str(self.recovery)

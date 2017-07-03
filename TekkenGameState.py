@@ -224,7 +224,7 @@ class BotSnapshot:
         return self.attack_type == AttackType.LOW
 
     def IsInThrowing(self):
-        return self.attack_type == AttackType.THROW_TECH
+        return self.attack_type == AttackType.THROW_ANIM
 
     def GetActiveFrames(self):
         return self.startup_end - self.startup + 1
@@ -516,6 +516,26 @@ class TekkenGameState:
 
     def GetOppActiveFrames(self):
         return self.stateLog[-1].opp.GetActiveFrames()
+
+    def GetLastActiveFrameHitWasOn(self, frames):
+        returnNextState = False
+        for state in reversed(self.stateLog[-(frames + 2):]):
+            if returnNextState:
+                return (state.opp.move_timer - state.opp.startup) + 1
+
+            if state.bot.move_timer == 1:
+                returnNextState = True
+
+        return -1
+
+        #return self.stateLog[-1].opp.move_timer - self.stateLog[-1].opp.startup
+        #elapsedActiveFrames = 0
+        #opp_move_timer = -1
+        #for state in reversed(self.stateLog):
+            #elapsedActiveFrames += 1
+            #if state.bot.move_timer == 1 or state.opp.move_timer == state.opp.startup:
+                #return elapsedActiveFrames
+        #return -1
 
     def GetOppActiveFramesXFramesAgo(self, framesAgo):
         if len(self.stateLog) > framesAgo:

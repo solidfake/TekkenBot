@@ -33,7 +33,7 @@ class GUI_FrameTrapBot(Tk):
         self.entry.pack(side="top", fill="both", expand=True)
         self.entry.configure(state="normal")
 
-        self.launcher = TekkenBotLauncher(BotFrameTrap)
+        self.launcher = TekkenBotLauncher(BotFrameTrap, False)
 
 
     def update_launcher(self):
