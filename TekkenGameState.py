@@ -245,6 +245,15 @@ class BotSnapshot:
     def IsBeingJuggled(self):
         return self.simple_state == SimpleMoveStates.JUGGLED
 
+    def IsAirborne(self):
+        return self.simple_state == SimpleMoveStates.AIRBORNE
+
+    def IsHoldingUp(self):
+        return self.input_direction == InputDirectionCodes.u
+
+    def IsHoldingUpBack(self):
+        return self.input_direction == InputDirectionCodes.ub
+
     def IsBeingKnockedDown(self):
         return self.simple_state == SimpleMoveStates.KNOCKDOWN
 
@@ -709,6 +718,16 @@ class TekkenGameState:
         #if -1 < char_id < 50:
         print("Character: " + str(char_id))
         return char_id
+
+    def IsFulfillJumpFallbackConditions(self):
+        if len(self.stateLog) > 10:
+            if self.stateLog[-7].bot.IsAirborne() and self.stateLog[-7].opp.IsAirborne():
+                if not self.stateLog[-8].bot.IsAirborne() or not self.stateLog[-8].opp.IsAirborne():
+                    for state in self.stateLog[-10:]:
+                        if not(state.bot.IsHoldingUp() or state.opp.IsHoldingUp()):
+                            return False
+                    return True
+        return False
 
     def GetBotInputState(self):
         return self.stateLog[-1].bot.GetInputState()

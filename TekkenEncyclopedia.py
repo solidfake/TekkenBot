@@ -29,10 +29,17 @@ class TekkenEncyclopedia:
             return None
 
 
+    #Set the dummy to jump and hold up and this prints the frame difference.
+    def CheckJumpFrameDataFallback(self, gameState):
+        if not self.isPlayerOne:
+            if gameState.IsFulfillJumpFallbackConditions():
+                print("p1 jump frame diff: " + str(gameState.GetBotMoveTimer() - gameState.GetOppMoveTimer()))
 
     def Update(self, gameState: TekkenGameState):
         if self.isPlayerOne:
             gameState.FlipMirror()
+
+        #self.CheckJumpFrameDataFallback(gameState)
 
         opp_id = gameState.GetOppMoveId()
 
@@ -79,7 +86,6 @@ class TekkenEncyclopedia:
                     frameDataEntry.move_id = opp_id
                     frameDataEntry.damage = gameState.GetMostRecentOppDamage()
 
-
                     frameDataEntry.startup = gameState.GetOppStartup()
                     frameDataEntry.activeFrames = gameState.GetOppActiveFrames()
                     frameDataEntry.hitType = AttackType(gameState.GetOppAttackType()).name
@@ -100,7 +106,6 @@ class TekkenEncyclopedia:
 
                     frameDataEntry.currentActiveFrame = gameState.GetLastActiveFrameHitWasOn(frameDataEntry.activeFrames)
 
-
                     time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
                     time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
                     new_frame_advantage_calc = time_till_recovery_bot - time_till_recovery_opp
@@ -109,7 +114,6 @@ class TekkenEncyclopedia:
                         frameDataEntry.onBlock = new_frame_advantage_calc
                         frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onBlock)
                         frameDataEntry.blockFrames = frameDataEntry.recovery - frameDataEntry.startup
-
                     else:
                         frameDataEntry.onNormalHit = new_frame_advantage_calc
                         frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onNormalHit)
@@ -126,13 +130,6 @@ class TekkenEncyclopedia:
                     self.stored_opp_recovery = time_till_recovery_opp
                     self.stored_prefix = prefix
                     self.stored_opp_id = opp_id
-
-
-
-
-                    #print(opp_id)
-                    #print(time_till_recovery_bot)
-
 
                     gameState.BackToTheFuture(self.active_frame_wait)
                 gameState.ReturnToPresent()
