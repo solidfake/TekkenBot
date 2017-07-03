@@ -27,7 +27,7 @@ class BotFrameTrap(Bot):
 
     def SetFrameTrapCommandFromNotationString(self, notation: str):
         try:
-            self.response = ParseMoveList(">, " + notation)
+            self.response = ParseMoveList(">, " + notation + ", >>")
         except:
             print("Could not parse move: " + notation)
 

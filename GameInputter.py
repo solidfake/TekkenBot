@@ -4,10 +4,12 @@ hold back) and turns them into the actual keypresses.
 
 """
 
+from enum import Enum
 from ArtificialKeyboard import ArtificalKeyboard
 
 #directinput scan codes
-class Keys:
+#https://gist.github.com/tracend/912308
+class Keys_P2:
     UP = 0xc8
     DOWN = 0xd0
     LEFT = 0xCB
@@ -23,21 +25,76 @@ class Keys:
     LT = 0x4a
     RT = 0x4e
 
+class Keys_P1:
+    UP = 0x11
+    DOWN = 0x1F
+    LEFT = 0x1E
+    RIGHT = 0x20
+    A = 0x24
+    B = 0x25
+    X = 0x16
+    Y = 0x17
+    START =  0x30
+    SELECT = 0x2F
+    LB = 0x19
+    RB = 0x18
+    LT = 0x27
+    RT = 0x26
+
+
+class Buttons(Enum):
+    BUTTON_1 = 1
+    BUTTON_2 = 2
+    BUTTON_3 = 3
+    BUTTON_4 = 4
+    BUTTON_LEFT = 5
+    BUTTON_RIGHT = 6
+    BUTTON_UP = 7
+    BUTTON_DOWN = 8
+    BUTTON_RB = 9
+    BUTTON_ACCEPT = 10
+
+
+
+
+
 class GameControllerInputter:
-    BUTTON_1 = Keys.X
-    BUTTON_2 = Keys.Y
-    BUTTON_3 = Keys.A
-    BUTTON_4 = Keys.B
-    BUTTON_LEFT = Keys.LEFT
-    BUTTON_RIGHT = Keys.RIGHT
-    BUTTON_UP = Keys.UP
-    BUTTON_DOWN = Keys.DOWN
-    BUTTON_RB = Keys.RB
-    BUTTON_ACCEPT = Keys.A
+
+    p2_controls = {
+        Buttons.BUTTON_1 : Keys_P2.X,
+        Buttons.BUTTON_2 : Keys_P2.Y,
+        Buttons.BUTTON_3 : Keys_P2.A,
+        Buttons.BUTTON_4 : Keys_P2.B,
+        Buttons.BUTTON_LEFT : Keys_P2.LEFT,
+        Buttons.BUTTON_RIGHT : Keys_P2.RIGHT,
+        Buttons.BUTTON_UP : Keys_P2.UP,
+        Buttons.BUTTON_DOWN : Keys_P2.DOWN,
+        Buttons.BUTTON_RB : Keys_P2.RB,
+        Buttons.BUTTON_ACCEPT : Keys_P2.A
+    }
+
+    p1_controls = {
+        Buttons.BUTTON_1: Keys_P1.X,
+        Buttons.BUTTON_2: Keys_P1.Y,
+        Buttons.BUTTON_3: Keys_P1.A,
+        Buttons.BUTTON_4: Keys_P1.B,
+        Buttons.BUTTON_LEFT: Keys_P1.LEFT,
+        Buttons.BUTTON_RIGHT: Keys_P1.RIGHT,
+        Buttons.BUTTON_UP: Keys_P1.UP,
+        Buttons.BUTTON_DOWN: Keys_P1.DOWN,
+        Buttons.BUTTON_RB: Keys_P1.RB,
+        Buttons.BUTTON_ACCEPT: Keys_P1.A
+    }
 
 
 
-    def __init__(self):
+
+    def __init__(self, usePlayer2Controls = True):
+        if usePlayer2Controls:
+            self.controls = GameControllerInputter.p2_controls
+        else:
+            self.controls = GameControllerInputter.p1_controls
+
         self.heldKeys = []
         self.tappedKeys = []
         self.releasedKeys = []
@@ -61,16 +118,16 @@ class GameControllerInputter:
         self.wasOnLeft = isBotOnLeft
 
     def SetControlsOnLeft(self):
-        self.back = GameControllerInputter.BUTTON_LEFT
-        self.forward = GameControllerInputter.BUTTON_RIGHT
-        self.right = GameControllerInputter.BUTTON_DOWN
-        self.left = GameControllerInputter.BUTTON_UP
+        self.back = self.controls[Buttons.BUTTON_LEFT]
+        self.forward = self.controls[Buttons.BUTTON_RIGHT]
+        self.right = self.controls[Buttons.BUTTON_DOWN]
+        self.left = self.controls[Buttons.BUTTON_UP]
 
     def SetControlsOnRight(self):
-        self.back = GameControllerInputter.BUTTON_RIGHT
-        self.forward = GameControllerInputter.BUTTON_LEFT
-        self.right = GameControllerInputter.BUTTON_UP
-        self.left = GameControllerInputter.BUTTON_DOWN
+        self.back = self.controls[Buttons.BUTTON_RIGHT]
+        self.forward = self.controls[Buttons.BUTTON_LEFT]
+        self.right = self.controls[Buttons.BUTTON_UP]
+        self.left = self.controls[Buttons.BUTTON_DOWN]
 
     def TapBack(self):
         self.TapButton(self.back)
@@ -79,10 +136,10 @@ class GameControllerInputter:
         self.TapButton(self.forward)
 
     def TapDown(self):
-        self.TapButton(GameControllerInputter.BUTTON_DOWN)
+        self.TapButton(self.controls[Buttons.BUTTON_DOWN])
 
     def TapUp(self):
-        self.TapButton(GameControllerInputter.BUTTON_UP)
+        self.TapButton(self.controls[Buttons.BUTTON_UP])
 
     def TapRight(self):
         self.TapButton(self.right)
@@ -91,31 +148,31 @@ class GameControllerInputter:
         self.TapButton(self.left)
 
     def Tap1(self):
-        self.TapButton(GameControllerInputter.BUTTON_1)
+        self.TapButton(self.controls[Buttons.BUTTON_1])
 
     def Tap2(self):
-        self.TapButton(GameControllerInputter.BUTTON_2)
+        self.TapButton(self.controls[Buttons.BUTTON_2])
 
     def Tap3(self):
-        self.TapButton(GameControllerInputter.BUTTON_3)
+        self.TapButton(self.controls[Buttons.BUTTON_3])
 
     def Tap4(self):
-        self.TapButton(GameControllerInputter.BUTTON_4)
+        self.TapButton(self.controls[Buttons.BUTTON_4])
 
     def TapAccept(self):
-        self.TapButton(GameControllerInputter.BUTTON_ACCEPT)
+        self.TapButton(self.controls[Buttons.BUTTON_ACCEPT])
 
     def TapRageArt(self):
-        self.TapButton(GameControllerInputter.BUTTON_RB)
+        self.TapButton(self.controls[Buttons.BUTTON_RB])
 
     def HoldBack(self):
         self.HoldButton(self.back)
 
     def HoldDown(self):
-        self.HoldButton(GameControllerInputter.BUTTON_DOWN)
+        self.HoldButton(self.controls[Buttons.BUTTON_DOWN])
 
     def HoldUp(self):
-        self.HoldButton(GameControllerInputter.BUTTON_UP)
+        self.HoldButton(self.controls[Buttons.BUTTON_UP])
 
     def HoldForward(self):
         self.HoldButton(self.forward)
@@ -126,9 +183,9 @@ class GameControllerInputter:
             self.heldKeys.remove(self.forward)
 
     def ReleaseUp(self):
-        self.ReleaseKeyIfActive(GameControllerInputter.BUTTON_UP)
-        if GameControllerInputter.BUTTON_UP in self.heldKeys:
-            self.heldKeys.remove(GameControllerInputter.BUTTON_UP)
+        self.ReleaseKeyIfActive(self.controls[Buttons.BUTTON_UP])
+        if self.controls[Buttons.BUTTON_UP] in self.heldKeys:
+            self.heldKeys.remove(self.controls[Buttons.BUTTON_UP])
 
     def ReleaseBack(self):
         self.ReleaseKeyIfActive(self.back)
@@ -136,9 +193,9 @@ class GameControllerInputter:
             self.heldKeys.remove(self.back)
 
     def ReleaseDown(self):
-        self.ReleaseKeyIfActive(GameControllerInputter.BUTTON_DOWN)
-        if GameControllerInputter.BUTTON_DOWN in self.heldKeys:
-            self.heldKeys.remove(GameControllerInputter.BUTTON_DOWN )
+        self.ReleaseKeyIfActive(self.controls[Buttons.BUTTON_DOWN])
+        if self.controls[Buttons.BUTTON_DOWN] in self.heldKeys:
+            self.heldKeys.remove(self.controls[Buttons.BUTTON_DOWN])
 
     def TapButton(self, button):
         if not button in self.releasedKeys:
@@ -174,7 +231,7 @@ class GameControllerInputter:
     def Release(self):
         if (self.isTekkenActiveWindow):
             self.heldKeys = []
-            GameControllerInputter.ReleaseAllButtons()
+            self.ReleaseAllButtons()
 
     def PressKeyIfActive(self, hexKeyCode):
         if (self.isTekkenActiveWindow):
@@ -184,16 +241,16 @@ class GameControllerInputter:
         if (self.isTekkenActiveWindow):
             ArtificalKeyboard.ReleaseKey(hexKeyCode)
 
-    def ReleaseAllButtons():
+    def ReleaseAllButtons(self):
         #print("releasing all buttons")
-        ArtificalKeyboard.ReleaseKey(GameControllerInputter.BUTTON_1)
-        ArtificalKeyboard.ReleaseKey(GameControllerInputter.BUTTON_2)
-        ArtificalKeyboard.ReleaseKey(GameControllerInputter.BUTTON_3)
-        ArtificalKeyboard.ReleaseKey(GameControllerInputter.BUTTON_4)
-        ArtificalKeyboard.ReleaseKey(GameControllerInputter.BUTTON_UP)
-        ArtificalKeyboard.ReleaseKey(GameControllerInputter.BUTTON_DOWN)
-        ArtificalKeyboard.ReleaseKey(GameControllerInputter.BUTTON_LEFT)
-        ArtificalKeyboard.ReleaseKey(GameControllerInputter.BUTTON_RIGHT)
-        ArtificalKeyboard.ReleaseKey(GameControllerInputter.BUTTON_RB)
+        ArtificalKeyboard.ReleaseKey(self.controls[Buttons.BUTTON_1])
+        ArtificalKeyboard.ReleaseKey(self.controls[Buttons.BUTTON_2])
+        ArtificalKeyboard.ReleaseKey(self.controls[Buttons.BUTTON_3])
+        ArtificalKeyboard.ReleaseKey(self.controls[Buttons.BUTTON_4])
+        ArtificalKeyboard.ReleaseKey(self.controls[Buttons.BUTTON_UP])
+        ArtificalKeyboard.ReleaseKey(self.controls[Buttons.BUTTON_DOWN])
+        ArtificalKeyboard.ReleaseKey(self.controls[Buttons.BUTTON_LEFT])
+        ArtificalKeyboard.ReleaseKey(self.controls[Buttons.BUTTON_RIGHT])
+        ArtificalKeyboard.ReleaseKey(self.controls[Buttons.BUTTON_RB])
 
 

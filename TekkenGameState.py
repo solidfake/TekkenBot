@@ -710,6 +710,12 @@ class TekkenGameState:
         print("Character: " + str(char_id))
         return char_id
 
+    def GetBotInputState(self):
+        return self.stateLog[-1].bot.GetInputState()
+
+    def GetOppInputState(self):
+        return self.stateLog[-1].opp.GetInputState()
+
     def IsFightOver(self):
         return self.duplicateFrameObtained > 5
 

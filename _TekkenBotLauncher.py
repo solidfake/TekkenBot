@@ -7,12 +7,9 @@ from ArtificialKeyboard import ArtificalKeyboard
 import GameInputter
 import TekkenGameState
 import BasicCommands
-import BotRandom
-import BotTezukaZone
-import BotData
-import BotGameplan
 from BotFrameTrap import BotFrameTrap
 from BotPunisher import BotPunisher
+from BotRecorder import BotRecorder
 
 #print("ADMIN STATUS: " + str(c.windll.shell32.IsUserAnAdmin()))
 
@@ -64,12 +61,12 @@ class TekkenBotLauncher:
     def MashAccept(self): #Useful for Treasure Mode
         if self.gameState.IsForegroundPID():
             if (random.randint(0, 1) == 0):
-                ArtificalKeyboard.PressKey(GameInputter.Keys.A)
+                ArtificalKeyboard.PressKey(GameInputter.Keys_P2.A)
             else:
-                ArtificalKeyboard.ReleaseKey(GameInputter.Keys.A)
+                ArtificalKeyboard.ReleaseKey(GameInputter.Keys_P2.A)
 
 if __name__ == "__main__":
-    launcher = TekkenBotLauncher(BotPunisher, True)
+    launcher = TekkenBotLauncher(BotRecorder, True)
     while(True):
         launcher.Update()
         time.sleep(.005)
