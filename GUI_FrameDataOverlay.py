@@ -8,7 +8,7 @@ from tkinter.ttk import *
 from _FrameDataLauncher import FrameDataLauncher
 import sys
 from ConfigReader import ConfigReader
-
+import platform
 
 
 class TextRedirector(object):
@@ -35,16 +35,21 @@ class TextRedirector(object):
             fa = output_str.split('NOW:')[1][:3]
             if '?' not in fa:
                 if int(fa) <= -14:
-                    self.style.configure('.', background='#ff0066')
+                    #self.style.configure('.', background='#ff0066')
+                    self.style.configure('.', background='deep pink')
                 elif int(fa) <= -10:
-                    self.style.configure('.', background='#ff6600')
+                    #self.style.configure('.', background='#ff6600')
+                    self.style.configure('.', background='orchid2')
                 elif int(fa) <= -5:
-                    self.style.configure('.', background='#cca300')
+                    #self.style.configure('.', background='#cca300')
+                    self.style.configure('.', background='ivory2')
 
-                elif int(fa) <= 0:
-                    self.style.configure('.', background='#ccff33')
+                elif int(fa) < 0:
+                    #self.style.configure('.', background='#ccff33')
+                    self.style.configure('.', background='ivory2')
                 else:
-                    self.style.configure('.', background='#0099ff')
+                    #self.style.configure('.', background='#0099ff')
+                    self.style.configure('.', background='SteelBlue1')
                 if "p1:" in output_str:
                     self.fa_p1_var.set(fa)
                     out = out.replace('p1:', '')
@@ -66,10 +71,11 @@ class GUI_FrameDataOverlay(Tk):
     def __init__(self):
         print("Tekken Bot Starting...")
 
+        is_windows_7 = 'Windows-7' in platform.platform()
         self.tekken_config = ConfigReader("frame_data_overlay")
         self.is_draggable_window = self.tekken_config.get_property("indepedent_window_mode", True, lambda x: not "0" in str(x))
         self.is_minimize_on_lost_focus = self.tekken_config.get_property("minimize_on_lost_focus", True, lambda x: not "0" in str(x))
-        self.is_transparency = self.tekken_config.get_property("transparency", True, lambda x: not "0" in str(x))
+        self.is_transparency = self.tekken_config.get_property("transparency", not is_windows_7, lambda x: not "0" in str(x))
 
         self.launcher = FrameDataLauncher()
 
@@ -81,9 +87,17 @@ class GUI_FrameDataOverlay(Tk):
 
         self.attributes("-topmost", True)
 
+
+
         if self.is_transparency:
             self.wm_attributes("-transparentcolor", "white")
             self.attributes("-alpha", "0.75")
+            self.tranparency_color = 'white'
+        else:
+            if is_windows_7:
+                print("Windows 7 detected. Disabling transparency.")
+            self.tranparency_color = 'black'
+        self.configure(background=self.tranparency_color)
 
         self.w = 820
         self.h = 100
@@ -92,7 +106,7 @@ class GUI_FrameDataOverlay(Tk):
         self.iconbitmap('TekkenData/tekken_bot_close.ico')
         if not self.is_draggable_window:
             self.overrideredirect(True)
-        self.configure(background='white')
+
 
         self.s = Style()
         self.s.theme_use('alt')
@@ -100,15 +114,26 @@ class GUI_FrameDataOverlay(Tk):
         self.s.configure('.', foreground='black')
 
         Grid.columnconfigure(self, 0, weight=0)
-        Grid.columnconfigure(self, 1, weight=1)
+        Grid.columnconfigure(self, 1, weight=0)
         Grid.columnconfigure(self, 2, weight=0)
+        Grid.columnconfigure(self, 3, weight=1)
+        Grid.columnconfigure(self, 4, weight=0)
+        Grid.columnconfigure(self, 5, weight=0)
+        Grid.columnconfigure(self, 6, weight=0)
         Grid.rowconfigure(self, 0, weight=1)
         Grid.rowconfigure(self, 1, weight=0)
 
-        self.fa_p1_var = self.create_frame_advantage_label(0)
-        self.fa_p2_var = self.create_frame_advantage_label(2)
+        self.s.configure('TFrame', background=self.tranparency_color)
+        self.fa_p1_var = self.create_frame_advantage_label(1)
+        self.fa_p2_var = self.create_frame_advantage_label(5)
 
-        self.text = self.create_textbox()
+        self.l_margin = self.create_padding_frame(0)
+        self.r_margin = self.create_padding_frame(2)
+        self.l_seperator = self.create_padding_frame(4)
+        self.r_seperator = self.create_padding_frame(6)
+
+
+        self.text = self.create_textbox(3)
 
         self.stdout = sys.stdout
         self.redirector = TextRedirector(self.stdout, self.text, self.s, self.fa_p1_var, self.fa_p2_var)
@@ -124,12 +149,17 @@ class GUI_FrameDataOverlay(Tk):
     def restore_stdout(self):
         sys.stdout = self.stdout
 
+    def create_padding_frame(self, col):
+        padding = Frame(width=20)
+        padding.grid(row=0, column=col, rowspan=2, sticky=N + S + W + E)
+        return padding
+
     def create_frame_advantage_label(self, col):
         frame_advantage_var = StringVar()
         frame_advantage_var.set('??')
         frame_advantage_label = Label(self, textvariable=frame_advantage_var, font=("Consolas", 44), width=4, anchor='c',
                                         borderwidth=4, relief='ridge')
-        frame_advantage_label.grid(row=0, column=col, sticky=E + W )
+        frame_advantage_label.grid(row=0, column=col)
         return frame_advantage_var
 
     def create_attack_type_label(self, col):
@@ -140,10 +170,10 @@ class GUI_FrameDataOverlay(Tk):
         attack_type_label.grid(row=1, column=col)
         return attack_type_var
 
-    def create_textbox(self):
+    def create_textbox(self, col):
         textbox = Text(self, font=("Consolas, 14"), wrap=NONE, highlightthickness=0, relief='flat')
         # self.text.pack(side="top", fill="both", expand=True)
-        textbox.grid(row=0, column=1, rowspan=2, sticky=N + S + W + E)
+        textbox.grid(row=0, column=col, rowspan=2, sticky=N + S + W + E)
         textbox.configure(background='black')
         #textbox.configure(background='white')
         textbox.configure(foreground='green')
