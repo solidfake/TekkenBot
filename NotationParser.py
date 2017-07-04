@@ -49,9 +49,15 @@ def ConvertNotationToCommands(notation:str, timingOccurances:int):
     elif 'qcf' in notation:
         commands.append((Command.HoldDown, 2))
         commands.append((Command.HoldForward, 2))
-        commands.append((Command.ReleaseDown, 2))
+        commands.append((Command.ReleaseDown, 1))
         commands += attackCommands
         commands.append((Command.ReleaseForward, 2))
+    elif 'pewgf' in notation:
+        commands.append((Command.TapForward, 0))
+        commands.append((Command.TapDown, 2))
+        commands.append((Command.TapForward, 0))
+        commands += attackCommands
+        commands.append((Command.ReleaseDown, 1))
     elif 'ewgf' in notation:
         commands.append((Command.TapForward, 0))
         commands.append((Command.HoldDown, 2))
@@ -68,7 +74,6 @@ def ConvertNotationToCommands(notation:str, timingOccurances:int):
     elif ':' in notation:
         waitFrames = int(notation.split('[')[1].split(']')[0])
         commands.append((Command.Wait, waitFrames - INPUT_DELAY))
-
     elif 'UF' in notation:
         commands.append((Command.HoldForward, 1))
         commands.append((Command.HoldUp, 0))
@@ -106,7 +111,14 @@ def ConvertNotationToCommands(notation:str, timingOccurances:int):
         commands.append((Command.ReleaseForward, 2))
     elif 'rel' in notation:
         commands.append((Command.ReleaseAll, 0))
-
+    elif '-U' in notation:
+        commands.append((Command.ReleaseUp, 0))
+    elif '-D' in notation:
+        commands.append((Command.ReleaseDown, 0))
+    elif '-B' in notation:
+        commands.append((Command.ReleaseBack, 0))
+    elif '-F' in notation:
+        commands.append((Command.ReleaseForward, 0))
     else:
         if 'u' in notation:
             commands.append((Command.TapUp, 0))
@@ -116,6 +128,15 @@ def ConvertNotationToCommands(notation:str, timingOccurances:int):
             commands.append((Command.TapBack, 0))
         if 'f' in notation:
             commands.append((Command.TapForward, 0))
+        if 'U' in notation:
+            commands.append((Command.HoldUp, 0))
+        if 'D' in notation:
+            commands.append((Command.HoldDown, 0))
+        if 'B' in notation:
+            commands.append((Command.HoldBack, 0))
+        if 'F' in notation:
+            commands.append((Command.HoldForward, 0))
+
         commands += GetAttackCommands(notation)
 
 
@@ -125,12 +146,33 @@ def ConvertNotationToCommands(notation:str, timingOccurances:int):
 
 def GetAttackCommands(notation:str):
     commands = []
-    if '+1' in notation:
-        commands.append((Command.Tap1, 0))
-    if '+2' in notation:
-        commands.append((Command.Tap2, 0))
-    if '+3' in notation:
-        commands.append((Command.Tap3, 0))
-    if '+4' in notation:
-        commands.append((Command.Tap4, 0))
+
+    if '*' in notation:
+        if '+1' in notation:
+            commands.append((Command.Hold1, 0))
+        if '+2' in notation:
+            commands.append((Command.Hold2, 0))
+        if '+3' in notation:
+            commands.append((Command.Hold3, 0))
+        if '+4' in notation:
+            commands.append((Command.Hold4, 0))
+
+    elif '-' in notation:
+        if '+1' in notation:
+            commands.append((Command.Release1, 0))
+        if '+2' in notation:
+            commands.append((Command.Release2, 0))
+        if '+3' in notation:
+            commands.append((Command.Release3, 0))
+        if '+4' in notation:
+            commands.append((Command.Release4, 0))
+    else:
+        if '+1' in notation:
+            commands.append((Command.Tap1, 0))
+        if '+2' in notation:
+            commands.append((Command.Tap2, 0))
+        if '+3' in notation:
+            commands.append((Command.Tap3, 0))
+        if '+4' in notation:
+            commands.append((Command.Tap4, 0))
     return commands

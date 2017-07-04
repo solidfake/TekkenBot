@@ -29,10 +29,10 @@ class BotBehaviors:
     def BlockAllAttacks(gameState: TekkenGameState, botCommands:BotCommands):
         if gameState.IsOppAttacking():
             if gameState.IsOppAttackLow():
-                botCommands.BlockLowFull(max(0, gameState.GetOppTimeUntilImpact() + 1))
+                botCommands.BlockLowFull(max(0, gameState.GetOppTimeUntilImpact() + gameState.GetOppActiveFrames()))
             else:
-                botCommands.BlockMidFull(max(0, gameState.GetOppTimeUntilImpact() + 1))
+                botCommands.BlockMidFull(max(0, gameState.GetOppTimeUntilImpact() + gameState.GetOppActiveFrames()))
 
-    def UnblockIncomingAttacks(self, gameState):
+    def UnblockIncomingAttacks(self, gameState: TekkenGameState):
         if gameState.IsOppAttacking():
-            self.botCommands.WalkForward(max(0, gameState.GetOppTimeUntilImpact() + 1))
+            self.botCommands.WalkForward(max(0, gameState.GetOppTimeUntilImpact() + gameState.GetOppActiveFrames()))

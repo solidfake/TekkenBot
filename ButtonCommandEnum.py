@@ -27,6 +27,14 @@ class Command(Enum):
     Tap3 = 103
     Tap4 = 104
     Accept = 105
+    Hold1 = 106
+    Hold2 = 107
+    Hold3 = 108
+    Hold4 = 109
+    Release1 = 110
+    Release2 = 111
+    Release3 = 112
+    Release4 = 113
 
 
 

@@ -177,25 +177,47 @@ class GameControllerInputter:
     def HoldForward(self):
         self.HoldButton(self.forward)
 
+    def Hold1(self):
+        self.HoldButton(self.controls[Buttons.BUTTON_1])
+
+    def Hold2(self):
+        self.HoldButton(self.controls[Buttons.BUTTON_2])
+
+    def Hold3(self):
+        self.HoldButton(self.controls[Buttons.BUTTON_3])
+
+    def Hold4(self):
+        self.HoldButton(self.controls[Buttons.BUTTON_4])
+
     def ReleaseForward(self):
-        self.ReleaseKeyIfActive(self.forward)
-        if self.forward in self.heldKeys:
-            self.heldKeys.remove(self.forward)
+        self.ReleaseButton(self.forward)
 
     def ReleaseUp(self):
-        self.ReleaseKeyIfActive(self.controls[Buttons.BUTTON_UP])
-        if self.controls[Buttons.BUTTON_UP] in self.heldKeys:
-            self.heldKeys.remove(self.controls[Buttons.BUTTON_UP])
+        self.ReleaseButton(self.controls[Buttons.BUTTON_UP])
 
     def ReleaseBack(self):
-        self.ReleaseKeyIfActive(self.back)
-        if self.back in self.heldKeys:
-            self.heldKeys.remove(self.back)
+        self.ReleaseButton(self.back)
 
     def ReleaseDown(self):
-        self.ReleaseKeyIfActive(self.controls[Buttons.BUTTON_DOWN])
-        if self.controls[Buttons.BUTTON_DOWN] in self.heldKeys:
-            self.heldKeys.remove(self.controls[Buttons.BUTTON_DOWN])
+        self.ReleaseButton(self.controls[Buttons.BUTTON_DOWN])
+
+    def Release1(self):
+        self.ReleaseButton(self.controls[Buttons.BUTTON_1])
+
+    def Release2(self):
+        self.ReleaseButton(self.controls[Buttons.BUTTON_2])
+
+    def Release3(self):
+        self.ReleaseButton(self.controls[Buttons.BUTTON_3])
+
+    def Release4(self):
+        self.ReleaseButton(self.controls[Buttons.BUTTON_4])
+
+
+    def ReleaseButton(self, button):
+        self.ReleaseKeyIfActive(button)
+        if button in self.heldKeys:
+            self.heldKeys.remove(button)
 
     def TapButton(self, button):
         if not button in self.releasedKeys:

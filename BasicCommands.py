@@ -190,8 +190,10 @@ class BotCommands:
             self.inputController.Tap3()
         if command == Command.Tap4:
             self.inputController.Tap4()
+
         if command == Command.Accept:
             self.inputController.TapAccept()
+
         if command == Command.HoldBack:
             self.inputController.HoldBack()
         if command == Command.ReleaseBack:
@@ -208,6 +210,25 @@ class BotCommands:
             self.inputController.HoldUp()
         if command == Command.ReleaseUp:
             self.inputController.ReleaseUp()
+
+        if command == Command.Hold1:
+            self.inputController.Hold1()
+        if command == Command.Hold2:
+            self.inputController.Hold2()
+        if command == Command.Hold3:
+            self.inputController.Hold3()
+        if command == Command.Hold4:
+            self.inputController.Hold4()
+
+        if command == Command.Release1:
+            self.inputController.Release1()
+        if command == Command.Release2:
+            self.inputController.Release2()
+        if command == Command.Release3:
+            self.inputController.Release3()
+        if command == Command.Release4:
+            self.inputController.Release4()
+
         if command == Command.HoldDownBack:
             self.inputController.HoldBack()
             self.inputController.HoldDown()
