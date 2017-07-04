@@ -39,6 +39,7 @@ class TekkenEncyclopedia:
         if self.isPlayerOne:
             gameState.FlipMirror()
 
+
         #self.CheckJumpFrameDataFallback(gameState)
 
         opp_id = gameState.GetOppMoveId()
@@ -162,7 +163,10 @@ class FrameDataEntry:
             return str(value)
 
     def InputTupleToInputString(self, inputTuple):
-        return (inputTuple[0].name + inputTuple[1].name.replace('x', '+')).replace('N', '')
+        s = (inputTuple[0].name + inputTuple[1].name.replace('x', '+')).replace('N', '')
+        if inputTuple[2]:
+            s += "+RA"
+        return s
 
     def __repr__(self):
         return "" + str(self.input) + " | " + str(self.hitType)[:7] +  " | " + str(self.startup).center(len('startup')) + " | " + str(self.damage).center(len('  damage  ')) + " | " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + " | " \
