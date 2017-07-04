@@ -231,7 +231,7 @@ class BotSnapshot:
         return self.attack_type == AttackType.LOW
 
     def IsInThrowing(self):
-        return self.attack_type == AttackType.THROW_ANIM
+        return self.attack_type == AttackType.THROWN
 
     def GetActiveFrames(self):
         return self.startup_end - self.startup + 1
