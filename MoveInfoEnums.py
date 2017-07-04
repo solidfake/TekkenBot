@@ -2,7 +2,7 @@ from enum import Enum
 
 class AttackType(Enum):
     ANTIAIR_ONLY = 11 #Doesn't hit characters on the ground? Very rare, appears on Alisa's chainsaw stance f+2
-    THROW_ANIM = 10  #this is only the attack type *during* the throw animation
+    THROWN = 10  #this is only the attack type *during* the throw animation
     LOW_UNBLOCKABLE = 9 #Yoshimitsu's 10 hit combo 2 has one
     HIGH_UNBLOCKABLE = 8  #Akuma's focus attack
     MID_UNBLOCKABLE = 7
@@ -124,3 +124,6 @@ class InputAttackCodes(Enum):
 
 
 
+class UniversalAnimationCodes(Enum):
+    NEUTRAL = 32769
+    CROUCHING_NEUTRAL = 32770
