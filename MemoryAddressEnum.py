@@ -1,7 +1,8 @@
 from enum import Enum
 
 class MemoryAddressOffsets(Enum):
-    player_data_pointer_offset =  0x03360450 #pc patch 1
+    player_data_pointer_offset = 0x03362540 #pc patch 2
+    #player_data_pointer_offset =  0x03360450 #pc patch 1
     #player_data_pointer_offset = 0x0337A450 #pc patch 0
     player_data_second_pointer_offset = 0
 
@@ -20,6 +21,8 @@ class PlayerDataAddress(Enum):
 
     move_id = 0x31C
     simple_move_state = 0x3D8
+    stun_type = 0x3DC
+    cancel_window = 0x558
     attack_type = 0x3D4
     attack_startup = 0x6680
     attack_startup_end = 0x6684
@@ -31,6 +34,8 @@ class PlayerDataAddress(Enum):
     char_id = 0xD4
     throw_flag = 0x3F8
     rage_flag = 0x988
+
+
 
     #raw_array_start = 0xABC #this is the raw 'buttons' pressed before they are assigned to 1,2,3,4, 1+2, etc
     input_counter = 0x14D8  #goes up one every new input state, caps at 0x27
