@@ -208,6 +208,15 @@ class BotSnapshot:
         self.input_direction = InputDirectionCodes(d[PlayerDataAddress.input_direction])
         self.input_button = InputAttackCodes(d[PlayerDataAddress.input_attack] % InputAttackCodes.xRAGE.value)
         self.rage_button_flag = d[PlayerDataAddress.input_attack] >= InputAttackCodes.xRAGE.value
+        self.stun_state = StunStates(d[PlayerDataAddress.stun_type])
+
+
+        cancel_window_bitmask = d[PlayerDataAddress.cancel_window]
+        self.cwb = cancel_window_bitmask
+        self.is_cancelable = (CancelStatesBitmask.CANCELABLE.value & cancel_window_bitmask) > 0
+        self.is_bufferable = (CancelStatesBitmask.BUFFERABLE.value & cancel_window_bitmask) > 0
+        self.is_parry_1 = (CancelStatesBitmask.PARRYABLE_1.value & cancel_window_bitmask) > 0
+        self.is_parry_2 = (CancelStatesBitmask.PARRYABLE_2.value & cancel_window_bitmask) > 0
 
     def GetInputState(self):
         return (self.input_direction, self.input_button, self.rage_button_flag)
@@ -216,7 +225,8 @@ class BotSnapshot:
         return self.complex_state == ComplexMoveStates.BLOCK
 
     def IsGettingHit(self):
-        return self.complex_state == ComplexMoveStates.RECOVERING and self.simple_state == SimpleMoveStates.STANDING_FORWARD #TODO: make this more accurate
+        return self.stun_state == StunStates.GETTING_HIT
+        #return not self.is_cancelable and self.complex_state == ComplexMoveStates.RECOVERING and self.simple_state == SimpleMoveStates.STANDING_FORWARD  and self.attack_damage == 0 and self.startup == 0 #TODO: make this more accurate
 
     def IsAttackMid(self):
         return self.attack_type == AttackType.MID
@@ -266,6 +276,10 @@ class BotSnapshot:
     def IsInRage(self):
         return self.rage_flag > 0
 
+    def IsAbleToAct(self):
+        #print(self.cwb)
+        return self.is_cancelable
+
     def IsAttackStarting(self):
         #return self.complex_state in {ComplexMoveStates.ATTACK_STARTING_1, ComplexMoveStates.ATTACK_STARTING_2, ComplexMoveStates.ATTACK_STARTING_3, ComplexMoveStates.ATTACK_STARTING_5, ComplexMoveStates.ATTACK_STARTING_6, ComplexMoveStates.ATTACK_STARTING_7} #doesn't work on several of Kazuya's moves, maybe others
         if self.startup > 0:
@@ -311,7 +325,7 @@ class TekkenGameState:
             if len(self.stateLog) == 0 or gameData.frame_count != self.stateLog[-1].frame_count or gameData.frame_count == 65535: #we don't run perfectly in sync, if we get back the same frame, throw it away
                 self.duplicateFrameObtained = 0
                 if gameData.frame_count == 65535:
-                    print("PRACTICE TIME LIMIT EXCEEDED. PLEASE RESTART OR RESET PRACTICE.")
+                    print("PRACTICE TIME EXCEEDED. PRESS SELECT + A TO RESET.")
                     self.duplicateFrameObtained = 9999
 
                 if not self.isMirrored:
@@ -372,7 +386,8 @@ class TekkenGameState:
         return self.stateLog[-1].opp.IsGettingHit()
 
     def IsBotGettingHit(self):
-        return self.GetFramesSinceBotTookDamage() < 15
+        return self.stateLog[-1].bot.IsGettingHit()# or self.GetFramesSinceBotTookDamage() < 15
+        #return self.GetFramesSinceBotTookDamage() < 15
 
     def IsBotStartedGettingHit(self):
         if len(self.stateLog) > 2:
@@ -542,7 +557,7 @@ class TekkenGameState:
             if state.bot.move_timer == 1:
                 returnNextState = True
 
-        return -1
+        return 0
 
         #return self.stateLog[-1].opp.move_timer - self.stateLog[-1].opp.startup
         #elapsedActiveFrames = 0
@@ -598,6 +613,9 @@ class TekkenGameState:
     def IsBotBeingKnockedDown(self):
         return self.stateLog[-1].bot.IsBeingKnockedDown()
 
+    def GetOppDamage(self):
+        return self.stateLog[-1].opp.attack_damage
+
     def GetMostRecentOppDamage(self):
         if self.stateLog[-1].opp.attack_damage > 0:
             return self.stateLog[-1].opp.attack_damage
@@ -608,6 +626,15 @@ class TekkenGameState:
             if state.bot.damage_taken < currentHealth:
                 return currentHealth - state.bot.damage_taken
         return 0
+
+    def GetOppLatestNonZeroStartupAndDamage(self):
+        for state in reversed(self.stateLog):
+            damage = state.opp.attack_damage
+            startup = state.opp.startup
+            if damage > 0 or startup > 0:
+                return (startup, damage)
+        return (0, 0)
+
 
     def IsBotJustGrounded(self):
         if (len(self.stateLog) > 2):
@@ -732,6 +759,9 @@ class TekkenGameState:
                             return False
                     return True
         return False
+
+    def IsOppAbleToAct(self):
+        return self.stateLog[-1].opp.IsAbleToAct()
 
     def GetBotInputState(self):
         return self.stateLog[-1].bot.GetInputState()

@@ -15,6 +15,8 @@ class BotFrameTrap(Bot):
         super().__init__(botCommands)
         self.SetFrameTrapCommandFromNotationString("+4")
         self.recorder = None
+        self.inputDelay = 0
+        self.inputDelayCode = None
 
 
     def Update(self, gameState: TekkenGameState):
@@ -31,10 +33,10 @@ class BotFrameTrap(Bot):
 
 
     def SetFrameTrapCommandFromNotationString(self, notation: str):
-        #try:
+        try:
             self.response = ParseMoveList(">, " + notation + ", >>")
-        #except:
-            #print("Could not parse move: " + str(notation))
+        except:
+            print("Could not parse move: " + str(notation))
 
     def Record(self):
         self.recorder = MatchRecorder()

@@ -63,6 +63,7 @@ class TekkenEncyclopedia:
                 self.second_opinion_timer = 0
 
             if self.second_opinion_timer > self.stored_opp_recovery:
+
                 self.second_opinion = False
                 self.second_opinion_timer = 0
 
@@ -75,7 +76,7 @@ class TekkenEncyclopedia:
                 if not self.active_frame_wait >= gameState.GetOppActiveFrames() + 1:
                     self.active_frame_wait += 1
                 else:
-                    self.active_frame_wait = 1
+                    gameState.ReturnToPresent()
 
                     if opp_id in self.FrameData:
                         frameDataEntry = self.FrameData[opp_id]
@@ -83,18 +84,27 @@ class TekkenEncyclopedia:
                         frameDataEntry = FrameDataEntry()
                         self.FrameData[opp_id] = frameDataEntry
 
+                    frameDataEntry.currentActiveFrame = gameState.GetLastActiveFrameHitWasOn(self.active_frame_wait)
+
+                    gameState.BackToTheFuture(self.active_frame_wait)
+
                     frameDataEntry.currentFrameAdvantage = '??'
                     frameDataEntry.move_id = opp_id
-                    frameDataEntry.damage = gameState.GetMostRecentOppDamage()
-
+                    #frameDataEntry.damage =
+                    frameDataEntry.damage = gameState.GetOppDamage()
                     frameDataEntry.startup = gameState.GetOppStartup()
+
+                    if frameDataEntry.damage == 0 and frameDataEntry.startup == 0:
+                        frameDataEntry.startup, frameDataEntry.damage = gameState.GetOppLatestNonZeroStartupAndDamage()
+
                     frameDataEntry.activeFrames = gameState.GetOppActiveFrames()
                     frameDataEntry.hitType = AttackType(gameState.GetOppAttackType()).name
                     if gameState.IsOppAttackThrow():
                         frameDataEntry.hitType += "_THROW"
 
                     fastestRageMoveFrames = 120
-                    if frameDataEntry.startup > fastestRageMoveFrames and gameState.DidOpponentUseRageRecently(frameDataEntry.startup - 1):
+                    longestRageMoveFrames = 150
+                    if frameDataEntry.startup > fastestRageMoveFrames: #and gameState.DidOpponentUseRageRecently(longestRageMoveFrames):
                         frameDataEntry.startup = gameState.GetBotElapsedFramesOfRageMove(frameDataEntry.startup)
 
                     try:
@@ -105,10 +115,15 @@ class TekkenEncyclopedia:
                     frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
                     gameState.ReturnToPresent()
 
-                    frameDataEntry.currentActiveFrame = gameState.GetLastActiveFrameHitWasOn(frameDataEntry.activeFrames)
+
 
                     time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
                     time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
+
+                    #print(gameState.IsOppAbleToAct())
+                    #if gameState.IsOppAbleToAct():
+                    #    time_till_recovery_opp = 0
+
                     new_frame_advantage_calc = time_till_recovery_bot - time_till_recovery_opp
 
                     if gameState.IsBotBlocking():
@@ -133,6 +148,8 @@ class TekkenEncyclopedia:
                     self.stored_opp_id = opp_id
 
                     gameState.BackToTheFuture(self.active_frame_wait)
+
+                    self.active_frame_wait = 1
                 gameState.ReturnToPresent()
         if self.isPlayerOne:
             gameState.FlipMirror()

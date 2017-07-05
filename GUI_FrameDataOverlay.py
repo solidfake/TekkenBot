@@ -18,6 +18,8 @@ class TextRedirector(object):
         self.fa_p1_var = fa_p1_var
         self.fa_p2_var = fa_p2_var
         self.style = style
+        self.widget.tag_config("p1", foreground="#93A1A1")
+        self.widget.tag_config("p2", foreground="#586E75")
 
     def write(self, output_str):
         self.stdout.write(output_str)
@@ -30,6 +32,8 @@ class TextRedirector(object):
                 self.widget.delete('2.0', '3.0')
                 self.widget.configure(state="disabled")
 
+
+        text_tag = None
         if 'NOW:' in output_str:
             out = output_str.split('NOW:')[0]
             fa = output_str.split('NOW:')[1][:3]
@@ -49,19 +53,21 @@ class TextRedirector(object):
                     self.style.configure('.', background='ivory2')
                 else:
                     #self.style.configure('.', background='#0099ff')
-                    self.style.configure('.', background='SteelBlue1')
+                    self.style.configure('.', background='DodgerBlue2')
                 if "p1:" in output_str:
                     self.fa_p1_var.set(fa)
                     out = out.replace('p1:', '')
+                    text_tag = 'p1'
                 else:
                     self.fa_p2_var.set(fa)
                     out = out.replace('p2:', '')
+                    text_tag = 'p2'
 
         else:
             out = output_str
 
         self.widget.configure(state="normal")
-        self.widget.insert("end", out)
+        self.widget.insert("end", out, text_tag)
         self.widget.configure(state="disabled")
         self.widget.see('0.0')
 
@@ -87,7 +93,8 @@ class GUI_FrameDataOverlay(Tk):
 
         self.attributes("-topmost", True)
 
-
+        #self.background_color = '#002B36'
+        self.background_color = 'gray10'
 
         if self.is_transparency:
             self.wm_attributes("-transparentcolor", "white")
@@ -96,11 +103,11 @@ class GUI_FrameDataOverlay(Tk):
         else:
             if is_windows_7:
                 print("Windows 7 detected. Disabling transparency.")
-            self.tranparency_color = 'black'
+            self.tranparency_color = self.background_color
         self.configure(background=self.tranparency_color)
 
         self.w = 820
-        self.h = 100
+        self.h = 96
         self.geometry( str(self.w) + 'x' + str(self.h))
 
         self.iconbitmap('TekkenData/tekken_bot_close.ico')
@@ -110,7 +117,7 @@ class GUI_FrameDataOverlay(Tk):
 
         self.s = Style()
         self.s.theme_use('alt')
-        self.s.configure('.', background='black')
+        self.s.configure('.', background=self.background_color)
         self.s.configure('.', foreground='black')
 
         Grid.columnconfigure(self, 0, weight=0)
@@ -150,7 +157,7 @@ class GUI_FrameDataOverlay(Tk):
         sys.stdout = self.stdout
 
     def create_padding_frame(self, col):
-        padding = Frame(width=20)
+        padding = Frame(width=10)
         padding.grid(row=0, column=col, rowspan=2, sticky=N + S + W + E)
         return padding
 
@@ -174,9 +181,14 @@ class GUI_FrameDataOverlay(Tk):
         textbox = Text(self, font=("Consolas, 14"), wrap=NONE, highlightthickness=0, relief='flat')
         # self.text.pack(side="top", fill="both", expand=True)
         textbox.grid(row=0, column=col, rowspan=2, sticky=N + S + W + E)
-        textbox.configure(background='black')
+        #textbox.configure(background='black')
         #textbox.configure(background='white')
-        textbox.configure(foreground='green')
+        textbox.configure(background=self.background_color)
+
+        textbox.configure(foreground='lawn green')
+        #textbox.configure(foreground='dark khaki')
+        #textbox.configure(foreground='#839496')
+        #textbox.configure(foreground='#657B83')
         return textbox
 
 

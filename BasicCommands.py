@@ -12,6 +12,7 @@ or read from a file.
 import random
 from ButtonCommandEnum import Command
 from TekkenGameState import TekkenGameState
+from MoveInfoEnums import InputAttackCodes, InputDirectionCodes
 
 class UniversalCommands:
     BACKDASH = list(zip(
@@ -86,23 +87,33 @@ class BotCommands:
         self.inputController = inputController
         self.commandBuffer = []
         self.commandIndex = 0
+        self.inputDelay = 0
+        self.inputDelayCode = None
 
-    def Update(self, gameState):
+    def Update(self, gameState: TekkenGameState):
+        #self.UpdateInputDelay(gameState)
+
         if self.updateFrame > 120:
             self.ClearCommands()
 
         if gameState.DidBotJustTakeDamage():
             self.ClearCommands()
 
+        self.UpdateCommandBuffer(gameState)
+
+
+
+    def UpdateCommandBuffer(self, gameState: TekkenGameState):
         if not self.IsAvailable():
             if self.updateFrame == self.commandBuffer[self.commandIndex][1]:
                 command = self.commandBuffer[self.commandIndex][0]
                 self.commandIndex += 1
                 self.ProcessCommand(command, gameState)
                 self.updateFrame = 0
-                self.Update(gameState)
+                self.UpdateCommandBuffer(gameState)
             else:
                 self.updateFrame += 1
+
         #print(self.updateFrame)
 
 
@@ -169,7 +180,8 @@ class BotCommands:
             self.commandIndex = 0
 
     def ProcessCommand(self, command, gameState:TekkenGameState):
-        #print(command)
+        self.CheckForInputDelay(command)
+
         if command == Command.TapForward:
             self.inputController.TapForward()
         if command == Command.TapBack:
@@ -280,6 +292,26 @@ class BotCommands:
                 self.commandIndex -= 1
                 self.commandBuffer[self.commandIndex] = (Command.FullRecovery, 1)
 
+    def CheckForInputDelay(self, command):
+        if self.inputDelayCode == None:
+            self.inputDelay = 0
+            if command == Command.Tap1:
+                self.inputDelayCode = [InputAttackCodes.x1, InputAttackCodes.x1x2, InputAttackCodes.x1x3, InputAttackCodes.x1x4, InputAttackCodes.x1x2x3, InputAttackCodes.x1x2x4, InputAttackCodes.x1x3x4]
+            else:
+                self.inputDelayCode = None
+
+    def UpdateInputDelay(self, gameState: TekkenGameState):
+        if self.inputDelayCode != None:
+            #if any((True for x in self.inputDelayCode if x in botInputState)):
+            if gameState.DidBotIdChangeXMovesAgo(1):
+                print(self.inputDelay)
+                self.inputDelayCode = None
+                self.inputDelay = 0
+            else:
+                self.inputDelay += 1
+                if self.inputDelay > 40:
+                    self.inputDelayCode = None
+                    self.inputDelay = 0
 
     def ClearCommands(self):
         self.commandBuffer = []

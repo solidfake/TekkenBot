@@ -87,6 +87,30 @@ class ComplexMoveStates(Enum):  #these seem difficult to pin down what they are 
 
     SIDEWALK = 28 #left or right
 
+class StunStates(Enum):
+    NONE = 0
+    BLOCK = 0x01000100
+    GETTING_HIT = 256
+    DOING_THE_HITTING = 0x10000
+    DOING_A_PUNISH = 0x10100 #One frame at the begining of a punish
+
+class RawCancelStates(Enum):
+    STUCK = 0 #Pressing buttons doesn't do anything
+    UNKNOWN_1 = 1 #1 frames occurs during Alisa's u/f 1+2 command grab, also occurs during asuka's parry escapes
+    CANCELABLE = 0x00010000
+    BUFFERABLE = 0x01010000 #coming out of attack for sure, probably block and hit stun too?
+    UNKNOWN_2 = 2 #Alisa's d+3 and chainsaw stance moves cause this, maybe it's a conditional buffer?  Also triggers during normal throws
+    MOVE_ENDING_1 = 0x00010001  # ??? 3 frames at the end of cancel window??? alisa d+2
+    MOVE_ENDING_2 = 0x00010002 #??? 1 frames near the end (or at the end?) of cancelable moves
+    #Theory: 1 and 2 refer to 'parryable' states, these include the active frames of moves and the throw tech windows of moves
+    # the next bit is the cancelable/not cancelable bit and finally there's a 'is being buffered' bit
+
+class CancelStatesBitmask(Enum):
+    CANCELABLE =  0x00010000
+    BUFFERABLE =  0x01010000
+    PARRYABLE_1 = 0x00000001
+    PARRYABLE_2 = 0x00000002
+
 class InputDirectionCodes(Enum):
     FIGHT_START = 0
 
