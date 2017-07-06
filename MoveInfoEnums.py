@@ -53,9 +53,9 @@ class SimpleMoveStates(Enum):
 
     UNKNOWN_23 = 23 #Kuma
 
-    UNKNOWN_24 = 24 #Yoshimitsu
+    AIRBORNE_24 = 24 #Yoshimitsu
     AIRBORNE = 25
-    UNKNOWN_26 = 26 #Eliza
+    AIRBORNE_26 = 26 #Eliza. Chloe
     FLY = 27 #Devil Jin 3+4
 
 

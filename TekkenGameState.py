@@ -155,16 +155,24 @@ class TekkenGameReader:
 
                     bot_facing = self.GetValueFromAddress(processHandle, player_data_second_address + GameDataAddress.facing.value, IsDataAFloat(data))
 
-                    #positionArrays = {}
-                    #for startingAddress in valuesOfPositionArrays:
-                    #    positionArrays[startingAddress[0]] = []
-                    #    for i in range(16):
-                    #        positionOffset = 32 #our xyz coordinate is 32 bytes, a 4 byte x, y, and z value followed by five 4 byte values that don't change
-                    #        positionArrays[startingAddress[0]].append(TekkenGameReader.GetValueFromAddress(processHandle, player_data_second_address + startingAddress[1] + (i * positionOffset), startingAddress[2]))
+                    positionArrays = {}
+
+                    for startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z):
+                        positionOffset = 32  # our xyz coordinate is 32 bytes, a 4 byte x, y, and z value followed by five 4 byte values that don't change
+                        p1_coord_array = []
+                        p2_coord_array = []
+                        for i in range(16):
+                            p1_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset), True))
+                            p2_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset) + MemoryAddressOffsets.p2_data_offset.value, True))
+                        p1_bot.player_data_dict[startingAddress] = p1_coord_array
+                        p2_bot.player_data_dict[startingAddress] = p2_coord_array
+                        #print("numpy.array([" + xyz_coord + "])")
+                    #print("--------------------")
+
 
                     #for key in positionArrays:
-                    #    positionArray = positionArrays[key]
-                    #    gameData[key] = sum(positionArray)/float(len(positionArray))
+                        #positionArray = positionArrays[key]
+                        #gameData[key] = sum(positionArray)/float(len(positionArray))
 
                     if self.original_facing == None and best_frame_count > 0:
                         self.original_facing = bot_facing > 0
@@ -210,13 +218,19 @@ class BotSnapshot:
         self.rage_button_flag = d[PlayerDataAddress.input_attack] >= InputAttackCodes.xRAGE.value
         self.stun_state = StunStates(d[PlayerDataAddress.stun_type])
 
-
         cancel_window_bitmask = d[PlayerDataAddress.cancel_window]
-        self.cwb = cancel_window_bitmask
         self.is_cancelable = (CancelStatesBitmask.CANCELABLE.value & cancel_window_bitmask) > 0
         self.is_bufferable = (CancelStatesBitmask.BUFFERABLE.value & cancel_window_bitmask) > 0
         self.is_parry_1 = (CancelStatesBitmask.PARRYABLE_1.value & cancel_window_bitmask) > 0
         self.is_parry_2 = (CancelStatesBitmask.PARRYABLE_2.value & cancel_window_bitmask) > 0
+
+        self.highest_y = max(d[PlayerDataAddress.y])
+        self.lowest_y = min(d[PlayerDataAddress.y])
+
+
+    def PrintYInfo(self):
+        #print("h: " + str(self.highest_y) + " l: " + str(self.lowest_y) + ' d: ' + str(self.highest_y - self.lowest_y))
+        print('{:.4f}, {:.4f}, {:.4f}'.format(self.highest_y, self.lowest_y, self.highest_y - self.lowest_y))
 
     def GetInputState(self):
         return (self.input_direction, self.input_button, self.rage_button_flag)
@@ -264,11 +278,17 @@ class BotSnapshot:
     def IsHoldingUpBack(self):
         return self.input_direction == InputDirectionCodes.ub
 
+    def IsTechnicalCrouch(self):
+        return self.simple_state in (SimpleMoveStates.CROUCH, SimpleMoveStates.CROUCH_BACK, SimpleMoveStates.CROUCH_FORWARD)
+
+    def IsTechnicalJump(self):
+        return self.simple_state in (SimpleMoveStates.AIRBORNE, SimpleMoveStates.AIRBORNE_26, SimpleMoveStates.AIRBORNE_24)
+
     def IsBeingKnockedDown(self):
         return self.simple_state == SimpleMoveStates.KNOCKDOWN
 
     def IsWhileStanding(self):
-        return (self.simple_state in {SimpleMoveStates.CROUCH, SimpleMoveStates.CROUCH_BACK, SimpleMoveStates.CROUCH_FORWARD}) or (self.IsBlocking() and self.simple_state == SimpleMoveStates.STANDING_FORWARD)
+        return (self.simple_state in {SimpleMoveStates.CROUCH, SimpleMoveStates.CROUCH_BACK, SimpleMoveStates.CROUCH_FORWARD})
 
     def IsWallSplat(self):
         return self.move_id == 2396 or self.move_id == 2387 or self.move_id == 2380 or self.move_id == 2382 #TODO: use the wall splat states in ComplexMoveStates #move ids may be different for 'big' characters
@@ -768,6 +788,21 @@ class TekkenGameState:
 
     def GetOppInputState(self):
         return self.stateLog[-1].opp.GetInputState()
+
+    def GetOppTechnicalStates(self):
+        opp_id = self.stateLog[-1].opp.move_id
+        tc_frames = []
+        tj_frames = []
+        found = False
+        for state in reversed(self.stateLog):
+            if state.opp.move_id == opp_id:
+                found = True
+                tc_frames.append(state.opp.IsTechnicalCrouch())
+                tj_frames.append(state.opp.IsTechnicalJump())
+            elif found:
+                break
+
+        return (tc_frames.count(True), tj_frames.count(True))
 
     def IsFightOver(self):
         return self.duplicateFrameObtained > 5

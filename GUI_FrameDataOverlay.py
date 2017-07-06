@@ -146,7 +146,7 @@ class GUI_FrameDataOverlay(Tk):
         self.redirector = TextRedirector(self.stdout, self.text, self.s, self.fa_p1_var, self.fa_p2_var)
         self.text.configure(state="normal")
         self.text.delete("1.0", "end")
-        self.text.insert("1.0", "input | type | startup | damage | block | hit | active\n")
+        self.text.insert("1.0", "input | type | startup | damage | block | hit | active | notes\n")
 
         self.text.configure(state="disabled")
 

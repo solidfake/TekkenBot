@@ -38,6 +38,10 @@ class TekkenEncyclopedia:
     def Update(self, gameState: TekkenGameState):
         if self.isPlayerOne:
             gameState.FlipMirror()
+            #gameState.stateLog[-1].opp.PrintYInfo()
+            #print(gameState.GetOppTechnicalStates())
+            #print(gameState.stateLog[-1].opp.simple_state)
+            #print(gameState.stateLog[-1].opp.complex_state)
 
 
         #self.CheckJumpFrameDataFallback(gameState)
@@ -113,6 +117,9 @@ class TekkenEncyclopedia:
                         frameDataEntry.recovery = "?!"
 
                     frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
+
+                    frameDataEntry.TC, frameDataEntry.TJ = gameState.GetOppTechnicalStates()
+
                     gameState.ReturnToPresent()
 
 
@@ -133,6 +140,8 @@ class TekkenEncyclopedia:
                     else:
                         frameDataEntry.onNormalHit = new_frame_advantage_calc
                         frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onNormalHit)
+
+                    #print(gameState.stateLog[-1].bot.IsWhileStanding())
 
                     if self.isPlayerOne:
                         prefix = "p1: "
@@ -169,6 +178,8 @@ class FrameDataEntry:
         self.currentFrameAdvantage = '??'
         self.currentActiveFrame = '??'
         self.input = '??'
+        self.TC = 0
+        self.TJ = 0
 
     def WithPlusIfNeeded(self, value):
         try:
@@ -186,8 +197,15 @@ class FrameDataEntry:
         return s
 
     def __repr__(self):
-        return "" + str(self.input).rjust(len('input')) + " | " + str(self.hitType)[:7] +  " | " + str(self.startup).center(len('startup')) + " | " + str(self.damage).center(len('  damage  ')) + " | " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + " | " \
-               + self.WithPlusIfNeeded(self.onNormalHit) +  " | " + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) \
+
+        notes = ''
+        if self.TC > 0 :
+            notes += 'TC' #+ str(self.TC)
+        if self.TJ > 0:
+            notes += 'TJ' #+ str(self.TJ)
+
+        return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "|" + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \
+               + self.WithPlusIfNeeded(self.onNormalHit) +  "|" + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) + '| ' + notes \
                + " NOW:" + str(self.currentFrameAdvantage)
 
                 #+ " Recovery: " + str(self.recovery)
