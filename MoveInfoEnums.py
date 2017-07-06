@@ -63,13 +63,13 @@ class SimpleMoveStates(Enum):
 class ComplexMoveStates(Enum):  #these seem difficult to pin down what they are exactly
     STILL = 0
 
-    ATTACK_STARTING_1 = 1 #during startup
-    ATTACK_STARTING_2= 2 #f+4 with Ling
-    ATTACK_STARTING_3 = 3 #during startup
-    ATTACK_STARTING_4 = 4  # elisa, one of the moves in the move list
-    ATTACK_STARTING_5 = 5  #inferred but not tested, with Ling
-    ATTACK_STARTING_6 = 6  #Alisa's b+2, 1 has this
-    ATTACK_STARTING_7 = 7 #some moves have 7 instead of 3 or
+    ATTACK_STARTING_1 = 1 #during startup this value seems to occur mainly on tracking moves
+    ATTACK_STARTING_2= 2 #f+4 with Ling, extremely rare
+    ATTACK_STARTING_3 = 3 #very common
+    ATTACK_STARTING_4 = 4  # elisa, one of the moves in the move list, extremely rare
+    ATTACK_STARTING_5 = 5  #uncommon
+    ATTACK_STARTING_6 = 6  #Alisa's b+2, 1 has this, extremely rare
+    ATTACK_STARTING_7 = 7 #very common
 
     ATTACK_ENDING = 10 #after startup  ###Kazuya's ff+3 doesn't have a startup or attack ending flag, it's just 0 the whole way through ???  ###Lili's d/b+4 doesn't have it after being blocked
     BLOCK = 11

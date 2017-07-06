@@ -217,6 +217,7 @@ class BotSnapshot:
         self.input_button = InputAttackCodes(d[PlayerDataAddress.input_attack] % InputAttackCodes.xRAGE.value)
         self.rage_button_flag = d[PlayerDataAddress.input_attack] >= InputAttackCodes.xRAGE.value
         self.stun_state = StunStates(d[PlayerDataAddress.stun_type])
+        self.power_crush_flag = d[PlayerDataAddress.power_crush] > 0
 
         cancel_window_bitmask = d[PlayerDataAddress.cancel_window]
         self.is_cancelable = (CancelStatesBitmask.CANCELABLE.value & cancel_window_bitmask) > 0
@@ -284,6 +285,12 @@ class BotSnapshot:
     def IsTechnicalJump(self):
         return self.simple_state in (SimpleMoveStates.AIRBORNE, SimpleMoveStates.AIRBORNE_26, SimpleMoveStates.AIRBORNE_24)
 
+    def IsHoming(self):
+        return self.complex_state in (ComplexMoveStates.ATTACK_STARTING_1, ComplexMoveStates.ATTACK_STARTING_2)
+
+    def IsPowerCrush(self):
+        return self.power_crush_flag
+
     def IsBeingKnockedDown(self):
         return self.simple_state == SimpleMoveStates.KNOCKDOWN
 
@@ -299,6 +306,9 @@ class BotSnapshot:
     def IsAbleToAct(self):
         #print(self.cwb)
         return self.is_cancelable
+
+    def IsBufferable(self):
+        return self.is_bufferable
 
     def IsAttackStarting(self):
         #return self.complex_state in {ComplexMoveStates.ATTACK_STARTING_1, ComplexMoveStates.ATTACK_STARTING_2, ComplexMoveStates.ATTACK_STARTING_3, ComplexMoveStates.ATTACK_STARTING_5, ComplexMoveStates.ATTACK_STARTING_6, ComplexMoveStates.ATTACK_STARTING_7} #doesn't work on several of Kazuya's moves, maybe others
@@ -793,16 +803,23 @@ class TekkenGameState:
         opp_id = self.stateLog[-1].opp.move_id
         tc_frames = []
         tj_frames = []
+        cancel_frames = []
+        pc_frames = []
+        homing_frames = []
         found = False
         for state in reversed(self.stateLog):
             if state.opp.move_id == opp_id:
                 found = True
                 tc_frames.append(state.opp.IsTechnicalCrouch())
                 tj_frames.append(state.opp.IsTechnicalJump())
+                cancel_frames.append(state.opp.IsAbleToAct())
+                pc_frames.append(state.opp.IsPowerCrush())
+                homing_frames.append(state.opp.IsHoming())
+
             elif found:
                 break
 
-        return (tc_frames.count(True), tj_frames.count(True))
+        return (tc_frames.count(True), tj_frames.count(True), cancel_frames.count(True), pc_frames.count(True), homing_frames.count(True))
 
     def IsFightOver(self):
         return self.duplicateFrameObtained > 5

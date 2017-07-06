@@ -42,6 +42,14 @@ class TekkenEncyclopedia:
             #print(gameState.GetOppTechnicalStates())
             #print(gameState.stateLog[-1].opp.simple_state)
             #print(gameState.stateLog[-1].opp.complex_state)
+            if len(gameState.stateLog) > 2:
+                if gameState.stateLog[-1].bot.complex_state != gameState.stateLog[-2].bot.complex_state:
+                    pass
+                    print(gameState.stateLog[-1].bot.complex_state)
+                if gameState.stateLog[-1].opp.simple_state != gameState.stateLog[-2].opp.simple_state:
+                    #print(gameState.stateLog[-1].opp.simple_state)
+                    pass
+
 
 
         #self.CheckJumpFrameDataFallback(gameState)
@@ -67,7 +75,7 @@ class TekkenEncyclopedia:
                 self.second_opinion_timer = 0
 
             if self.second_opinion_timer > self.stored_opp_recovery:
-
+                #print(gameState.stateLog[-1].opp.IsBufferable())
                 self.second_opinion = False
                 self.second_opinion_timer = 0
 
@@ -118,7 +126,9 @@ class TekkenEncyclopedia:
 
                     frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
 
-                    frameDataEntry.TC, frameDataEntry.TJ = gameState.GetOppTechnicalStates()
+                    frameDataEntry.TC, frameDataEntry.TJ, frameDataEntry.cancelFrames, frameDataEntry.powerCrushFrames, frameDataEntry.homingFrames = gameState.GetOppTechnicalStates()
+
+
 
                     gameState.ReturnToPresent()
 
@@ -180,6 +190,9 @@ class FrameDataEntry:
         self.input = '??'
         self.TC = 0
         self.TJ = 0
+        self.cancelFrames = 0
+        self.powerCrushFrames = 0
+        self.homingFrames = 0
 
     def WithPlusIfNeeded(self, value):
         try:
@@ -203,6 +216,12 @@ class FrameDataEntry:
             notes += 'TC' #+ str(self.TC)
         if self.TJ > 0:
             notes += 'TJ' #+ str(self.TJ)
+        #if self.powerCrushFrames > 0:
+            #notes += 'PC' #+ str(self.TJ)
+        #if self.homingFrames > 0:
+            #notes += 'HOM' #+ str(self.TJ)
+        #if self.cancelFrames > 0:
+        #    notes += 'x' + str(self.cancelFrames)
 
         return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "|" + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \
                + self.WithPlusIfNeeded(self.onNormalHit) +  "|" + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) + '| ' + notes \
