@@ -111,6 +111,11 @@ class CancelStatesBitmask(Enum):
     PARRYABLE_1 = 0x00000001
     PARRYABLE_2 = 0x00000002
 
+class JumpFlagBitmask(Enum):
+    #GROUND = 0x800000
+    #LANDING_OR_STANDING = 0x810000
+    JUMP = 0x820000
+
 class InputDirectionCodes(Enum):
     FIGHT_START = 0
 

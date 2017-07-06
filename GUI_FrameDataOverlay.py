@@ -9,6 +9,7 @@ from _FrameDataLauncher import FrameDataLauncher
 import sys
 from ConfigReader import ConfigReader
 import platform
+import time
 
 
 class TextRedirector(object):
@@ -82,8 +83,9 @@ class GUI_FrameDataOverlay(Tk):
         self.is_draggable_window = self.tekken_config.get_property("indepedent_window_mode", True, lambda x: not "0" in str(x))
         self.is_minimize_on_lost_focus = self.tekken_config.get_property("minimize_on_lost_focus", True, lambda x: not "0" in str(x))
         self.is_transparency = self.tekken_config.get_property("transparency", not is_windows_7, lambda x: not "0" in str(x))
+        self.enable_nerd_data = self.tekken_config.get_property("data_for_nerds", False, lambda x: not "0" in str(x))
 
-        self.launcher = FrameDataLauncher()
+        self.launcher = FrameDataLauncher(self.enable_nerd_data)
 
         self.overlay_visible = False
 
@@ -106,8 +108,14 @@ class GUI_FrameDataOverlay(Tk):
             self.tranparency_color = self.background_color
         self.configure(background=self.tranparency_color)
 
+
+
         self.w = 820
         self.h = 96
+
+        if self.enable_nerd_data:
+            self.w += 400
+
         self.geometry( str(self.w) + 'x' + str(self.h))
 
         self.iconbitmap('TekkenData/tekken_bot_close.ico')
@@ -193,7 +201,10 @@ class GUI_FrameDataOverlay(Tk):
 
 
     def update_launcher(self):
+        time1 = time.time()
         self.launcher.Update()
+        time2 = time.time()
+        elapsed_time = 1000 * (time2 - time1)
 
         if not self.is_draggable_window:
             tekken_rect = self.launcher.gameState.gameReader.GetWindowRect()
@@ -211,8 +222,8 @@ class GUI_FrameDataOverlay(Tk):
             self.restore_stdout()
         else:
             self.redirect_stdout()
-
-        self.after(7, self.update_launcher)
+        #print(10 - int(round(elapsed_time)))
+        self.after(min(2, 8 - int(round(elapsed_time))), self.update_launcher)
 
     def hide(self):
         if self.is_minimize_on_lost_focus and not self.is_draggable_window:

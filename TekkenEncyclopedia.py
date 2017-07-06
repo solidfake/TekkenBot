@@ -8,9 +8,11 @@ from TekkenGameState import TekkenGameState
 import sys
 
 class TekkenEncyclopedia:
-    def __init__(self, isPlayerOne = False):
+    def __init__(self, isPlayerOne = False, print_extended_frame_data = False):
         self.FrameData = {}
         self.isPlayerOne = isPlayerOne
+        self.print_extended_frame_data = print_extended_frame_data
+
         self.active_frame_wait = 1
         self.second_opinion = False
         self.second_opinion_timer = 0
@@ -18,6 +20,7 @@ class TekkenEncyclopedia:
         self.stored_opp_id = 0
         self.stored_opp_recovery = 0
         self.stored_bot_recovery = 0
+
 
     def GetFrameAdvantage(self, moveId, isOnBlock = True):
         if moveId in self.FrameData:
@@ -45,7 +48,7 @@ class TekkenEncyclopedia:
             if len(gameState.stateLog) > 2:
                 if gameState.stateLog[-1].bot.complex_state != gameState.stateLog[-2].bot.complex_state:
                     pass
-                    print(gameState.stateLog[-1].bot.complex_state)
+                    #print(gameState.stateLog[-1].bot.complex_state)
                 if gameState.stateLog[-1].opp.simple_state != gameState.stateLog[-2].opp.simple_state:
                     #print(gameState.stateLog[-1].opp.simple_state)
                     pass
@@ -93,7 +96,7 @@ class TekkenEncyclopedia:
                     if opp_id in self.FrameData:
                         frameDataEntry = self.FrameData[opp_id]
                     else:
-                        frameDataEntry = FrameDataEntry()
+                        frameDataEntry = FrameDataEntry(self.print_extended_frame_data)
                         self.FrameData[opp_id] = frameDataEntry
 
                     frameDataEntry.currentActiveFrame = gameState.GetLastActiveFrameHitWasOn(self.active_frame_wait)
@@ -119,18 +122,17 @@ class TekkenEncyclopedia:
                     if frameDataEntry.startup > fastestRageMoveFrames: #and gameState.DidOpponentUseRageRecently(longestRageMoveFrames):
                         frameDataEntry.startup = gameState.GetBotElapsedFramesOfRageMove(frameDataEntry.startup)
 
-                    try:
-                        frameDataEntry.recovery = gameState.GetOppRecovery() - frameDataEntry.startup - frameDataEntry.activeFrames + 1
-                    except:
-                        frameDataEntry.recovery = "?!"
-
+                    frameDataEntry.recovery = gameState.GetOppRecovery()
                     frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
 
-                    frameDataEntry.TC, frameDataEntry.TJ, frameDataEntry.cancelFrames, frameDataEntry.powerCrushFrames, frameDataEntry.homingFrames = gameState.GetOppTechnicalStates()
-
-
-
                     gameState.ReturnToPresent()
+
+
+                    frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates()
+
+
+
+
 
 
 
@@ -174,7 +176,8 @@ class TekkenEncyclopedia:
             gameState.FlipMirror()
 
 class FrameDataEntry:
-    def __init__(self):
+    def __init__(self, print_extended = False):
+        self.print_extended = print_extended
         self.move_id = '??'
         self.startup = '??'
         self.hitType = '??'
@@ -188,11 +191,7 @@ class FrameDataEntry:
         self.currentFrameAdvantage = '??'
         self.currentActiveFrame = '??'
         self.input = '??'
-        self.TC = 0
-        self.TJ = 0
-        self.cancelFrames = 0
-        self.powerCrushFrames = 0
-        self.homingFrames = 0
+        self.technical_state_reports = []
 
     def WithPlusIfNeeded(self, value):
         try:
@@ -212,19 +211,24 @@ class FrameDataEntry:
     def __repr__(self):
 
         notes = ''
-        if self.TC > 0 :
-            notes += 'TC' #+ str(self.TC)
-        if self.TJ > 0:
-            notes += 'TJ' #+ str(self.TJ)
-        #if self.powerCrushFrames > 0:
-            #notes += 'PC' #+ str(self.TJ)
-        #if self.homingFrames > 0:
-            #notes += 'HOM' #+ str(self.TJ)
-        #if self.cancelFrames > 0:
-        #    notes += 'x' + str(self.cancelFrames)
 
-        return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "|" + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \
-               + self.WithPlusIfNeeded(self.onNormalHit) +  "|" + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) + '| ' + notes \
+        if self.print_extended:
+            notes += str(self.recovery) + "f "
+
+        for report in self.technical_state_reports:
+            if not self.print_extended:
+                if 'TC' in report.name and report.is_present():
+                    notes += 'TC'
+                if 'TJ' in report.name and report.is_present():
+                    notes += 'TJ'
+
+            elif self.print_extended:
+                if report.is_present():
+                    notes += str(report)
+
+
+        return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "| " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \
+               + self.WithPlusIfNeeded(self.onNormalHit) +  " |" + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) + '| ' + notes \
                + " NOW:" + str(self.currentFrameAdvantage)
 
                 #+ " Recovery: " + str(self.recovery)

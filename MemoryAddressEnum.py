@@ -29,6 +29,7 @@ class PlayerDataAddress(Enum):
     throw_flag = 0x3F8
 
     power_crush = 0x4f6
+    jump_flags = 0x544
     cancel_window = 0x568
     damage_taken = 0x6EC
 

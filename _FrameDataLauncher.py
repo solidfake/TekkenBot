@@ -3,10 +3,10 @@ from TekkenEncyclopedia import TekkenEncyclopedia
 import time
 
 class FrameDataLauncher:
-    def __init__(self):
+    def __init__(self, print_extended_frame_data=False):
         self.gameState = TekkenGameState()
-        self.cyclopedia_p2 = TekkenEncyclopedia(False)
-        self.cyclopedia_p1 = TekkenEncyclopedia(True)
+        self.cyclopedia_p2 = TekkenEncyclopedia(False, print_extended_frame_data)
+        self.cyclopedia_p1 = TekkenEncyclopedia(True, print_extended_frame_data)
 
 
     def Update(self):

@@ -24,6 +24,7 @@ import PIDSearcher
 from MoveInfoEnums import *
 from MemoryAddressEnum import *
 from ConfigReader import ConfigReader
+from MoveDataReport import MoveDataReport
 
 #player_data_pointer_offset = 0x03360450 #pc patch 1
 #player_data_pointer_offset = 0x0337A450 #pc patch 0
@@ -220,6 +221,7 @@ class BotSnapshot:
         self.power_crush_flag = d[PlayerDataAddress.power_crush] > 0
 
         cancel_window_bitmask = d[PlayerDataAddress.cancel_window]
+
         self.is_cancelable = (CancelStatesBitmask.CANCELABLE.value & cancel_window_bitmask) > 0
         self.is_bufferable = (CancelStatesBitmask.BUFFERABLE.value & cancel_window_bitmask) > 0
         self.is_parry_1 = (CancelStatesBitmask.PARRYABLE_1.value & cancel_window_bitmask) > 0
@@ -227,6 +229,8 @@ class BotSnapshot:
 
         self.highest_y = max(d[PlayerDataAddress.y])
         self.lowest_y = min(d[PlayerDataAddress.y])
+
+        self.is_jump = d[PlayerDataAddress.jump_flags] & JumpFlagBitmask.JUMP.value == JumpFlagBitmask.JUMP.value
 
 
     def PrintYInfo(self):
@@ -283,10 +287,16 @@ class BotSnapshot:
         return self.simple_state in (SimpleMoveStates.CROUCH, SimpleMoveStates.CROUCH_BACK, SimpleMoveStates.CROUCH_FORWARD)
 
     def IsTechnicalJump(self):
-        return self.simple_state in (SimpleMoveStates.AIRBORNE, SimpleMoveStates.AIRBORNE_26, SimpleMoveStates.AIRBORNE_24)
+        return self.is_jump
+        #return self.simple_state in (SimpleMoveStates.AIRBORNE, SimpleMoveStates.AIRBORNE_26, SimpleMoveStates.AIRBORNE_24)
 
-    def IsHoming(self):
-        return self.complex_state in (ComplexMoveStates.ATTACK_STARTING_1, ComplexMoveStates.ATTACK_STARTING_2)
+
+
+    def IsHoming1(self):
+        return self.complex_state == ComplexMoveStates.ATTACK_STARTING_1
+
+    def IsHoming2(self):
+        return self.complex_state == ComplexMoveStates.ATTACK_STARTING_2
 
     def IsPowerCrush(self):
         return self.power_crush_flag
@@ -306,6 +316,12 @@ class BotSnapshot:
     def IsAbleToAct(self):
         #print(self.cwb)
         return self.is_cancelable
+
+    def IsParryable1(self):
+        return self.is_parry_1
+
+    def IsParryable2(self):
+        return self.is_parry_2
 
     def IsBufferable(self):
         return self.is_bufferable
@@ -805,7 +821,10 @@ class TekkenGameState:
         tj_frames = []
         cancel_frames = []
         pc_frames = []
-        homing_frames = []
+        homing_frames1 = []
+        homing_frames2 = []
+        parryable_frames1 = []
+        parryable_frames2 = []
         found = False
         for state in reversed(self.stateLog):
             if state.opp.move_id == opp_id:
@@ -814,12 +833,23 @@ class TekkenGameState:
                 tj_frames.append(state.opp.IsTechnicalJump())
                 cancel_frames.append(state.opp.IsAbleToAct())
                 pc_frames.append(state.opp.IsPowerCrush())
-                homing_frames.append(state.opp.IsHoming())
-
+                homing_frames1.append(state.opp.IsHoming1())
+                homing_frames2.append(state.opp.IsHoming2())
+                parryable_frames1.append(state.opp.IsParryable1())
+                parryable_frames2.append(state.opp.IsParryable2())
             elif found:
                 break
 
-        return (tc_frames.count(True), tj_frames.count(True), cancel_frames.count(True), pc_frames.count(True), homing_frames.count(True))
+        return [
+            MoveDataReport('TC', tc_frames),
+            MoveDataReport('TJ', tj_frames),
+            MoveDataReport('xx', cancel_frames),
+            MoveDataReport('PC', pc_frames),
+            MoveDataReport('HOM1', homing_frames1),
+            MoveDataReport('HOM2', homing_frames2),
+            MoveDataReport('PY1', parryable_frames1),
+            MoveDataReport('PY2', parryable_frames2),
+        ]
 
     def IsFightOver(self):
         return self.duplicateFrameObtained > 5
