@@ -45,7 +45,12 @@ def GetModuleAddressByPIDandName(pid, name):
         me32 = MODULEENTRY32()
         me32.dwSize = sizeof( MODULEENTRY32 )
         #me32.dwSize = 5000
+
         hModuleSnap = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, ProcessID )
+        if hModuleSnap == -1:
+            print('CreateToolhelp32Snapshot Error [%d]' % GetLastError())
+            print('This is the part that fails on Python 3.6, try 3.4 or 3.5')
+
         ret = Module32First( hModuleSnap, pointer(me32) )
         if ret == 0 :
             print('ListProcessModules() Error on Module32First[%d]' % GetLastError())
