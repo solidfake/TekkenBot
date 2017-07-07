@@ -52,6 +52,9 @@ class TekkenEncyclopedia:
                 if gameState.stateLog[-1].opp.simple_state != gameState.stateLog[-2].opp.simple_state:
                     #print(gameState.stateLog[-1].opp.simple_state)
                     pass
+                if gameState.stateLog[-1].opp.move_id != gameState.stateLog[-2].opp.move_id:
+                    #print(gameState.stateLog[-1].opp.move_id)
+                    pass
 
 
 
@@ -125,14 +128,9 @@ class TekkenEncyclopedia:
                     frameDataEntry.recovery = gameState.GetOppRecovery()
                     frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
 
+                    frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates(frameDataEntry.startup)
+
                     gameState.ReturnToPresent()
-
-
-                    frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates()
-
-
-
-
 
 
 
@@ -203,9 +201,11 @@ class FrameDataEntry:
             return str(value)
 
     def InputTupleToInputString(self, inputTuple):
-        s = (inputTuple[0].name + inputTuple[1].name.replace('x', '+')).replace('N', '')
-        if inputTuple[2]:
-            s += "+RA"
+        s = ""
+        for input in inputTuple:
+            s += (input[0].name + input[1].name.replace('x', '+')).replace('N', '')
+        #if input[2]:
+            #s += "+RA"
         return s
 
     def __repr__(self):
@@ -218,9 +218,9 @@ class FrameDataEntry:
         for report in self.technical_state_reports:
             if not self.print_extended:
                 if 'TC' in report.name and report.is_present():
-                    notes += 'TC'
+                    notes += str(report)
                 if 'TJ' in report.name and report.is_present():
-                    notes += 'TJ'
+                    notes += str(report)
 
             elif self.print_extended:
                 if report.is_present():

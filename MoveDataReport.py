@@ -19,7 +19,7 @@ class MoveDataReport:
                 stop = -1
 
         if stop < 0 and start >= 0:
-            start_stop_pairs.append((start, total_frames))
+            start_stop_pairs.append((start, ''))
 
         return start_stop_pairs
 

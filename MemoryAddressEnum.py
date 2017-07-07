@@ -47,7 +47,9 @@ class PlayerDataAddress(Enum):
 
     rage_flag = 0x99A
 
+    mystery_state = 0x000
 
+    juggle_height = 0x11D8
 
     #super meter p1 0x9F4
 

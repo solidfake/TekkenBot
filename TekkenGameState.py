@@ -26,15 +26,6 @@ from MemoryAddressEnum import *
 from ConfigReader import ConfigReader
 from MoveDataReport import MoveDataReport
 
-#player_data_pointer_offset = 0x03360450 #pc patch 1
-#player_data_pointer_offset = 0x0337A450 #pc patch 0
-
-#charSelectValue = ("char_select", 0x03338618, 0x3CC, False)
-
-
-#p2 values are 0x6690 more than p1 values
-#input buffer at 0x714C???
-
 k32 = c.windll.kernel32
 
 OpenProcess = k32.OpenProcess
@@ -185,19 +176,19 @@ class TekkenGameReader:
                     #bot_facing = self.GetValueFromAddress(processHandle, player_data_second_address + GameDataAddress.facing.value, IsDataAFloat(offset_enum))
                     bot_facing = self.GetValueFromFrame(player_data_frame, GameDataAddress.facing.value, False)
 
-                    for startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z):
-                        positionOffset = 32  # our xyz coordinate is 32 bytes, a 4 byte x, y, and z value followed by five 4 byte values that don't change
-                        p1_coord_array = []
-                        p2_coord_array = []
-                        for i in range(16):
-                            #p1_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset), True))
-                            #p2_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset) + MemoryAddressOffsets.p2_data_offset.value, True))
-                            p1_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), False, True))
-                            p2_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), True, True))
-                        p1_bot.player_data_dict[startingAddress] = p1_coord_array
-                        p2_bot.player_data_dict[startingAddress] = p2_coord_array
-                        #print("numpy.array([" + xyz_coord + "])")
-                    #print("--------------------")
+                    #for startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z):
+                    #    positionOffset = 32  # our xyz coordinate is 32 bytes, a 4 byte x, y, and z value followed by five 4 byte values that don't change
+                    #    p1_coord_array = []
+                    #    p2_coord_array = []
+                    #    for i in range(16):
+                    #        #p1_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset), True))
+                    #        #p2_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset) + MemoryAddressOffsets.p2_data_offset.value, True))
+                    #        p1_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), False, True))
+                    #        p2_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), True, True))
+                    #    p1_bot.player_data_dict[startingAddress] = p1_coord_array
+                    #    p2_bot.player_data_dict[startingAddress] = p2_coord_array
+                    #    #print("numpy.array([" + xyz_coord + "])")
+                    ##print("--------------------")
 
                     if self.original_facing == None and best_frame_count > 0:
                         self.original_facing = bot_facing > 0
@@ -251,10 +242,12 @@ class BotSnapshot:
         self.is_parry_1 = (CancelStatesBitmask.PARRYABLE_1.value & cancel_window_bitmask) > 0
         self.is_parry_2 = (CancelStatesBitmask.PARRYABLE_2.value & cancel_window_bitmask) > 0
 
-        self.highest_y = max(d[PlayerDataAddress.y])
-        self.lowest_y = min(d[PlayerDataAddress.y])
+        #self.highest_y = max(d[PlayerDataAddress.y])
+        #self.lowest_y = min(d[PlayerDataAddress.y])
 
         self.is_jump = d[PlayerDataAddress.jump_flags] & JumpFlagBitmask.JUMP.value == JumpFlagBitmask.JUMP.value
+
+        self.mystery_state = d[PlayerDataAddress.mystery_state]
 
 
     def PrintYInfo(self):
@@ -807,10 +800,13 @@ class TekkenGameState:
 
     def GetOppLastMoveInput(self):
         oppMoveId = self.stateLog[-1].opp.move_id
+        input = []
         for state in reversed(self.stateLog):
             if state.opp.move_id != oppMoveId and state.opp.GetInputState()[1] != InputAttackCodes.N:
-                return state.opp.GetInputState()
-        return (InputDirectionCodes.N, InputAttackCodes.N, False)
+                input.append(state.opp.GetInputState())
+                return input
+
+        return [(InputDirectionCodes.N, InputAttackCodes.N, False)]
 
     def GetFrameDataOfCurrentOppMove(self):
         if self.stateLog[-1].opp.startup > 0:
