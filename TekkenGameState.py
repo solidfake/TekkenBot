@@ -167,7 +167,7 @@ class TekkenGameReader:
                         print("ERROR: reqeusting {} frame of {} long rollback frame".format(rollback_frame, len(last_eight_frames)))
                         rollback_frame = len(last_eight_frames) - 1
 
-                    best_frame_count, player_data_second_address = sorted(last_eight_frames, key=lambda x: x[0])[rollback_frame]
+                    best_frame_count, player_data_second_address = sorted(last_eight_frames, key=lambda x: -x[0])[rollback_frame]
 
                     p1_bot = BotSnapshot()
                     p2_bot = BotSnapshot()
@@ -855,8 +855,8 @@ class TekkenGameState:
     def GetOppInputState(self):
         return self.stateLog[-1].opp.GetInputState()
 
-    def GetOppTechnicalStates(self):
-        opp_id = self.stateLog[-1].opp.move_id
+    def GetOppTechnicalStates(self, startup):
+        #opp_id = self.stateLog[-1].opp.move_id
         tc_frames = []
         tj_frames = []
         cancel_frames = []
@@ -865,20 +865,25 @@ class TekkenGameState:
         homing_frames2 = []
         parryable_frames1 = []
         parryable_frames2 = []
-        found = False
-        for state in reversed(self.stateLog):
-            if state.opp.move_id == opp_id:
-                found = True
-                tc_frames.append(state.opp.IsTechnicalCrouch())
-                tj_frames.append(state.opp.IsTechnicalJump())
-                cancel_frames.append(state.opp.IsAbleToAct())
-                pc_frames.append(state.opp.IsPowerCrush())
-                homing_frames1.append(state.opp.IsHoming1())
-                homing_frames2.append(state.opp.IsHoming2())
-                parryable_frames1.append(state.opp.IsParryable1())
-                parryable_frames2.append(state.opp.IsParryable2())
-            elif found:
-                break
+        #found = False
+        #for state in reversed(self.stateLog):
+            #if state.opp.move_id == opp_id and not state.opp.is_bufferable:
+                #found = True
+        for state in reversed(self.stateLog[-startup:]):
+            tc_frames.append(state.opp.IsTechnicalCrouch())
+            tj_frames.append(state.opp.IsTechnicalJump())
+            cancel_frames.append(state.opp.IsAbleToAct())
+            pc_frames.append(state.opp.IsPowerCrush())
+            homing_frames1.append(state.opp.IsHoming1())
+            homing_frames2.append(state.opp.IsHoming2())
+            parryable_frames1.append(state.opp.IsParryable1())
+            parryable_frames2.append(state.opp.IsParryable2())
+            #elif found:
+            #    break
+
+        parryable1 = MoveDataReport('PY1', parryable_frames1)
+        parryable2 = MoveDataReport('PY2', parryable_frames2)
+        unparryable = MoveDataReport('NO PARRY?', [not parryable1.is_present() and not parryable2.is_present()])
 
         return [
             MoveDataReport('TC', tc_frames),
@@ -887,8 +892,9 @@ class TekkenGameState:
             MoveDataReport('PC', pc_frames),
             MoveDataReport('HOM1', homing_frames1),
             MoveDataReport('HOM2', homing_frames2),
-            MoveDataReport('PY1', parryable_frames1),
-            MoveDataReport('PY2', parryable_frames2),
+            #parryable1,
+            #parryable2,
+            #unparryable
         ]
 
     def IsFightOver(self):
