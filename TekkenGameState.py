@@ -86,6 +86,26 @@ class TekkenGameReader:
         else:
             return struct.unpack("<f", struct.pack("<I", (value)))[0]
 
+    def GetPlayerDataFrame(self, processHandle, address):
+        data = c.create_string_buffer(MemoryAddressOffsets.rollback_frame_offset.value)
+        bytesRead = c.c_ulonglong(MemoryAddressOffsets.rollback_frame_offset.value)
+        successful = ReadProcessMemory(processHandle, address, c.byref(data), c.sizeof(data), c.byref(bytesRead))
+        if not successful:
+            e = GetLastError()
+            print("Getting Player Data Error: Code " + str(e))
+        #print('{} : {}'.format(address, self.GetValueFromFrame(data, PlayerDataAddress.simple_move_state)))
+        return data
+
+    def GetValueFromFrame(self, frame, offset, is_player_2, is_float=False):
+        address = offset
+        if is_player_2:
+            address += MemoryAddressOffsets.p2_data_offset.value
+        bytes = frame[address: address + 4]
+        if not is_float:
+            return struct.unpack("<I", bytes)[0]
+        else:
+            return struct.unpack("<f", bytes)[0]
+
     def IsForegroundPID(self):
         pid = c.wintypes.DWORD()
         active = c.windll.user32.GetForegroundWindow()
@@ -103,7 +123,7 @@ class TekkenGameReader:
     def HasWorkingPID(self):
         return self.pid > -1
 
-    def GetUpdatedState(self):
+    def GetUpdatedState(self, rollback_frame = 0):
         gameSnapshot = None
 
         if not self.HasWorkingPID():
@@ -135,45 +155,49 @@ class TekkenGameReader:
                     self.needReaquireGameState = True
 
                 else:
-                    player_data_second_address = 0
-                    best_frame_count = -1
+                    last_eight_frames = []
+
                     second_address_base = self.GetValueFromAddress(processHandle, player_data_base_address, is64bit = True)
                     for i in range(8):  # for rollback purposes, there are 8 copies of the game state, each one updatating once every 8 frames
                         potential_second_address = second_address_base + (i * MemoryAddressOffsets.rollback_frame_offset.value)
                         potential_frame_count = self.GetValueFromAddress(processHandle, potential_second_address +  GameDataAddress.frame_count.value)
-                        if potential_frame_count > best_frame_count:
-                            player_data_second_address = potential_second_address
-                            best_frame_count = potential_frame_count
+                        last_eight_frames.append((potential_frame_count, potential_second_address))
+
+                    if rollback_frame >= len(last_eight_frames):
+                        print("ERROR: reqeusting {} frame of {} long rollback frame".format(rollback_frame, len(last_eight_frames)))
+                        rollback_frame = len(last_eight_frames) - 1
+
+                    best_frame_count, player_data_second_address = sorted(last_eight_frames, key=lambda x: x[0])[rollback_frame]
 
                     p1_bot = BotSnapshot()
                     p2_bot = BotSnapshot()
 
-                    for data in PlayerDataAddress:
-                        p1_value = self.GetValueFromAddress(processHandle, player_data_second_address + data.value, IsDataAFloat(data))
-                        p2_value = self.GetValueFromAddress(processHandle, player_data_second_address + MemoryAddressOffsets.p2_data_offset.value + data.value, IsDataAFloat(data))
-                        p1_bot.player_data_dict[data] = p1_value
-                        p2_bot.player_data_dict[data] = p2_value
+                    player_data_frame = self.GetPlayerDataFrame(processHandle, player_data_second_address)
 
-                    bot_facing = self.GetValueFromAddress(processHandle, player_data_second_address + GameDataAddress.facing.value, IsDataAFloat(data))
+                    for offset_enum in PlayerDataAddress:
+                        #p1_value = self.GetValueFromAddress(processHandle, player_data_second_address + data.value, IsDataAFloat(data))
+                        #p2_value = self.GetValueFromAddress(processHandle, player_data_second_address + MemoryAddressOffsets.p2_data_offset.value + data.value, IsDataAFloat(data))
+                        p1_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, False)
+                        p2_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, True)
+                        p1_bot.player_data_dict[offset_enum] = p1_value
+                        p2_bot.player_data_dict[offset_enum] = p2_value
 
-                    positionArrays = {}
+                    #bot_facing = self.GetValueFromAddress(processHandle, player_data_second_address + GameDataAddress.facing.value, IsDataAFloat(offset_enum))
+                    bot_facing = self.GetValueFromFrame(player_data_frame, GameDataAddress.facing.value, False)
 
                     for startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z):
                         positionOffset = 32  # our xyz coordinate is 32 bytes, a 4 byte x, y, and z value followed by five 4 byte values that don't change
                         p1_coord_array = []
                         p2_coord_array = []
                         for i in range(16):
-                            p1_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset), True))
-                            p2_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset) + MemoryAddressOffsets.p2_data_offset.value, True))
+                            #p1_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset), True))
+                            #p2_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset) + MemoryAddressOffsets.p2_data_offset.value, True))
+                            p1_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), False, True))
+                            p2_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), True, True))
                         p1_bot.player_data_dict[startingAddress] = p1_coord_array
                         p2_bot.player_data_dict[startingAddress] = p2_coord_array
                         #print("numpy.array([" + xyz_coord + "])")
                     #print("--------------------")
-
-
-                    #for key in positionArrays:
-                        #positionArray = positionArrays[key]
-                        #gameData[key] = sum(positionArray)/float(len(positionArray))
 
                     if self.original_facing == None and best_frame_count > 0:
                         self.original_facing = bot_facing > 0
@@ -374,20 +398,36 @@ class TekkenGameState:
                     print("PRACTICE TIME EXCEEDED. PRESS SELECT + A TO RESET.")
                     self.duplicateFrameObtained = 9999
 
-                if not self.isMirrored:
-                    self.stateLog.append(gameData)
-                    self.mirroredStateLog.append(gameData.FromMirrored())
-                else:
-                    self.stateLog.append(gameData.FromMirrored())
-                    self.mirroredStateLog.append(gameData)
+                frames_lost = 0
+                if len(self.stateLog) > 0:
+                    frames_lost = gameData.frame_count - self.stateLog[-1].frame_count - 1
+                    if frames_lost > 0:
+                        pass
+                        print("DROPPED FRAMES: " + str(frames_lost))
 
-                if (len(self.stateLog) > 300):
-                    self.stateLog.pop(0)
-                    self.mirroredStateLog.pop(0)
+                for i in range(min(7, frames_lost)):
+                    #print("RETRIEVING FRAMES")
+                    droppedState = self.gameReader.GetUpdatedState(frames_lost - i)
+                    self.AppendGamedata(droppedState)
+
+                self.AppendGamedata(gameData)
+
                 return True
             elif gameData.frame_count == self.stateLog[-1].frame_count:
                 self.duplicateFrameObtained += 1
         return False
+
+    def AppendGamedata(self, gameData):
+        if not self.isMirrored:
+            self.stateLog.append(gameData)
+            self.mirroredStateLog.append(gameData.FromMirrored())
+        else:
+            self.stateLog.append(gameData.FromMirrored())
+            self.mirroredStateLog.append(gameData)
+
+        if (len(self.stateLog) > 300):
+            self.stateLog.pop(0)
+            self.mirroredStateLog.pop(0)
 
     def FlipMirror(self):
         tempLog = self.mirroredStateLog

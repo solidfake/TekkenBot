@@ -223,7 +223,7 @@ class GUI_FrameDataOverlay(Tk):
         else:
             self.redirect_stdout()
         #print(10 - int(round(elapsed_time)))
-        self.after(min(2, 8 - int(round(elapsed_time))), self.update_launcher)
+        self.after(max(2, 8 - int(round(elapsed_time))), self.update_launcher)
 
     def hide(self):
         if self.is_minimize_on_lost_focus and not self.is_draggable_window:
