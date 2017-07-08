@@ -80,7 +80,7 @@ class GUI_FrameDataOverlay(Tk):
 
         is_windows_7 = 'Windows-7' in platform.platform()
         self.tekken_config = ConfigReader("frame_data_overlay")
-        self.is_draggable_window = self.tekken_config.get_property("indepedent_window_mode", True, lambda x: not "0" in str(x))
+        self.is_draggable_window = self.tekken_config.get_property("independent_window_mode", True, lambda x: not "0" in str(x))
         self.is_minimize_on_lost_focus = self.tekken_config.get_property("minimize_on_lost_focus", True, lambda x: not "0" in str(x))
         self.is_transparency = self.tekken_config.get_property("transparency", not is_windows_7, lambda x: not "0" in str(x))
         self.enable_nerd_data = self.tekken_config.get_property("data_for_nerds", False, lambda x: not "0" in str(x))
