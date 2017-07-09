@@ -36,11 +36,7 @@ class SimpleMoveStates(Enum):
     JUGGLED = 14
     KNOCKDOWN = 15
 
-
-
-
     #THE UNDERSTANDING OF THE FOLLOWING VALUES IS NOT COMPLETE
-
 
     OFF_AXIS_GETUP = 8
 
@@ -90,9 +86,11 @@ class ComplexMoveStates(Enum):  #these seem difficult to pin down what they are 
 class StunStates(Enum):
     NONE = 0
     BLOCK = 0x01000100
-    GETTING_HIT = 256
+    GETTING_HIT = 0x100
     DOING_THE_HITTING = 0x10000
-    DOING_A_PUNISH = 0x10100 #One frame at the begining of a punish
+    DOING_A_PUNISH = 0x10100 #One frame at the begining of a punish #Also appears during simultaneous couterhits
+
+    BLOCK_NO_HIT = 0x1000000 #law's UF+4, sometimes???? Proximity guard maybe?
 
 class RawCancelStates(Enum):
     STUCK = 0 #Pressing buttons doesn't do anything
@@ -104,10 +102,11 @@ class RawCancelStates(Enum):
     MOVE_ENDING_2 = 0x00010002 #??? 1 frames near the end (or at the end?) of cancelable moves
     #Theory: 1 and 2 refer to 'parryable' states, these include the active frames of moves and the throw tech windows of moves
     # the next bit is the cancelable/not cancelable bit and finally there's a 'is being buffered' bit
+    #EDIT: Doesn't seem to be parryyable state. Mostly correspond to active frames, but not entirely.
 
 class CancelStatesBitmask(Enum):
     CANCELABLE =  0x00010000
-    BUFFERABLE =  0x01010000
+    BUFFERABLE =  0x01000000
     PARRYABLE_1 = 0x00000001
     PARRYABLE_2 = 0x00000002
 
@@ -150,6 +149,7 @@ class InputAttackCodes(Enum):
     x2x3x4 = 7168
     x1x2x3x4 = 7680
     xRAGE = 8192
+
 
 
 
