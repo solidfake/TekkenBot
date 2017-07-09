@@ -47,8 +47,8 @@ def ConvertNotationToCommands(notation:str, timingOccurances:int):
         commands += attackCommands
         commands.append((Command.ReleaseBack, 2))
     elif 'qcf' in notation:
-        commands.append((Command.HoldDown, 2))
-        commands.append((Command.HoldForward, 2))
+        commands.append((Command.HoldDown, 1))
+        commands.append((Command.HoldForward, 1))
         commands.append((Command.ReleaseDown, 1))
         commands += attackCommands
         commands.append((Command.ReleaseForward, 2))

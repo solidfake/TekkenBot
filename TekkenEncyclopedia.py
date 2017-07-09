@@ -7,6 +7,7 @@ from MoveInfoEnums import AttackType
 from TekkenGameState import TekkenGameState
 import sys
 
+
 class TekkenEncyclopedia:
     def __init__(self, isPlayerOne = False, print_extended_frame_data = False):
         self.FrameData = {}
@@ -20,6 +21,8 @@ class TekkenEncyclopedia:
         self.stored_opp_id = 0
         self.stored_opp_recovery = 0
         self.stored_bot_recovery = 0
+
+
 
 
     def GetFrameAdvantage(self, moveId, isOnBlock = True):
@@ -45,6 +48,8 @@ class TekkenEncyclopedia:
             #print(gameState.GetOppTechnicalStates())
             #print(gameState.stateLog[-1].opp.simple_state)
             #print(gameState.stateLog[-1].opp.complex_state)
+
+
             if len(gameState.stateLog) > 2:
                 if gameState.stateLog[-1].bot.complex_state != gameState.stateLog[-2].bot.complex_state:
                     pass
@@ -53,8 +58,13 @@ class TekkenEncyclopedia:
                     #print(gameState.stateLog[-1].opp.simple_state)
                     pass
                 if gameState.stateLog[-1].opp.move_id != gameState.stateLog[-2].opp.move_id:
+                    #print(self.move_data_reader.get_data(gameState.stateLog[-1].opp.move_id)[2])
                     #print(gameState.stateLog[-1].opp.move_id)
                     pass
+                if gameState.stateLog[-1].opp.move_timer != gameState.stateLog[-2].opp.move_timer + 1:
+                    pass
+                    #print( '{} -> {}'.format(gameState.stateLog[-2].opp.move_timer, gameState.stateLog[-1].opp.move_timer))
+
 
 
 
@@ -86,9 +96,10 @@ class TekkenEncyclopedia:
                 self.second_opinion_timer = 0
 
 
-        if (gameState.IsOppWhiffingXFramesAgo(self.active_frame_wait + 1)) and (gameState.IsBotBlocking()  or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotStartedBeingJuggled() or gameState.IsBotBeingKnockedDown() or gameState.IsBotJustGrounded()):
+        if (gameState.IsOppWhiffingXFramesAgo(self.active_frame_wait + 1)) and \
+                (gameState.IsBotBlocking()  or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotStartedBeingJuggled() or gameState.IsBotBeingKnockedDown() or gameState.IsBotJustGrounded()):
 
-            if gameState.DidBotIdChangeXMovesAgo(self.active_frame_wait)  or gameState.DidBotTimerReduceXMovesAgo(self.active_frame_wait):# or gameState.DidOppIdChangeXMovesAgo(self.active_frame_wait):
+            if gameState.DidBotIdChangeXMovesAgo(self.active_frame_wait)  or gameState.DidBotTimerReduceXMovesAgo(self.active_frame_wait): #or gameState.DidOppIdChangeXMovesAgo(self.active_frame_wait):
                 gameState.BackToTheFuture(self.active_frame_wait)
 
                 if not self.active_frame_wait >= gameState.GetOppActiveFrames() + 1:
@@ -126,20 +137,17 @@ class TekkenEncyclopedia:
                         frameDataEntry.startup = gameState.GetBotElapsedFramesOfRageMove(frameDataEntry.startup)
 
                     frameDataEntry.recovery = gameState.GetOppRecovery()
+
                     frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
+
+                    #print(gameState.stateLog[-1].opp.move_id)
 
                     frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates(frameDataEntry.startup)
 
                     gameState.ReturnToPresent()
 
-
-
                     time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
                     time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
-
-                    #print(gameState.IsOppAbleToAct())
-                    #if gameState.IsOppAbleToAct():
-                    #    time_till_recovery_opp = 0
 
                     new_frame_advantage_calc = time_till_recovery_bot - time_till_recovery_opp
 
@@ -178,6 +186,7 @@ class FrameDataEntry:
         self.print_extended = print_extended
         self.move_id = '??'
         self.startup = '??'
+        self.calculated_startup = -1
         self.hitType = '??'
         self.onBlock = '??'
         self.onCounterHit = '??'
@@ -212,22 +221,27 @@ class FrameDataEntry:
 
         notes = ''
 
-        if self.print_extended:
-            notes += str(self.recovery) + "f "
 
+
+        self.calculated_startup = self.startup
         for report in self.technical_state_reports:
-            if not self.print_extended:
-                if 'TC' in report.name and report.is_present():
-                    notes += str(report)
-                if 'TJ' in report.name and report.is_present():
-                    notes += str(report)
-
+            #if not self.print_extended:
+            if 'TC' in report.name and report.is_present():
+                notes += str(report)
+            elif 'TJ' in report.name and report.is_present():
+                notes += str(report)
+            elif 'PC' in report.name and report.is_present():
+                notes += str(report)
+            elif 'SKIP' in report.name and report.is_present():
+                self.calculated_startup = str(self.startup - report.total_present() + 1) + '?'
             elif self.print_extended:
                 if report.is_present():
                     notes += str(report)
+        if self.print_extended:
+            notes += "Total:" + str(self.recovery) + "f "
 
 
-        return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "| " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \
+        return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.calculated_startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "| " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \
                + self.WithPlusIfNeeded(self.onNormalHit) +  " |" + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) + '| ' + notes \
                + " NOW:" + str(self.currentFrameAdvantage)
 

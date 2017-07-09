@@ -155,7 +155,7 @@ class TekkenGameReader:
                         last_eight_frames.append((potential_frame_count, potential_second_address))
 
                     if rollback_frame >= len(last_eight_frames):
-                        print("ERROR: reqeusting {} frame of {} long rollback frame".format(rollback_frame, len(last_eight_frames)))
+                        print("ERROR: requesting {} frame of {} long rollback frame".format(rollback_frame, len(last_eight_frames)))
                         rollback_frame = len(last_eight_frames) - 1
 
                     best_frame_count, player_data_second_address = sorted(last_eight_frames, key=lambda x: -x[0])[rollback_frame]
@@ -400,7 +400,7 @@ class TekkenGameState:
 
                 for i in range(min(7, frames_lost)):
                     #print("RETRIEVING FRAMES")
-                    droppedState = self.gameReader.GetUpdatedState(frames_lost - i)
+                    droppedState = self.gameReader.GetUpdatedState(min(7, frames_lost) - i)
                     self.AppendGamedata(droppedState)
 
                 self.AppendGamedata(gameData)
@@ -744,7 +744,14 @@ class TekkenGameState:
 
     def DidBotTimerReduceXMovesAgo(self, framesAgo):
         if len(self.stateLog) > framesAgo:
+            #if self.stateLog[0 - framesAgo].bot.move_id != 32769 or self.stateLog[0 - framesAgo -1].bot.move_id != 32769:
             return self.stateLog[0 - framesAgo].bot.move_timer < self.stateLog[0 - framesAgo - 1].bot.move_timer
+
+        return False
+
+    def DidBotStartGettingHitXMovesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].bot.IsGettingHit() and not self.stateLog[0 - framesAgo - 1].bot.IsGettingHit()
         else:
             return False
 
@@ -861,10 +868,12 @@ class TekkenGameState:
         homing_frames2 = []
         parryable_frames1 = []
         parryable_frames2 = []
+        startup_frames = []
         #found = False
         #for state in reversed(self.stateLog):
             #if state.opp.move_id == opp_id and not state.opp.is_bufferable:
                 #found = True
+        previous_state = None
         for state in reversed(self.stateLog[-startup:]):
             tc_frames.append(state.opp.IsTechnicalCrouch())
             tj_frames.append(state.opp.IsTechnicalJump())
@@ -874,6 +883,11 @@ class TekkenGameState:
             homing_frames2.append(state.opp.IsHoming2())
             parryable_frames1.append(state.opp.IsParryable1())
             parryable_frames2.append(state.opp.IsParryable2())
+            if previous_state != None:
+                startup_frames.append(state.opp.move_timer != previous_state.opp.move_timer - 1)
+            else:
+                startup_frames.append(False)
+            previous_state = state
             #elif found:
             #    break
 
@@ -888,6 +902,7 @@ class TekkenGameState:
             MoveDataReport('PC', pc_frames),
             MoveDataReport('HOM1', homing_frames1),
             MoveDataReport('HOM2', homing_frames2),
+            MoveDataReport('SKIP', startup_frames),
             #parryable1,
             #parryable2,
             #unparryable

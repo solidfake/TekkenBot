@@ -26,6 +26,12 @@ class MoveDataReport:
     def is_present(self):
         return len(self.start_stop_pairs) > 0
 
+    def total_present(self):
+        total = 0
+        for pair in self.start_stop_pairs:
+            total += pair[1] - pair[0] + 1
+        return total
+
 
     def __repr__(self):
         repr = self.name + ": "
