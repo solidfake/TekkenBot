@@ -58,12 +58,14 @@ class TekkenEncyclopedia:
                     #print(gameState.stateLog[-1].opp.simple_state)
                     pass
                 if gameState.stateLog[-1].opp.move_id != gameState.stateLog[-2].opp.move_id:
-                    #print(self.move_data_reader.get_data(gameState.stateLog[-1].opp.move_id)[2])
                     #print(gameState.stateLog[-1].opp.move_id)
                     pass
-                if gameState.stateLog[-1].opp.move_timer != gameState.stateLog[-2].opp.move_timer + 1:
+                if gameState.stateLog[-1].opp.stun_state != gameState.stateLog[-2].opp.stun_state:
                     pass
-                    #print( '{} -> {}'.format(gameState.stateLog[-2].opp.move_timer, gameState.stateLog[-1].opp.move_timer))
+                    #print(gameState.stateLog[-1].opp.stun_state)
+                if gameState.stateLog[-1].bot.stun_state != gameState.stateLog[-2].bot.stun_state:
+                    pass
+                    #print(gameState.stateLog[-1].bot.stun_state)
 
 
 
@@ -91,7 +93,10 @@ class TekkenEncyclopedia:
                 self.second_opinion_timer = 0
 
             if self.second_opinion_timer > self.stored_opp_recovery:
+                #print("check {}".format(self.stored_opp_recovery))
                 #print(gameState.stateLog[-1].opp.IsBufferable())
+                #print(gameState.GetOppTechnicalStates(self.stored_opp_recovery)[2])
+                #print(gameState.GetOppTechnicalStates(self.stored_opp_recovery)[3])
                 self.second_opinion = False
                 self.second_opinion_timer = 0
 
@@ -159,7 +164,8 @@ class TekkenEncyclopedia:
                         frameDataEntry.onNormalHit = new_frame_advantage_calc
                         frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onNormalHit)
 
-                    #print(gameState.stateLog[-1].bot.IsWhileStanding())
+                    frameDataEntry.hitRecovery = time_till_recovery_opp
+                    frameDataEntry.blockRecovery = time_till_recovery_bot
 
                     if self.isPlayerOne:
                         prefix = "p1: "
@@ -168,11 +174,14 @@ class TekkenEncyclopedia:
 
                     print(prefix + str(frameDataEntry))
 
+
+
                     self.second_opinion = True
                     self.stored_bot_recovery = time_till_recovery_bot
                     self.stored_opp_recovery = time_till_recovery_opp
                     self.stored_prefix = prefix
                     self.stored_opp_id = opp_id
+                    self.second_opinion_timer = 0
 
                     gameState.BackToTheFuture(self.active_frame_wait)
 
@@ -199,6 +208,8 @@ class FrameDataEntry:
         self.currentActiveFrame = '??'
         self.input = '??'
         self.technical_state_reports = []
+        self.blockRecovery = '??'
+        self.hitRecovery = '??'
 
     def WithPlusIfNeeded(self, value):
         try:
@@ -238,7 +249,10 @@ class FrameDataEntry:
                 if report.is_present():
                     notes += str(report)
         if self.print_extended:
-            notes += "Total:" + str(self.recovery) + "f "
+            pass
+            #notes += ' d_recovery {}'.format(self.blockRecovery)
+            #notes += ' a_recovery {}'.format(self.hitRecovery)
+            #notes += "Total:" + str(self.recovery) + "f "
 
 
         return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.calculated_startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "| " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \

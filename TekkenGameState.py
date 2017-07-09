@@ -237,10 +237,10 @@ class BotSnapshot:
 
         cancel_window_bitmask = d[PlayerDataAddress.cancel_window]
 
-        self.is_cancelable = (CancelStatesBitmask.CANCELABLE.value & cancel_window_bitmask) > 0
-        self.is_bufferable = (CancelStatesBitmask.BUFFERABLE.value & cancel_window_bitmask) > 0
-        self.is_parry_1 = (CancelStatesBitmask.PARRYABLE_1.value & cancel_window_bitmask) > 0
-        self.is_parry_2 = (CancelStatesBitmask.PARRYABLE_2.value & cancel_window_bitmask) > 0
+        self.is_cancelable = (CancelStatesBitmask.CANCELABLE.value & cancel_window_bitmask) == CancelStatesBitmask.CANCELABLE.value
+        self.is_bufferable = (CancelStatesBitmask.BUFFERABLE.value & cancel_window_bitmask) == CancelStatesBitmask.BUFFERABLE.value
+        self.is_parry_1 = (CancelStatesBitmask.PARRYABLE_1.value & cancel_window_bitmask) == CancelStatesBitmask.PARRYABLE_1.value
+        self.is_parry_2 = (CancelStatesBitmask.PARRYABLE_2.value & cancel_window_bitmask) == CancelStatesBitmask.PARRYABLE_2.value
 
         #self.highest_y = max(d[PlayerDataAddress.y])
         #self.lowest_y = min(d[PlayerDataAddress.y])
@@ -863,6 +863,7 @@ class TekkenGameState:
         tc_frames = []
         tj_frames = []
         cancel_frames = []
+        buffer_frames = []
         pc_frames = []
         homing_frames1 = []
         homing_frames2 = []
@@ -878,6 +879,7 @@ class TekkenGameState:
             tc_frames.append(state.opp.IsTechnicalCrouch())
             tj_frames.append(state.opp.IsTechnicalJump())
             cancel_frames.append(state.opp.IsAbleToAct())
+            buffer_frames.append(state.opp.IsBufferable())
             pc_frames.append(state.opp.IsPowerCrush())
             homing_frames1.append(state.opp.IsHoming1())
             homing_frames2.append(state.opp.IsHoming2())
@@ -898,6 +900,7 @@ class TekkenGameState:
         return [
             MoveDataReport('TC', tc_frames),
             MoveDataReport('TJ', tj_frames),
+            MoveDataReport('BUF', buffer_frames),
             MoveDataReport('xx', cancel_frames),
             MoveDataReport('PC', pc_frames),
             MoveDataReport('HOM1', homing_frames1),
