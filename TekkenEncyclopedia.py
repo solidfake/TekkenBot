@@ -66,6 +66,17 @@ class TekkenEncyclopedia:
                 if gameState.stateLog[-1].bot.stun_state != gameState.stateLog[-2].bot.stun_state:
                     pass
                     #print(gameState.stateLog[-1].bot.stun_state)
+                if gameState.stateLog[-1].opp.mystery_state != gameState.stateLog[-2].opp.mystery_state:
+                    pass
+                    #print(gameState.stateLog[-1].opp.mystery_state)
+                    #print('b{}'.format(gameState.stateLog[-1].bot.mystery_state))
+                if gameState.stateLog[-1].bot.mystery_state != gameState.stateLog[-2].bot.mystery_state:
+                    pass
+                    #print('{}'.format(gameState.stateLog[-1].bot.mystery_state))
+                if gameState.stateLog[-1].bot.hit_outcome != gameState.stateLog[-2].bot.hit_outcome:
+                    pass
+                    #print(gameState.stateLog[-1].bot.hit_outcome)
+
 
 
 
@@ -145,24 +156,28 @@ class TekkenEncyclopedia:
 
                     frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
 
-                    #print(gameState.stateLog[-1].opp.move_id)
+
 
                     frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates(frameDataEntry.startup)
 
                     gameState.ReturnToPresent()
+
 
                     time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
                     time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
 
                     new_frame_advantage_calc = time_till_recovery_bot - time_till_recovery_opp
 
+                    frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(new_frame_advantage_calc)
+
                     if gameState.IsBotBlocking():
                         frameDataEntry.onBlock = new_frame_advantage_calc
-                        frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onBlock)
-                        frameDataEntry.blockFrames = frameDataEntry.recovery - frameDataEntry.startup
                     else:
-                        frameDataEntry.onNormalHit = new_frame_advantage_calc
-                        frameDataEntry.currentFrameAdvantage = frameDataEntry.WithPlusIfNeeded(frameDataEntry.onNormalHit)
+                        if gameState.IsBotGettingCounterHit():
+                            frameDataEntry.onCounterHit = new_frame_advantage_calc
+                        else:
+                            frameDataEntry.onNormalHit = new_frame_advantage_calc
+
 
                     frameDataEntry.hitRecovery = time_till_recovery_opp
                     frameDataEntry.blockRecovery = time_till_recovery_bot
@@ -174,7 +189,8 @@ class TekkenEncyclopedia:
 
                     print(prefix + str(frameDataEntry))
 
-
+                    #print(gameState.stateLog[-1].opp.startup)
+                    #print(time_till_recovery_bot)
 
                     self.second_opinion = True
                     self.stored_bot_recovery = time_till_recovery_bot
@@ -255,9 +271,22 @@ class FrameDataEntry:
             #notes += "Total:" + str(self.recovery) + "f "
 
 
-        return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.calculated_startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "| " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \
-               + self.WithPlusIfNeeded(self.onNormalHit) +  " |" + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) + '| ' + notes \
-               + " NOW:" + str(self.currentFrameAdvantage)
+        return "{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{} NOW:{}".format(
+            str(self.input),
+            str(self.hitType)[:7],
+            str(self.calculated_startup),
+            self.WithPlusIfNeeded(self.onBlock),
+            self.WithPlusIfNeeded(self.onNormalHit),
+            self.WithPlusIfNeeded(self.onCounterHit),
+            (str(self.currentActiveFrame) + "/" + str(self.activeFrames)),
+            notes,
+            str(self.currentFrameAdvantage)
+        )
+
+
+        #return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.calculated_startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "| " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \
+               #+ self.WithPlusIfNeeded(self.onNormalHit) +  " |" + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) + '| ' + notes \
+               #+ " NOW:" + str(self.currentFrameAdvantage)
 
                 #+ " Recovery: " + str(self.recovery)
                 # + " Block Stun: " + str(self.blockFrames)

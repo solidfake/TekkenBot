@@ -262,6 +262,9 @@ class BotSnapshot:
     def IsBlocking(self):
         return self.complex_state == ComplexMoveStates.BLOCK
 
+    def IsGettingCounterHit(self):
+        return self.hit_outcome in (HitOutcome.COUNTER_HIT_CROUCHING, HitOutcome.COUNTER_HIT_STANDING)
+
     def IsGettingHit(self):
         return self.stun_state == StunStates.GETTING_HIT
         #return not self.is_cancelable and self.complex_state == ComplexMoveStates.RECOVERING and self.simple_state == SimpleMoveStates.STANDING_FORWARD  and self.attack_damage == 0 and self.startup == 0 #TODO: make this more accurate
@@ -459,6 +462,9 @@ class TekkenGameState:
 
     def IsBotBlocking(self):
         return self.stateLog[-1].bot.IsBlocking()
+
+    def IsBotGettingCounterHit(self):
+        return self.stateLog[-1].bot.IsGettingCounterHit()
 
     def IsOppBlocking(self):
         return self.stateLog[-1].opp.IsBlocking()
