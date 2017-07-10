@@ -190,6 +190,8 @@ class TekkenGameReader:
                     #    #print("numpy.array([" + xyz_coord + "])")
                     ##print("--------------------")
 
+
+
                     if self.original_facing == None and best_frame_count > 0:
                         self.original_facing = bot_facing > 0
 
@@ -246,7 +248,7 @@ class BotSnapshot:
         #self.lowest_y = min(d[PlayerDataAddress.y])
 
         self.is_jump = d[PlayerDataAddress.jump_flags] & JumpFlagBitmask.JUMP.value == JumpFlagBitmask.JUMP.value
-
+        self.hit_outcome = HitOutcome(d[PlayerDataAddress.hit_outcome])
         self.mystery_state = d[PlayerDataAddress.mystery_state]
 
 

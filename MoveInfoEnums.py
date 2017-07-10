@@ -110,6 +110,31 @@ class CancelStatesBitmask(Enum):
     PARRYABLE_1 = 0x00000001
     PARRYABLE_2 = 0x00000002
 
+
+#Note that this information resides on the player BEING hit not the player doing the hitting. Also note that there's no counter hit state for side or back attacks.
+class HitOutcome(Enum):
+    NONE = 0
+    BLOCKED_STANDING = 1
+    BLOCKED_CROUCHING = 2
+    JUGGLE = 3
+    SCREW = 4
+    UNKNOWN_SCREW_5 = 5 #Xiaoyu's sample combo 3 ends with this, off-axis or right side maybe?
+    UNKNOWN_6 = 6 #May not exist???
+    UNKNOWN_SCREW_7 = 7 #Xiaoy's sample combo 3 includes this
+    GROUNDED_FACE_DOWN= 8
+    GROUNDED_FACE_UP = 9
+    COUNTER_HIT_STANDING = 10
+    COUNTER_HIT_CROUCHING = 11
+    NORMAL_HIT_STANDING = 12
+    NORMAL_HIT_CROUCHING = 13
+    NORMAL_HIT_STANDING_LEFT = 14
+    NORMAL_HIT_CROUCHING_LEFT = 15
+    NORMAL_HIT_STANDING_BACK = 16
+    NORMAL_HIT_CROUCHING_BACK = 17
+    NORMAL_HIT_STANDING_RIGHT = 18
+    NORMAL_HIT_CROUCHING_RIGHT = 19
+
+
 class JumpFlagBitmask(Enum):
     #GROUND = 0x800000
     #LANDING_OR_STANDING = 0x810000

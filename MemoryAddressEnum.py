@@ -15,18 +15,17 @@ class GameDataAddress(Enum):
 
 class PlayerDataAddress(Enum):
 
-
+    char_id = 0xD4
+    move_timer = 0x1f0
+    attack_damage = 0x2FC
     move_id = 0x31C
+    recovery = 0x360
+    hit_outcome = 0x39C
+    attack_type = 0x3D4
     simple_move_state = 0x3D8
     stun_type = 0x3DC
-
-    attack_type = 0x3D4
-    complex_move_state = 0x400
-    attack_damage = 0x2FC
-    move_timer = 0x1f0
-    recovery = 0x360
-    char_id = 0xD4
     throw_flag = 0x3F8
+    complex_move_state = 0x400
 
     power_crush = 0x4f6
     jump_flags = 0x544
@@ -44,6 +43,8 @@ class PlayerDataAddress(Enum):
 
     attack_startup = 0x66A0
     attack_startup_end = 0x66A4
+
+
 
     rage_flag = 0x99A
 
