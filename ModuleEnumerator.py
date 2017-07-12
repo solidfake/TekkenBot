@@ -49,7 +49,7 @@ def GetModuleAddressByPIDandName(pid, name):
         hModuleSnap = CreateToolhelp32Snapshot( TH32CS_SNAPMODULE, ProcessID )
         if hModuleSnap == -1:
             print('CreateToolhelp32Snapshot Error [%d]' % GetLastError())
-            print('This is the error for using 32-bit Python. Try the 64-bit version.')
+            print('Build the code yourself? This is the error for using 32-bit Python. Try the 64-bit version.')
 
         ret = Module32First( hModuleSnap, pointer(me32) )
         if ret == 0 :
