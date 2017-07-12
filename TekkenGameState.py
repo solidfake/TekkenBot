@@ -55,6 +55,10 @@ class TekkenGameReader:
         self.config_reader = ConfigReader('memory_address')
         self.player_data_pointer_offset = self.config_reader.get_property('player_data_pointer_offset', MemoryAddressOffsets.player_data_pointer_offset.value, lambda x: int(x, 16))
 
+    def ReacquireEverything(self):
+        self.needReacquireModule = True
+        self.needReaquireGameState = True
+        self.pid = -1
 
     def GetValueFromAddress(self, processHandle, address, isFloat=False, is64bit=False):
         data = c.c_ulonglong()
@@ -63,9 +67,7 @@ class TekkenGameReader:
         if not successful:
             e = GetLastError()
             print("ReadProcessMemory Error: Code " + str(e))
-            self.needReacquireModule = True
-            self.needReaquireGameState = True
-            self.pid = -1
+            self.ReacquireEverything()
 
         if not is64bit:
             value = int(data.value) % pow(2, 32)
@@ -130,7 +132,8 @@ class TekkenGameReader:
             print("Trying to acquire Tekken library in pid: " + str(self.pid))
             self.module_address = ModuleEnumerator.GetModuleAddressByPIDandName(self.pid, 'TekkenGame-Win64-Shipping.exe')
             if self.module_address == None:
-                print("TekkenGame-Win64-Shipping.exe not found. Likely wrong process id.")
+                print("TekkenGame-Win64-Shipping.exe not found. Likely wrong process id. Reacquiring pid.")
+                self.ReacquireEverything()
             elif(self.module_address != 0x140000000):
                 print("Unrecognized location for TekkenGame-Win64-Shipping.exe module. Tekken.exe Patch? Wrong process id?")
             else:
@@ -142,7 +145,8 @@ class TekkenGameReader:
             try:
                 player_data_base_address = self.GetValueFromAddress(processHandle, self.module_address + self.player_data_pointer_offset, is64bit = True)
                 if player_data_base_address == 0:
-                    print("No fight detected. Gamestate not updated.")
+                    if not self.needReaquireGameState:
+                        print("No fight detected. Gamestate not updated.")
                     self.needReaquireGameState = True
 
                 else:
@@ -195,6 +199,8 @@ class TekkenGameReader:
                     if self.original_facing == None and best_frame_count > 0:
                         self.original_facing = bot_facing > 0
 
+                    if self.needReaquireGameState:
+                        print("Fight detected. Updating gamestate.")
                     self.needReaquireGameState = False
 
                     p1_bot.Bake()
@@ -268,6 +274,9 @@ class BotSnapshot:
     def IsGettingHit(self):
         return self.stun_state == StunStates.GETTING_HIT
         #return not self.is_cancelable and self.complex_state == ComplexMoveStates.RECOVERING and self.simple_state == SimpleMoveStates.STANDING_FORWARD  and self.attack_damage == 0 and self.startup == 0 #TODO: make this more accurate
+
+    def IsHitting(self):
+        return self.stun_state in (StunStates.DOING_A_PUNISH, StunStates.DOING_THE_HITTING)
 
     def IsAttackMid(self):
         return self.attack_type == AttackType.MID
@@ -475,6 +484,9 @@ class TekkenGameState:
     def IsBotGettingHit(self):
         return self.stateLog[-1].bot.IsGettingHit()# or self.GetFramesSinceBotTookDamage() < 15
         #return self.GetFramesSinceBotTookDamage() < 15
+
+    def IsOppHitting(self):
+        return self.stateLog[-1].opp.IsHitting()
 
     def IsBotStartedGettingHit(self):
         if len(self.stateLog) > 2:
@@ -750,10 +762,12 @@ class TekkenGameState:
         else:
             return False
 
-    def DidBotTimerReduceXMovesAgo(self, framesAgo):
+    def DidBotTimerInterruptXMovesAgo(self, framesAgo):
         if len(self.stateLog) > framesAgo:
             #if self.stateLog[0 - framesAgo].bot.move_id != 32769 or self.stateLog[0 - framesAgo -1].bot.move_id != 32769:
             return self.stateLog[0 - framesAgo].bot.move_timer < self.stateLog[0 - framesAgo - 1].bot.move_timer
+            #print('{} {}'.format(self.stateLog[0 - framesAgo].bot.move_timer, self.stateLog[0 - framesAgo - 1].bot.move_timer))
+            #return self.stateLog[0 - framesAgo].bot.move_timer != self.stateLog[0 - framesAgo - 1].bot.move_timer + 1
 
         return False
 
