@@ -10,11 +10,24 @@ class MemoryAddressOffsets(Enum):
 
 class GameDataAddress(Enum):
     #frame_count = 0x6a0 #resets sometimes on p1 backdash???
-    frame_count = 0x70C
+    #frame_count = 0x70C #caps at 0xFF
+    frame_count = 0x19AD0
     facing = 0xAC4
 
-class PlayerDataAddress(Enum):
+class EndBlockPlayerDataAddress(Enum):
+    timer_in_frames = 0x19AD8
+    p1_wins = 0x19AEC
+    p2_wins = 0x19BB4
+    p1_display_combo_counter = 0x19b50
+    p1_display_combo_damage = 0x19B58
+    p1_display_juggle_damage = 0x19B5C
+    p2_display_combo_counter = 0x19c18
+    p2_display_combo_damage = 0x19c20
+    p2_display_juggle_damage = 0x19c24
 
+
+
+class PlayerDataAddress(Enum):
     char_id = 0xD4
     move_timer = 0x1f0
     attack_damage = 0x2FC

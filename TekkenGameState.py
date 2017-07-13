@@ -177,8 +177,15 @@ class TekkenGameReader:
                         p1_bot.player_data_dict[offset_enum] = p1_value
                         p2_bot.player_data_dict[offset_enum] = p2_value
 
+
+                    game_snapshot_dict = {}
+                    for offset_enum in EndBlockPlayerDataAddress:
+                        game_snapshot_dict[offset_enum] = self.GetValueFromFrame(player_data_frame, offset_enum.value, False)
+
+
                     #bot_facing = self.GetValueFromAddress(processHandle, player_data_second_address + GameDataAddress.facing.value, IsDataAFloat(offset_enum))
                     bot_facing = self.GetValueFromFrame(player_data_frame, GameDataAddress.facing.value, False)
+
 
                     #for startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z):
                     #    positionOffset = 32  # our xyz coordinate is 32 bytes, a 4 byte x, y, and z value followed by five 4 byte values that don't change
@@ -205,7 +212,7 @@ class TekkenGameReader:
 
                     p1_bot.Bake()
                     p2_bot.Bake()
-                    gameSnapshot = GameSnapshot(p1_bot, p2_bot, best_frame_count, bot_facing)
+                    gameSnapshot = GameSnapshot(p1_bot, p2_bot, best_frame_count, bot_facing, game_snapshot_dict)
             finally:
                 CloseHandle(processHandle)
 
@@ -367,14 +374,18 @@ class BotSnapshot:
 
 
 class GameSnapshot:
-    def __init__(self, bot, opp, frame_count, facing_bool):
+    def __init__(self, bot, opp, frame_count, facing_bool, game_snapshot_dict):
         self.bot = bot
         self.opp = opp
         self.frame_count = frame_count
         self.facing_bool = facing_bool
+        self.game_snapshot_dict = game_snapshot_dict
+        self.p1_wins = game_snapshot_dict[EndBlockPlayerDataAddress.p1_wins]
+        self.p2_wins = game_snapshot_dict[EndBlockPlayerDataAddress.p2_wins]
+        self.timer_frames_remaining = game_snapshot_dict[EndBlockPlayerDataAddress.timer_in_frames]
 
     def FromMirrored(self):
-        return GameSnapshot(self.opp, self.bot, self.frame_count, self.facing_bool)
+        return GameSnapshot(self.opp, self.bot, self.frame_count, self.facing_bool, self.game_snapshot_dict)
 
 
     def GetDist(self):
@@ -399,11 +410,8 @@ class TekkenGameState:
         gameData = self.gameReader.GetUpdatedState()
 
         if(gameData != None):
-            if len(self.stateLog) == 0 or gameData.frame_count != self.stateLog[-1].frame_count or gameData.frame_count == 65535: #we don't run perfectly in sync, if we get back the same frame, throw it away
+            if len(self.stateLog) == 0 or gameData.frame_count != self.stateLog[-1].frame_count: #we don't run perfectly in sync, if we get back the same frame, throw it away
                 self.duplicateFrameObtained = 0
-                if gameData.frame_count == 65535:
-                    print("PRACTICE TIME EXCEEDED. PRESS SELECT + A TO RESET.")
-                    self.duplicateFrameObtained = 9999
 
                 frames_lost = 0
                 if len(self.stateLog) > 0:
