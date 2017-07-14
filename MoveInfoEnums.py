@@ -2,7 +2,7 @@ from enum import Enum
 
 class AttackType(Enum):
     ANTIAIR_ONLY = 11 #Doesn't hit characters on the ground? Very rare, appears on Alisa's chainsaw stance f+2
-    THROWN = 10  #this is only the attack type *during* the throw animation
+    THROW = 10  #this is only the attack type *during* the throw animation
     LOW_UNBLOCKABLE = 9 #Yoshimitsu's 10 hit combo 2 has one
     HIGH_UNBLOCKABLE = 8  #Akuma's focus attack
     MID_UNBLOCKABLE = 7
@@ -83,12 +83,18 @@ class ComplexMoveStates(Enum):  #these seem difficult to pin down what they are 
 
     SIDEWALK = 28 #left or right
 
+class ThrowTechs(Enum):
+    NONE = 0
+    t1 = 1 #both 1 and 2 seem to sometimes include normal throws that can be broken with either
+    t2 = 2
+    t1_2 = 3
+
 class StunStates(Enum):
     NONE = 0
     BLOCK = 0x01000100
     GETTING_HIT = 0x100
     DOING_THE_HITTING = 0x10000
-    DOING_A_PUNISH = 0x10100 #One frame at the begining of a punish #Also appears during simultaneous couterhits
+    BEING_PUNISHED = 0x10100 #One frame at the begining of a punish #Also appears during simultaneous couterhits
 
     BLOCK_NO_HIT = 0x1000000 #law's UF+4, sometimes???? Proximity guard maybe?
 

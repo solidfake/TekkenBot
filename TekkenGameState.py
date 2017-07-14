@@ -89,10 +89,9 @@ class TekkenGameReader:
         #print('{} : {}'.format(address, self.GetValueFromFrame(data, PlayerDataAddress.simple_move_state)))
         return data
 
-    def GetValueFromFrame(self, frame, offset, is_player_2, is_float=False):
+    def GetValueFromFrame(self, frame, offset, player_2_offset = 0x0, is_float=False):
         address = offset
-        if is_player_2:
-            address += MemoryAddressOffsets.p2_data_offset.value
+        address += player_2_offset
         bytes = frame[address: address + 4]
         if not is_float:
             return struct.unpack("<I", bytes)[0]
@@ -172,19 +171,21 @@ class TekkenGameReader:
                     for offset_enum in PlayerDataAddress:
                         #p1_value = self.GetValueFromAddress(processHandle, player_data_second_address + data.value, IsDataAFloat(data))
                         #p2_value = self.GetValueFromAddress(processHandle, player_data_second_address + MemoryAddressOffsets.p2_data_offset.value + data.value, IsDataAFloat(data))
-                        p1_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, False)
-                        p2_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, True)
+                        p1_value = self.GetValueFromFrame(player_data_frame, offset_enum.value)
+                        p2_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, MemoryAddressOffsets.p2_data_offset.value)
+                        p1_bot.player_data_dict[offset_enum] = p1_value
+                        p2_bot.player_data_dict[offset_enum] = p2_value
+
+                    for offset_enum in EndBlockPlayerDataAddress:
+                        p1_value = self.GetValueFromFrame(player_data_frame, offset_enum.value)
+                        p2_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, MemoryAddressOffsets.p2_end_block_offset.value)
                         p1_bot.player_data_dict[offset_enum] = p1_value
                         p2_bot.player_data_dict[offset_enum] = p2_value
 
 
-                    game_snapshot_dict = {}
-                    for offset_enum in EndBlockPlayerDataAddress:
-                        game_snapshot_dict[offset_enum] = self.GetValueFromFrame(player_data_frame, offset_enum.value, False)
-
-
                     #bot_facing = self.GetValueFromAddress(processHandle, player_data_second_address + GameDataAddress.facing.value, IsDataAFloat(offset_enum))
-                    bot_facing = self.GetValueFromFrame(player_data_frame, GameDataAddress.facing.value, False)
+                    bot_facing = self.GetValueFromFrame(player_data_frame, GameDataAddress.facing.value)
+                    timer_in_frames = self.GetValueFromFrame(player_data_frame, GameDataAddress.timer_in_frames.value)
 
 
                     #for startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z):
@@ -212,7 +213,7 @@ class TekkenGameReader:
 
                     p1_bot.Bake()
                     p2_bot.Bake()
-                    gameSnapshot = GameSnapshot(p1_bot, p2_bot, best_frame_count, bot_facing, game_snapshot_dict)
+                    gameSnapshot = GameSnapshot(p1_bot, p2_bot, best_frame_count, timer_in_frames, bot_facing)
             finally:
                 CloseHandle(processHandle)
 
@@ -257,12 +258,19 @@ class BotSnapshot:
         self.is_parry_1 = (CancelStatesBitmask.PARRYABLE_1.value & cancel_window_bitmask) == CancelStatesBitmask.PARRYABLE_1.value
         self.is_parry_2 = (CancelStatesBitmask.PARRYABLE_2.value & cancel_window_bitmask) == CancelStatesBitmask.PARRYABLE_2.value
 
+        self.throw_tech = ThrowTechs(d[PlayerDataAddress.throw_tech])
+
         #self.highest_y = max(d[PlayerDataAddress.y])
         #self.lowest_y = min(d[PlayerDataAddress.y])
 
         self.is_jump = d[PlayerDataAddress.jump_flags] & JumpFlagBitmask.JUMP.value == JumpFlagBitmask.JUMP.value
         self.hit_outcome = HitOutcome(d[PlayerDataAddress.hit_outcome])
         self.mystery_state = d[PlayerDataAddress.mystery_state]
+
+        self.wins = d[EndBlockPlayerDataAddress.round_wins]
+        self.combo_counter = d[EndBlockPlayerDataAddress.display_combo_counter]
+        self.combo_damage = d[EndBlockPlayerDataAddress.display_combo_damage]
+        self.juggle_damage = d[EndBlockPlayerDataAddress.display_juggle_damage]
 
 
     def PrintYInfo(self):
@@ -278,12 +286,18 @@ class BotSnapshot:
     def IsGettingCounterHit(self):
         return self.hit_outcome in (HitOutcome.COUNTER_HIT_CROUCHING, HitOutcome.COUNTER_HIT_STANDING)
 
+    def IsGettingGroundHit(self):
+        return self.hit_outcome in (HitOutcome.GROUNDED_FACE_DOWN, HitOutcome.GROUNDED_FACE_UP)
+
     def IsGettingHit(self):
-        return self.stun_state == StunStates.GETTING_HIT
+        return self.stun_state in (StunStates.BEING_PUNISHED, StunStates.GETTING_HIT)
         #return not self.is_cancelable and self.complex_state == ComplexMoveStates.RECOVERING and self.simple_state == SimpleMoveStates.STANDING_FORWARD  and self.attack_damage == 0 and self.startup == 0 #TODO: make this more accurate
 
     def IsHitting(self):
-        return self.stun_state in (StunStates.DOING_A_PUNISH, StunStates.DOING_THE_HITTING)
+        return self.stun_state == StunStates.DOING_THE_HITTING
+
+    def IsPunish(self):
+        return self.stun_state == StunStates.BEING_PUNISHED
 
     def IsAttackMid(self):
         return self.attack_type == AttackType.MID
@@ -298,7 +312,7 @@ class BotSnapshot:
         return self.attack_type == AttackType.LOW
 
     def IsInThrowing(self):
-        return self.attack_type == AttackType.THROWN
+        return self.attack_type == AttackType.THROW
 
     def GetActiveFrames(self):
         return self.startup_end - self.startup + 1
@@ -374,18 +388,15 @@ class BotSnapshot:
 
 
 class GameSnapshot:
-    def __init__(self, bot, opp, frame_count, facing_bool, game_snapshot_dict):
+    def __init__(self, bot, opp, frame_count, timer_in_frames, facing_bool):
         self.bot = bot
         self.opp = opp
         self.frame_count = frame_count
         self.facing_bool = facing_bool
-        self.game_snapshot_dict = game_snapshot_dict
-        self.p1_wins = game_snapshot_dict[EndBlockPlayerDataAddress.p1_wins]
-        self.p2_wins = game_snapshot_dict[EndBlockPlayerDataAddress.p2_wins]
-        self.timer_frames_remaining = game_snapshot_dict[EndBlockPlayerDataAddress.timer_in_frames]
+        self.timer_frames_remaining = timer_in_frames
 
     def FromMirrored(self):
-        return GameSnapshot(self.opp, self.bot, self.frame_count, self.facing_bool, self.game_snapshot_dict)
+        return GameSnapshot(self.opp, self.bot, self.frame_count, self.timer_frames_remaining, self.facing_bool)
 
 
     def GetDist(self):
@@ -477,11 +488,50 @@ class TekkenGameState:
     def GetDist(self):
         return self.stateLog[-1].GetDist()
 
+    def DidOppComboCounterJustStartXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.combo_counter == 1 and self.stateLog[0 - framesAgo - 1].opp.combo_counter == 0
+        else:
+            return False
+
+    def DidOppComboCounterJustEndXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.combo_counter == 0 and self.stateLog[0 - framesAgo - 1].opp.combo_counter > 0
+        else:
+            return False
+
+    def GetOppComboDamageXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.combo_damage
+        else:
+            return 0
+
+    def GetOppComboHitsXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.combo_counter
+        else:
+            return 0
+
+    def GetOppJuggleDamageXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.juggle_damage
+        else:
+            return 0
+
+    def DidBotStartGettingPunishedXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].bot.IsPunish()
+        else:
+            return False
+
     def IsBotBlocking(self):
         return self.stateLog[-1].bot.IsBlocking()
 
     def IsBotGettingCounterHit(self):
         return self.stateLog[-1].bot.IsGettingCounterHit()
+
+    def IsBotGettingHitOnGround(self):
+        return self.stateLog[-1].bot.IsGettingGroundHit()
 
     def IsOppBlocking(self):
         return self.stateLog[-1].opp.IsBlocking()
@@ -543,6 +593,9 @@ class TekkenGameState:
             if self.stateLog[-1].opp.damage_taken > self.stateLog[-20].opp.damage_taken:
                 return True
         return False
+
+    def IsBotCrouching(self):
+        return self.stateLog[-1].bot.IsTechnicalCrouch()
 
     def IsOppAttackMid(self):
         return self.stateLog[-1].opp.IsAttackMid()
@@ -652,6 +705,12 @@ class TekkenGameState:
     def GetOppStartup(self):
         return self.stateLog[-1].opp.startup
 
+    def GetBotStartupXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].bot.startup
+        else:
+            return False
+
     def GetOppActiveFrames(self):
         return self.stateLog[-1].opp.GetActiveFrames()
 
@@ -681,6 +740,7 @@ class TekkenGameState:
         else:
             return 0
 
+
     def GetOppRecovery(self):
         return self.stateLog[-1].opp.recovery
 
@@ -692,6 +752,12 @@ class TekkenGameState:
 
     def GetOppAttackType(self):
         return self.stateLog[-1].opp.attack_type
+
+    def GetOppAttackTypeXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.attack_type
+        else:
+            return False
 
     def GetBotMoveId(self):
         return self.stateLog[-1].bot.move_id
@@ -887,6 +953,9 @@ class TekkenGameState:
 
     def GetOppInputState(self):
         return self.stateLog[-1].opp.GetInputState()
+
+    def GetBotThrowTech(self):
+        return self.stateLog[-1].bot.throw_tech
 
     def GetOppTechnicalStates(self, startup):
         #opp_id = self.stateLog[-1].opp.move_id

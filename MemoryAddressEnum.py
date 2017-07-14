@@ -6,6 +6,7 @@ class MemoryAddressOffsets(Enum):
     #player_data_pointer_offset = 0x0337A450 #pc patch 0
     player_data_second_pointer_offset = 0
     p2_data_offset = 0x66B0
+    p2_end_block_offset = 0xC8
     rollback_frame_offset =  0x19F70
 
 class GameDataAddress(Enum):
@@ -13,17 +14,19 @@ class GameDataAddress(Enum):
     #frame_count = 0x70C #caps at 0xFF
     frame_count = 0x19AD0
     facing = 0xAC4
+    timer_in_frames = 0x19AD8
 
 class EndBlockPlayerDataAddress(Enum):
-    timer_in_frames = 0x19AD8
-    p1_wins = 0x19AEC
-    p2_wins = 0x19BB4
-    p1_display_combo_counter = 0x19b50
-    p1_display_combo_damage = 0x19B58
-    p1_display_juggle_damage = 0x19B5C
-    p2_display_combo_counter = 0x19c18
-    p2_display_combo_damage = 0x19c20
-    p2_display_juggle_damage = 0x19c24
+    round_wins = 0x19AEC
+    #p2_wins = 0x19BB4
+    display_combo_counter = 0x19b50
+    display_combo_damage = 0x19B58
+    display_juggle_damage = 0x19B5C
+    total_attacks_made = 0x19B5C
+    total_moves_blocked = 0x19B5C
+    #p2_display_combo_counter = 0x19c18
+    #p2_display_combo_damage = 0x19c20
+    #p2_display_juggle_damage = 0x19c24
 
 
 
@@ -37,6 +40,7 @@ class PlayerDataAddress(Enum):
     attack_type = 0x3D4
     simple_move_state = 0x3D8
     stun_type = 0x3DC
+    throw_tech = 0x3EC
     throw_flag = 0x3F8
     complex_move_state = 0x400
 
@@ -56,6 +60,8 @@ class PlayerDataAddress(Enum):
 
     attack_startup = 0x66A0
     attack_startup_end = 0x66A4
+
+
 
 
 
