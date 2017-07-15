@@ -86,9 +86,9 @@ class ComplexMoveStates(Enum):  #these seem difficult to pin down what they are 
 
 class ThrowTechs(Enum):
     NONE = 0
-    t1 = 1 #both 1 and 2 seem to sometimes include normal throws that can be broken with either
-    t2 = 2
-    t1_2 = 3
+    TE1 = 1 #both 1 and 2 seem to sometimes include normal throws that can be broken with either
+    TE2 = 2
+    TE1_2 = 3
 
 class StunStates(Enum):
     NONE = 0

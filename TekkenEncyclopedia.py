@@ -329,14 +329,15 @@ class FrameDataEntry:
             elif self.print_extended:
                 if report.is_present():
                     notes += str(report)
+        nerd_string = ""
         if self.print_extended:
             pass
-            notes += ' stun {}'.format(self.blockRecovery)
+            #notes += ' stun {}'.format(self.blockRecovery)
             #notes += ' a_recovery {}'.format(self.hitRecovery)
             #notes += "Total:" + str(self.recovery) + "f "
 
 
-        return "{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{} NOW:{}".format(
+        non_nerd_string = "{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{:^5}|{:^5}|{:^5}|".format(
             str(self.input),
             str(self.hitType)[:7],
             str(self.calculated_startup),
@@ -344,9 +345,15 @@ class FrameDataEntry:
             self.WithPlusIfNeeded(self.onNormalHit),
             self.WithPlusIfNeeded(self.onCounterHit),
             (str(self.currentActiveFrame) + "/" + str(self.activeFrames)),
-            notes,
-            str(self.currentFrameAdvantage)
+            self.recovery,
+            self.hitRecovery,
+            self.blockRecovery
         )
+
+
+        notes_string = "{}".format(notes)
+        now_string = " NOW:{}".format(str(self.currentFrameAdvantage))
+        return non_nerd_string + notes_string + now_string
 
 
         #return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.calculated_startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "| " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \
