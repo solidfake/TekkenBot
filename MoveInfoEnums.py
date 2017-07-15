@@ -77,6 +77,7 @@ class ComplexMoveStates(Enum):  #these seem difficult to pin down what they are 
 
     RECOVERING = 16 #happens after you stop walking forward or backward, jumping, getting hit, going into a stance, and some other places
     RECOVERING_17 = 17  # f+4 with Ling
+    UNKNOWN_18 = 18 #King's 1+2+3+4 ki charge
 
     UNKNOWN_22 = 22 #Eddy move
     UNKNOWN_23 = 23 #Steve 3+4, 1
