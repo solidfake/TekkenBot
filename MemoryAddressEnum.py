@@ -73,6 +73,20 @@ class PlayerDataAddress(Enum):
 
     #super meter p1 0x9F4
 
+
+
+
+class NonPlayerDataAddressesEnum(Enum):
+    OPPONENT_NAME = 1
+
+
+class NonPlayerDataAddressesTuples:
+    offsets = {
+        NonPlayerDataAddressesEnum.OPPONENT_NAME : (0x03339C20, 0x0, 0x8, 0x114),
+    }
+
+
+
 def IsDataAFloat(dataEnum):
     return dataEnum in {PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z}
 
@@ -103,3 +117,11 @@ if __name__ == "__main__":
         id += 1
         PrintCheatEngineBlock(id, "p2_" + enum.name, MemoryAddressOffsets.player_data_pointer_offset.value,
                               enum.value + MemoryAddressOffsets.p2_data_offset.value, IsDataAFloat(enum))
+
+    for enum in EndBlockPlayerDataAddress:
+        id += 1
+        PrintCheatEngineBlock(id, "p1_" + enum.name, MemoryAddressOffsets.player_data_pointer_offset.value, enum.value,
+                              IsDataAFloat(enum))
+        id += 1
+        PrintCheatEngineBlock(id, "p2_" + enum.name, MemoryAddressOffsets.player_data_pointer_offset.value,
+                              enum.value + MemoryAddressOffsets.p2_end_block_offset.value, IsDataAFloat(enum))
