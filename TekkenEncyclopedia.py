@@ -5,6 +5,7 @@ Collects information from TekkenGameState over time in hopes of synthesizing it 
 
 from MoveInfoEnums import AttackType
 from MoveInfoEnums import ThrowTechs
+from MoveInfoEnums import ComplexMoveStates
 from TekkenGameState import TekkenGameState
 import sys
 
@@ -54,9 +55,9 @@ class TekkenEncyclopedia:
             #print(gameState.stateLog[-1].opp.move_timer)
 
             if len(gameState.stateLog) > 2:
-                if gameState.stateLog[-1].bot.complex_state != gameState.stateLog[-2].bot.complex_state:
+                if gameState.stateLog[-1].opp.complex_state != gameState.stateLog[-2].opp.complex_state:
                     pass
-                    #print(gameState.stateLog[-1].bot.complex_state)
+                    #print(gameState.stateLog[-1].opp.complex_state)
                 if gameState.stateLog[-1].opp.simple_state != gameState.stateLog[-2].opp.simple_state:
                     #print(gameState.stateLog[-1].opp.simple_state)
                     pass
@@ -224,6 +225,8 @@ class TekkenEncyclopedia:
 
                     frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates(frameDataEntry.startup)
 
+                    frameDataEntry.tracking = gameState.GetOppTrackingType(frameDataEntry.startup)
+
                     gameState.ReturnToPresent()
 
                     frameDataEntry.throwTech = gameState.GetBotThrowTech()
@@ -290,6 +293,7 @@ class FrameDataEntry:
         self.blockRecovery = '??'
         self.hitRecovery = '??'
         self.throwTech = None
+        self.tracking = ComplexMoveStates.NONE
 
     def WithPlusIfNeeded(self, value):
         try:
@@ -337,7 +341,7 @@ class FrameDataEntry:
             #notes += "Total:" + str(self.recovery) + "f "
 
 
-        non_nerd_string = "{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{:^5}|{:^5}|{:^5}|".format(
+        non_nerd_string = "{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{:^6}|{:^3}|{:^3}|{:^3}|".format(
             str(self.input),
             str(self.hitType)[:7],
             str(self.calculated_startup),
@@ -345,6 +349,7 @@ class FrameDataEntry:
             self.WithPlusIfNeeded(self.onNormalHit),
             self.WithPlusIfNeeded(self.onCounterHit),
             (str(self.currentActiveFrame) + "/" + str(self.activeFrames)),
+            self.tracking.name,
             self.recovery,
             self.hitRecovery,
             self.blockRecovery

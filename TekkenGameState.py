@@ -280,6 +280,12 @@ class BotSnapshot:
     def GetInputState(self):
         return (self.input_direction, self.input_button, self.rage_button_flag)
 
+    def GetTrackingType(self):
+        if self.complex_state.value < 8:
+            return self.complex_state
+        else:
+            return ComplexMoveStates.UNKN
+
     def IsBlocking(self):
         return self.complex_state == ComplexMoveStates.BLOCK
 
@@ -318,7 +324,7 @@ class BotSnapshot:
         return self.startup_end - self.startup + 1
 
     def IsAttackWhiffing(self):
-        return self.complex_state in {ComplexMoveStates.ATTACK_ENDING, ComplexMoveStates.STILL, ComplexMoveStates.RECOVERING, ComplexMoveStates.RECOVERING_17, ComplexMoveStates.SIDESTEP, ComplexMoveStates.MOVING_BACK_OR_FORWARD}
+        return self.complex_state in {ComplexMoveStates.ATTACK_ENDING, ComplexMoveStates.NONE, ComplexMoveStates.RECOVERING, ComplexMoveStates.UN17, ComplexMoveStates.SIDESTEP, ComplexMoveStates.MOVING_BACK_OR_FORWARD}
 
     def IsOnGround(self):
         return self.simple_state in {SimpleMoveStates.GROUND_FACEDOWN, SimpleMoveStates.GROUND_FACEUP}
@@ -345,10 +351,10 @@ class BotSnapshot:
 
 
     def IsHoming1(self):
-        return self.complex_state == ComplexMoveStates.ATTACK_STARTING_1
+        return self.complex_state == ComplexMoveStates.HOM1
 
     def IsHoming2(self):
-        return self.complex_state == ComplexMoveStates.ATTACK_STARTING_2
+        return self.complex_state == ComplexMoveStates.HOM2
 
     def IsPowerCrush(self):
         return self.power_crush_flag
@@ -956,6 +962,12 @@ class TekkenGameState:
 
     def GetBotThrowTech(self):
         return self.stateLog[-1].bot.throw_tech
+
+    def GetOppTrackingType(self, startup):
+        if len(self.stateLog) > startup:
+            return self.stateLog[0 - startup + 5].opp.GetTrackingType() #the offset here is completely arbitrary way to get to the 'middle' of a move
+        else:
+            return ComplexMoveStates.NONE
 
     def GetOppTechnicalStates(self, startup):
         #opp_id = self.stateLog[-1].opp.move_id
