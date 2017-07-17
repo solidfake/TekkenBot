@@ -231,7 +231,7 @@ class TekkenEncyclopedia:
 
                     frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
 
-                    frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates(frameDataEntry.startup)
+                    frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates(frameDataEntry.startup - 1)
 
                     frameDataEntry.tracking = gameState.GetOppTrackingType(frameDataEntry.startup)
 
@@ -338,7 +338,7 @@ class FrameDataEntry:
             elif 'PC' in report.name and report.is_present():
                 notes += str(report)
             elif 'SKIP' in report.name and report.is_present():
-                self.calculated_startup = str(self.startup - report.total_present() + 1) + '?'
+                self.calculated_startup = str(self.startup - report.total_present()) + '?'
             elif self.print_extended:
                 if report.is_present():
                     notes += str(report)
