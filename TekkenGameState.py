@@ -352,10 +352,10 @@ class BotSnapshot:
 
 
     def IsHoming1(self):
-        return self.complex_state == ComplexMoveStates.S1
+        return self.complex_state == ComplexMoveStates.S_PLUS
 
     def IsHoming2(self):
-        return self.complex_state == ComplexMoveStates.S2
+        return self.complex_state == ComplexMoveStates.S
 
     def IsPowerCrush(self):
         return self.power_crush_flag
@@ -961,14 +961,18 @@ class TekkenGameState:
     def GetOppInputState(self):
         return self.stateLog[-1].opp.GetInputState()
 
-    def GetBotThrowTech(self):
-        return self.stateLog[-1].bot.throw_tech
+    def GetBotThrowTech(self, activeFrames):
+        for state in reversed(self.stateLog[-activeFrames:]):
+            tech = state.bot.throw_tech
+            if tech != ThrowTechs.NONE:
+                return tech
+        return ThrowTechs.NONE
 
     def GetOppTrackingType(self, startup):
         if len(self.stateLog) > startup:
-            complex_states = [ComplexMoveStates.F_MINUS]
+            complex_states = [ComplexMoveStates.UNKN]
             for state in reversed(self.stateLog[-startup:]):
-                if 0 < state.opp.GetTrackingType().value < 8:
+                if -1 < state.opp.GetTrackingType().value < 8:
                     complex_states.append(state.opp.GetTrackingType())
             return Counter(complex_states).most_common(1)[0][0]
         else:
@@ -976,6 +980,7 @@ class TekkenGameState:
 
 
     def GetOppTechnicalStates(self, startup):
+
         #opp_id = self.stateLog[-1].opp.move_id
         tc_frames = []
         tj_frames = []
@@ -987,6 +992,7 @@ class TekkenGameState:
         parryable_frames1 = []
         parryable_frames2 = []
         startup_frames = []
+
         #found = False
         #for state in reversed(self.stateLog):
             #if state.opp.move_id == opp_id and not state.opp.is_bufferable:

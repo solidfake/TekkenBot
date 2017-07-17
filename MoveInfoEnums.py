@@ -60,8 +60,8 @@ class SimpleMoveStates(Enum):
 class ComplexMoveStates(Enum):  #These are tracking states>
     F_MINUS = 0 # this doubles as the nothing state and an attack_starting state. #occurs on kazuya's hellsweep
 
-    S1 = 1 #homing
-    S2 = 2 #homing, often with screw
+    S_PLUS = 1 #homing
+    S = 2 #homing, often with screw, seems to more often end up slightly off-axis?
     A = 3 #this move 'realigns' if you pause before throwing it out
     UN04 = 4 # extremely rare, eliza ff+4, 2 has this
     C_MINUS = 5 # realigns either slightly worse or slightly better than C, hard to tell
