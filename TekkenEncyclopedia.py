@@ -231,7 +231,7 @@ class TekkenEncyclopedia:
 
                     frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
 
-                    frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates(frameDataEntry.startup - 1)
+                    frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates(frameDataEntry.startup)
 
                     frameDataEntry.tracking = gameState.GetOppTrackingType(frameDataEntry.startup)
 
