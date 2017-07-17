@@ -13,6 +13,7 @@ frame?, what was the last move player 2 did?).
 
 """
 
+from collections import Counter
 
 import ctypes as c
 from ctypes import wintypes as w
@@ -281,10 +282,10 @@ class BotSnapshot:
         return (self.input_direction, self.input_button, self.rage_button_flag)
 
     def GetTrackingType(self):
-        if self.complex_state.value < 8:
-            return self.complex_state
-        else:
-            return ComplexMoveStates.UNKN
+        #if self.complex_state.value < 8:
+        return self.complex_state
+        #else:
+        #    return ComplexMoveStates.UNKN
 
     def IsBlocking(self):
         return self.complex_state == ComplexMoveStates.BLOCK
@@ -324,7 +325,7 @@ class BotSnapshot:
         return self.startup_end - self.startup + 1
 
     def IsAttackWhiffing(self):
-        return self.complex_state in {ComplexMoveStates.ATTACK_ENDING, ComplexMoveStates.NONE, ComplexMoveStates.RECOVERING, ComplexMoveStates.UN17, ComplexMoveStates.SIDESTEP, ComplexMoveStates.MOVING_BACK_OR_FORWARD}
+        return self.complex_state in {ComplexMoveStates.END1, ComplexMoveStates.NONE, ComplexMoveStates.RECOVERING, ComplexMoveStates.UN17, ComplexMoveStates.SS, ComplexMoveStates.WALK}
 
     def IsOnGround(self):
         return self.simple_state in {SimpleMoveStates.GROUND_FACEDOWN, SimpleMoveStates.GROUND_FACEUP}
@@ -965,9 +966,14 @@ class TekkenGameState:
 
     def GetOppTrackingType(self, startup):
         if len(self.stateLog) > startup:
-            return self.stateLog[0 - startup + 5].opp.GetTrackingType() #the offset here is completely arbitrary way to get to the 'middle' of a move
+            complex_states = [ComplexMoveStates.NONE]
+            for state in reversed(self.stateLog[-startup:]):
+                if state.opp.GetTrackingType().value < 8:
+                    complex_states.append(state.opp.GetTrackingType())
+            return Counter(complex_states).most_common(1)[0][0]
         else:
             return ComplexMoveStates.NONE
+
 
     def GetOppTechnicalStates(self, startup):
         #opp_id = self.stateLog[-1].opp.move_id

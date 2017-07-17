@@ -56,7 +56,8 @@ class SimpleMoveStates(Enum):
 
 
 
-class ComplexMoveStates(Enum):  #these seem difficult to pin down what they are exactly
+
+class ComplexMoveStates(Enum):  #These are tracking states>
     NONE = 0 # this doubles as the nothing state and an attack_starting state. #occurs on kazuya's hellsweep
 
     HOM1 = 1 #homing
@@ -64,27 +65,27 @@ class ComplexMoveStates(Enum):  #these seem difficult to pin down what they are 
     REAL = 3 #this move 'realigns' if you pause before throwing it out
     UN04 = 4 # extremely rare, eliza ff+4, 2 has this
     HALF = 5 # realigns 'ok' after a sidestep, but seems to have problems raligning after a sidewalk
-    HOM6 = 6 #unlisted homing??? #Alisa's b+2, 1 has this, extremely rare
+    REAL6 = 6 #unlisted homing??? #Alisa's b+2, 1 has this, extremely rare
     LINE = 7 #this move goes straight, even if you pause for a moment
 
-    ATTACK_ENDING = 10 #after startup  ###Kazuya's ff+3 doesn't have a startup or attack ending flag, it's just 0 the whole way through ???  ###Lili's d/b+4 doesn't have it after being blocked
+    END1 = 10 #after startup  ###Kazuya's ff+3 doesn't have a startup or attack ending flag, it's just 0 the whole way through ???  ###Lili's d/b+4 doesn't have it after being blocked
     BLOCK = 11
-    MOVING_BACK_OR_FORWARD = 12 #applies to dashing and walking
+    WALK = 12 #applies to dashing and walking
     SIDEROLL_GETUP = 13 #only happens after side rolling???
     SIDEROLL_STAYDOWN = 14
-    SIDESTEP = 15 #left or right, also applies to juggle techs
+    SS = 15 #sidestep left or right, also applies to juggle techs
 
 
     RECOVERING = 16 #happens after you stop walking forward or backward, jumping, getting hit, going into a stance, and some other places
     UN17 = 17  # f+4 with Ling
-    UNKNOWN_18 = 18 #King's 1+2+3+4 ki charge
+    UN18 = 18 #King's 1+2+3+4 ki charge
 
-    UNKNOWN_20 = 20 #Dragunov's d+3+4 ground stomp
+    UN20 = 20 #Dragunov's d+3+4 ground stomp
 
-    UNKNOWN_22 = 22 #Eddy move
-    UNKNOWN_23 = 23 #Steve 3+4, 1
+    UN22 = 22 #Eddy move
+    UN23 = 23 #Steve 3+4, 1
 
-    SIDEWALK = 28 #left or right
+    SW = 28 #sidewalk left or right
 
 
     UNKN = 999999 #used to indicate a non standard tracking move
