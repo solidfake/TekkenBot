@@ -325,7 +325,7 @@ class BotSnapshot:
         return self.startup_end - self.startup + 1
 
     def IsAttackWhiffing(self):
-        return self.complex_state in {ComplexMoveStates.END1, ComplexMoveStates.NONE, ComplexMoveStates.RECOVERING, ComplexMoveStates.UN17, ComplexMoveStates.SS, ComplexMoveStates.WALK}
+        return self.complex_state in {ComplexMoveStates.END1, ComplexMoveStates.F_MINUS, ComplexMoveStates.RECOVERING, ComplexMoveStates.UN17, ComplexMoveStates.SS, ComplexMoveStates.WALK}
 
     def IsOnGround(self):
         return self.simple_state in {SimpleMoveStates.GROUND_FACEDOWN, SimpleMoveStates.GROUND_FACEUP}
@@ -352,10 +352,10 @@ class BotSnapshot:
 
 
     def IsHoming1(self):
-        return self.complex_state == ComplexMoveStates.HOM1
+        return self.complex_state == ComplexMoveStates.S1
 
     def IsHoming2(self):
-        return self.complex_state == ComplexMoveStates.HOM2
+        return self.complex_state == ComplexMoveStates.S2
 
     def IsPowerCrush(self):
         return self.power_crush_flag
@@ -966,13 +966,13 @@ class TekkenGameState:
 
     def GetOppTrackingType(self, startup):
         if len(self.stateLog) > startup:
-            complex_states = [ComplexMoveStates.NONE]
+            complex_states = [ComplexMoveStates.F_MINUS]
             for state in reversed(self.stateLog[-startup:]):
-                if state.opp.GetTrackingType().value < 8:
+                if 0 < state.opp.GetTrackingType().value < 8:
                     complex_states.append(state.opp.GetTrackingType())
             return Counter(complex_states).most_common(1)[0][0]
         else:
-            return ComplexMoveStates.NONE
+            return ComplexMoveStates.F_MINUS
 
 
     def GetOppTechnicalStates(self, startup):

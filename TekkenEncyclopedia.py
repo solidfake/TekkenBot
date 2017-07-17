@@ -293,7 +293,7 @@ class FrameDataEntry:
         self.blockRecovery = '??'
         self.hitRecovery = '??'
         self.throwTech = None
-        self.tracking = ComplexMoveStates.NONE
+        self.tracking = ComplexMoveStates.F_MINUS
 
     def WithPlusIfNeeded(self, value):
         try:
@@ -341,7 +341,7 @@ class FrameDataEntry:
             #notes += "Total:" + str(self.recovery) + "f "
 
 
-        non_nerd_string = "{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{:^6}|{:^3}|{:^3}|{:^3}|".format(
+        non_nerd_string = "{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{:^3}|{:^3}|{:^3}|{:^3}|".format(
             str(self.input),
             str(self.hitType)[:7],
             str(self.calculated_startup),
@@ -349,7 +349,7 @@ class FrameDataEntry:
             self.WithPlusIfNeeded(self.onNormalHit),
             self.WithPlusIfNeeded(self.onCounterHit),
             (str(self.currentActiveFrame) + "/" + str(self.activeFrames)),
-            self.tracking.name,
+            self.tracking.name.replace('_MINUS', '-').replace("_PLUS", '+'),
             self.recovery,
             self.hitRecovery,
             self.blockRecovery

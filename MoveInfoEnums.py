@@ -58,15 +58,15 @@ class SimpleMoveStates(Enum):
 
 
 class ComplexMoveStates(Enum):  #These are tracking states>
-    NONE = 0 # this doubles as the nothing state and an attack_starting state. #occurs on kazuya's hellsweep
+    F_MINUS = 0 # this doubles as the nothing state and an attack_starting state. #occurs on kazuya's hellsweep
 
-    HOM1 = 1 #homing
-    HOM2 = 2 #homing, often with screw
-    REAL = 3 #this move 'realigns' if you pause before throwing it out
+    S1 = 1 #homing
+    S2 = 2 #homing, often with screw
+    A = 3 #this move 'realigns' if you pause before throwing it out
     UN04 = 4 # extremely rare, eliza ff+4, 2 has this
-    HALF = 5 # realigns 'ok' after a sidestep, but seems to have problems raligning after a sidewalk
-    REAL6 = 6 #unlisted homing??? #Alisa's b+2, 1 has this, extremely rare
-    LINE = 7 #this move goes straight, even if you pause for a moment
+    C_MINUS = 5 # realigns either slightly worse or slightly better than C, hard to tell
+    A_PLUS = 6 #realigns very well #Alisa's b+2, 1 has this, extremely rare
+    C = 7 #this realigns worse than 'A'
 
     END1 = 10 #after startup  ###Kazuya's ff+3 doesn't have a startup or attack ending flag, it's just 0 the whole way through ???  ###Lili's d/b+4 doesn't have it after being blocked
     BLOCK = 11
