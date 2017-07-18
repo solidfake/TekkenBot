@@ -1,19 +1,17 @@
 # TekkenBot
 AI and tools for playing and understanding Tekken 7.
 
-### Details
-Tekken Bot is a program that plays Tekken 7 on PC by reading the game's memory, making decisions based on the game state, and then inputting keyboarding commands. Ultimately the goal is to create emergent behavior either through specific coding it or, if possible, a generalized learning algorithm. Along the the way, useful tools for human players may also be developed and exposed.
-
-### Prerequisites
-Tekken Bot is developed on Python 3.4.3 and tries to use only core libraries to improve portability, download size, and, someday, optimization. It targets the 64-bit version of Tekken 7 available through Steam on Windows 7/8/10.
-
 ## Tools
 
 ### FrameDataOverlay
-A basic Tkinter, always on top window that can go over the game to display real time move information. Frame advantage is prominant but other data including startup and attack type are also displayed.
+A window that can go over the game to display real time move information read from memory. Requires the game to be in windowed or borderless to work or can be run as a standalone window on a second screen. Available from https://github.com/roguelike2d/TekkenBot/releases .
 
 ## Bots
 Currently in progress.
+
+### Details
+Tekken Bot bots are programs that plays Tekken 7 on PC by reading the game's memory, making decisions based on the game state, and then inputting keyboarding commands. Ultimately the goal is to create emergent behavior either through specific coding it or, if possible, a generalized learning algorithm.
+
 
 ### Frame Trap Bot
 Pushes jab or a user inputted move when getting out of block stun.
@@ -22,10 +20,15 @@ Pushes jab or a user inputted move when getting out of block stun.
 Attempts to punish negative attacks with the best avaiable punish. Punishes are listed in the character's file in the /TekkenData folder.
 
 
-## Deployment
-Tekken Bot is built using pyinstaller. On Windows, use the included build_project.bat file.
+## Project details
 
-## Updating Memory Addresses with Cheat Engine after patches
+### Prerequisites
+Tekken Bot is developed on Python 3.4.3 and tries to use only core libraries to improve portability, download size, and, someday, optimization. It targets the 64-bit version of Tekken 7 available through Steam on Windows 7/8/10.
+
+### Deployment
+Tekken Bot distributable is built using pyinstaller with Python 3.4.3. On Windows, use the included build_project.bat file.
+
+### Updating Memory Addresses with Cheat Engine after patches
 When Tekken 7.exe is patched on Steam, it may change the location in memory of the relevant addresses. To find the new addresses, use Cheat Engine or another memory editor to locate the values, then find the new pointer addresses:
 
 Currently, Tekken Bot only needs one value (Tekken7.exe Base + first offset  --> follow that pointer to a second pointer --> follow the second pointer to the base of the player data object in memory).
