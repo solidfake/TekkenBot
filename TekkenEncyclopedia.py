@@ -52,7 +52,8 @@ class TekkenEncyclopedia:
             #print(gameState.GetOppTechnicalStates())
             #print(gameState.stateLog[-1].opp.simple_state)
             #print(gameState.stateLog[-1].opp.complex_state)
-            #print(gameState.stateLog[-1].opp.move_timer)
+            #print(gameState.stateLog[-1].bot.move_timer)
+            #print(gameState.stateLog[-1].bot.recovery)
 
             if len(gameState.stateLog) > 2:
                 if gameState.stateLog[-1].opp.complex_state != gameState.stateLog[-2].opp.complex_state:
@@ -79,7 +80,7 @@ class TekkenEncyclopedia:
                     #print('b{}'.format(gameState.stateLog[-1].bot.mystery_state))
                 if gameState.stateLog[-1].opp.mystery_state != gameState.stateLog[-2].opp.mystery_state:
                     pass
-                    # print(gameState.stateLog[-1].opp.mystery_state)
+                    #print(gameState.stateLog[-1].opp.mystery_state)
                 if gameState.stateLog[-1].bot.stun_state != gameState.stateLog[-2].bot.stun_state:
                     pass
                     #print('{}'.format(gameState.stateLog[-1].bot.stun_state))
@@ -240,8 +241,8 @@ class TekkenEncyclopedia:
                     #frameDataEntry.throwTech = gameState.GetBotThrowTech(frameDataEntry.activeFrames + frameDataEntry.startup)
                     frameDataEntry.throwTech = gameState.GetBotThrowTech(1)
 
-                    time_till_recovery_opp = gameState.GetOppRecovery() - gameState.GetOppMoveTimer()
-                    time_till_recovery_bot = gameState.GetBotRecovery() - gameState.GetBotMoveTimer()
+                    time_till_recovery_opp = gameState.GetOppFramesTillNextMove()
+                    time_till_recovery_bot = gameState.GetBotFramesTillNextMove()
 
                     new_frame_advantage_calc = time_till_recovery_bot - time_till_recovery_opp
 

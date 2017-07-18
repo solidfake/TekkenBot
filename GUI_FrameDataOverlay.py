@@ -148,6 +148,10 @@ class GUI_FrameDataOverlay(Tk):
         self.r_seperator = self.create_padding_frame(6)
 
 
+        self.l_live_recovery = self.create_live_recovery(1)
+        self.r_live_recovery = self.create_live_recovery(5)
+
+
         self.text = self.create_textbox(3)
 
         self.stdout = sys.stdout
@@ -168,6 +172,13 @@ class GUI_FrameDataOverlay(Tk):
         padding = Frame(width=10)
         padding.grid(row=0, column=col, rowspan=2, sticky=N + S + W + E)
         return padding
+
+    def create_live_recovery(self, col):
+        live_recovery_var = StringVar()
+        live_recovery_var.set('??')
+        live_recovery_label = Label(self, textvariable=live_recovery_var, font=("Verdana", 12), width=4, anchor='c')
+        live_recovery_label.grid(row=1, column=col)
+        return live_recovery_var
 
     def create_frame_advantage_label(self, col):
         frame_advantage_var = StringVar()
@@ -203,8 +214,13 @@ class GUI_FrameDataOverlay(Tk):
     def update_launcher(self):
         time1 = time.time()
         self.launcher.Update()
-        time2 = time.time()
-        elapsed_time = 1000 * (time2 - time1)
+
+        if len(self.launcher.gameState.stateLog) > 1:
+            self.l_live_recovery.set(
+                self.launcher.gameState.GetOppFramesTillNextMove() - self.launcher.gameState.GetBotFramesTillNextMove())
+            self.r_live_recovery.set(
+                self.launcher.gameState.GetBotFramesTillNextMove() - self.launcher.gameState.GetOppFramesTillNextMove())
+
 
         if not self.is_draggable_window:
             tekken_rect = self.launcher.gameState.gameReader.GetWindowRect()
@@ -222,7 +238,10 @@ class GUI_FrameDataOverlay(Tk):
             self.restore_stdout()
         else:
             self.redirect_stdout()
-        #print(10 - int(round(elapsed_time)))
+
+
+        time2 = time.time()
+        elapsed_time = 1000 * (time2 - time1)
         self.after(max(2, 8 - int(round(elapsed_time))), self.update_launcher)
 
     def hide(self):

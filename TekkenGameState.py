@@ -751,6 +751,12 @@ class TekkenGameState:
     def GetOppRecovery(self):
         return self.stateLog[-1].opp.recovery
 
+    def GetOppFramesTillNextMove(self):
+        return self.GetOppRecovery() - self.GetOppMoveTimer()
+
+    def GetBotFramesTillNextMove(self):
+        return self.GetBotRecovery() - self.GetBotMoveTimer()
+
     def GetBotRecovery(self):
         return self.stateLog[-1].bot.recovery
 
