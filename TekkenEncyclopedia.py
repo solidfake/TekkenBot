@@ -341,7 +341,7 @@ class FrameDataEntry:
                 #print(report)
                 self.calculated_startup -= report.total_present()
             elif 'FROZ' in report.name and report.is_present():
-                print(report)
+                #print(report)
                 self.calculated_startup -= report.total_present()
             elif self.print_extended:
                 if report.is_present():
