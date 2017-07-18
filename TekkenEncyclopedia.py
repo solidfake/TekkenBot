@@ -222,10 +222,10 @@ class TekkenEncyclopedia:
                     if gameState.IsOppAttackThrow():
                         frameDataEntry.hitType += "_THROW"
 
-                    fastestRageMoveFrames = 120
-                    longestRageMoveFrames = 150
-                    if frameDataEntry.startup > fastestRageMoveFrames:  # and gameState.DidOpponentUseRageRecently(longestRageMoveFrames):
-                        frameDataEntry.startup = gameState.GetBotElapsedFramesOfRageMove(frameDataEntry.startup)
+                    #fastestRageMoveFrames = 120
+                    #longestRageMoveFrames = 150
+                    #if frameDataEntry.startup > fastestRageMoveFrames:  # and gameState.DidOpponentUseRageRecently(longestRageMoveFrames):
+                        #frameDataEntry.startup = gameState.GetBotElapsedFramesOfRageMove(frameDataEntry.startup)
 
                     frameDataEntry.recovery = gameState.GetOppRecovery()
 
@@ -338,7 +338,11 @@ class FrameDataEntry:
             elif 'PC' in report.name and report.is_present():
                 notes += str(report)
             elif 'SKIP' in report.name and report.is_present():
-                self.calculated_startup = str(self.startup - report.total_present()) + '?'
+                #print(report)
+                self.calculated_startup -= report.total_present()
+            elif 'FROZ' in report.name and report.is_present():
+                print(report)
+                self.calculated_startup -= report.total_present()
             elif self.print_extended:
                 if report.is_present():
                     notes += str(report)
@@ -349,6 +353,8 @@ class FrameDataEntry:
             #notes += ' a_recovery {}'.format(self.hitRecovery)
             #notes += "Total:" + str(self.recovery) + "f "
 
+        if self.calculated_startup != self.startup:
+            self.calculated_startup = str(self.calculated_startup) + "?"
 
         non_nerd_string = "{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{:^3}|{:^3}|{:^3}|{:^3}|".format(
             str(self.input),

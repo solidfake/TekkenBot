@@ -992,29 +992,40 @@ class TekkenGameState:
         parryable_frames1 = []
         parryable_frames2 = []
         startup_frames = []
+        frozen_frames = []
 
         #found = False
         #for state in reversed(self.stateLog):
             #if state.opp.move_id == opp_id and not state.opp.is_bufferable:
                 #found = True
         previous_state = None
-        for state in reversed(self.stateLog[-startup:]):
-            tc_frames.append(state.opp.IsTechnicalCrouch())
-            tj_frames.append(state.opp.IsTechnicalJump())
-            cancel_frames.append(state.opp.IsAbleToAct())
-            buffer_frames.append(state.opp.IsBufferable())
-            pc_frames.append(state.opp.IsPowerCrush())
-            homing_frames1.append(state.opp.IsHoming1())
-            homing_frames2.append(state.opp.IsHoming2())
-            parryable_frames1.append(state.opp.IsParryable1())
-            parryable_frames2.append(state.opp.IsParryable2())
+        skipped_frames_counter = 0
+        frozen_frames_counter = 0
+        for i, state in enumerate(reversed(self.stateLog[-startup:])):
             if previous_state != None:
-                startup_frames.append(state.opp.move_timer != previous_state.opp.move_timer - 1)
+                is_skipped = state.opp.move_timer != previous_state.opp.move_timer - 1
+                if is_skipped:
+                    skipped_frames_counter += 1
+                is_frozen = state.bot.move_timer == previous_state.bot.move_timer
+                if is_frozen:
+                    frozen_frames_counter += 1
             else:
-                startup_frames.append(False)
+                is_skipped = False
+                is_frozen = False
+            if skipped_frames_counter + i <= startup:
+                tc_frames.append(state.opp.IsTechnicalCrouch())
+                tj_frames.append(state.opp.IsTechnicalJump())
+                cancel_frames.append(state.opp.IsAbleToAct())
+                buffer_frames.append(state.opp.IsBufferable())
+                pc_frames.append(state.opp.IsPowerCrush())
+                homing_frames1.append(state.opp.IsHoming1())
+                homing_frames2.append(state.opp.IsHoming2())
+                parryable_frames1.append(state.opp.IsParryable1())
+                parryable_frames2.append(state.opp.IsParryable2())
+                startup_frames.append(is_skipped)
+                frozen_frames.append(is_frozen)
+
             previous_state = state
-            #elif found:
-            #    break
 
         parryable1 = MoveDataReport('PY1', parryable_frames1)
         parryable2 = MoveDataReport('PY2', parryable_frames2)
@@ -1029,6 +1040,7 @@ class TekkenGameState:
             MoveDataReport('HOM1', homing_frames1),
             MoveDataReport('HOM2', homing_frames2),
             MoveDataReport('SKIP', startup_frames),
+            MoveDataReport('FROZ', frozen_frames),
             #parryable1,
             #parryable2,
             #unparryable
