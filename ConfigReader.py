@@ -21,7 +21,10 @@ class ConfigReader:
     def get_property(self, section, property_string, default_value):
 
         try:
-            value = self.parser.getboolean(section, property_string)
+            if type(default_value) is bool:
+                value = self.parser.getboolean(section, property_string)
+            else:
+                value = self.parser.get(section, property_string)
         except:
             value = default_value
 
@@ -32,6 +35,12 @@ class ConfigReader:
 
     def set_property(self, section, property_string, value):
         self.parser.set(section, property_string, str(value))
+
+
+    def add_comment(self, comment):
+        if 'Comments' not in self.parser.sections():
+            self.parser.add_section('Comments')
+        self.parser.set('Comments', '; ' + comment, "")
 
 
     def write(self):

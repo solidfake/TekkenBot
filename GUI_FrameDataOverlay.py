@@ -11,7 +11,7 @@ from ConfigReader import ConfigReader
 import platform
 import time
 from enum import Enum
-import configparser
+
 
 
 class DataColumns(Enum):
@@ -41,6 +41,34 @@ class DisplaySettings(Enum):
         return "DisplaySettings"
 
 
+class ColorSchemeEnum(Enum):
+    background = 0
+    transparent = 1
+    p1_text = 2
+    p2_text = 3
+    system_text = 4
+    advantage_plus = 5
+    advantage_slight_minus = 6
+    advantage_safe_minus = 7
+    advantage_punishible = 8
+    advantage_very_punishible = 9
+    advantage_text = 10
+
+
+class CurrentColorScheme:
+    dict = {
+        ColorSchemeEnum.background : 'gray10',
+        ColorSchemeEnum.transparent: 'white',
+        ColorSchemeEnum.p1_text: '#93A1A1',
+        ColorSchemeEnum.p2_text: '#586E75',
+        ColorSchemeEnum.system_text: 'lawn green',
+        ColorSchemeEnum.advantage_plus: 'DodgerBlue2',
+        ColorSchemeEnum.advantage_slight_minus: 'ivory2',
+        ColorSchemeEnum.advantage_safe_minus: 'ivory2',
+        ColorSchemeEnum.advantage_punishible: 'orchid2',
+        ColorSchemeEnum.advantage_very_punishible: 'deep pink',
+        ColorSchemeEnum.advantage_text: 'black',
+    }
 
 
 class TextRedirector(object):
@@ -50,8 +78,8 @@ class TextRedirector(object):
         self.fa_p1_var = fa_p1_var
         self.fa_p2_var = fa_p2_var
         self.style = style
-        self.widget.tag_config("p1", foreground="#93A1A1")
-        self.widget.tag_config("p2", foreground="#586E75")
+        self.widget.tag_config("p1", foreground=CurrentColorScheme.dict[ColorSchemeEnum.p1_text])
+        self.widget.tag_config("p2", foreground=CurrentColorScheme.dict[ColorSchemeEnum.p2_text])
         self.columns_to_print = [True] * len(DataColumns)
 
     def set_columns_to_print(self, booleans_for_columns):
@@ -88,20 +116,20 @@ class TextRedirector(object):
             if '?' not in fa:
                 if int(fa) <= -14:
                     #self.style.configure('.', background='#ff0066')
-                    self.style.configure('.', background='deep pink')
+                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_very_punishible])
                 elif int(fa) <= -10:
                     #self.style.configure('.', background='#ff6600')
-                    self.style.configure('.', background='orchid2')
+                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_punishible])
                 elif int(fa) <= -5:
                     #self.style.configure('.', background='#cca300')
-                    self.style.configure('.', background='ivory2')
+                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_safe_minus])
 
                 elif int(fa) < 0:
                     #self.style.configure('.', background='#ccff33')
-                    self.style.configure('.', background='ivory2')
+                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_slight_minus])
                 else:
                     #self.style.configure('.', background='#0099ff')
-                    self.style.configure('.', background='DodgerBlue2')
+                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_plus])
             if "p1:" in output_str:
                 self.fa_p1_var.set(fa)
                 data = data.replace('p1:', '')
@@ -152,12 +180,12 @@ class GUI_FrameDataOverlay():
         self.toplevel.attributes("-topmost", True)
 
         #self.background_color = '#002B36'
-        self.background_color = 'gray10'
+        self.background_color = CurrentColorScheme.dict[ColorSchemeEnum.background]
 
         if self.is_transparency:
-            self.toplevel.wm_attributes("-transparentcolor", "white")
+            self.tranparency_color = CurrentColorScheme.dict[ColorSchemeEnum.transparent]
+            self.toplevel.wm_attributes("-transparentcolor", self.tranparency_color)
             self.toplevel.attributes("-alpha", "0.75")
-            self.tranparency_color = 'white'
         else:
             if is_windows_7:
                 print("Windows 7 detected. Disabling transparency.")
@@ -182,7 +210,7 @@ class GUI_FrameDataOverlay():
         self.s = Style()
         self.s.theme_use('alt')
         self.s.configure('.', background=self.background_color)
-        self.s.configure('.', foreground='black')
+        self.s.configure('.', foreground=CurrentColorScheme.dict[ColorSchemeEnum.advantage_text])
 
         Grid.columnconfigure(self.toplevel, 0, weight=0)
         Grid.columnconfigure(self.toplevel, 1, weight=0)
@@ -199,9 +227,9 @@ class GUI_FrameDataOverlay():
         self.fa_p2_var, fa_p2_label = self.create_frame_advantage_label(5)
 
         self.l_margin = self.create_padding_frame(0)
-        self.r_margin = self.create_padding_frame(2)
-        self.l_seperator = self.create_padding_frame(4)
-        self.r_seperator = self.create_padding_frame(6)
+        self.r_margin = self.create_padding_frame(6)
+        self.l_seperator = self.create_padding_frame(2)
+        self.r_seperator = self.create_padding_frame(4)
 
 
         self.l_live_recovery = self.create_live_recovery(fa_p1_label, 0)
@@ -235,7 +263,7 @@ class GUI_FrameDataOverlay():
         sys.stdout = self.stdout
 
     def create_padding_frame(self, col):
-        padding = Frame(width=10)
+        padding = Frame(self.toplevel, width=10)
         padding.grid(row=0, column=col, rowspan=2, sticky=N + S + W + E)
         return padding
 
@@ -271,7 +299,7 @@ class GUI_FrameDataOverlay():
         #textbox.configure(background='white')
         textbox.configure(background=self.background_color)
 
-        textbox.configure(foreground='lawn green')
+        textbox.configure(foreground=CurrentColorScheme.dict[ColorSchemeEnum.system_text])
         #textbox.configure(foreground='dark khaki')
         #textbox.configure(foreground='#839496')
         #textbox.configure(foreground='#657B83')
