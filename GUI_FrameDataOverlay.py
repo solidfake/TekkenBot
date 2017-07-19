@@ -11,6 +11,7 @@ from ConfigReader import ConfigReader
 import platform
 import time
 from enum import Enum
+import configparser
 
 
 class DataColumns(Enum):
@@ -26,6 +27,19 @@ class DataColumns(Enum):
     rec = 9
     stun = 10
     notes = 11
+
+    def config_name():
+        return "DataColumns"
+
+
+class DisplaySettings(Enum):
+    minimize_on_focus_loss = 0
+    force_transparency = 1
+    overlay_as_draggable_window = 2
+
+    def config_name():
+        return "DisplaySettings"
+
 
 
 
@@ -120,10 +134,10 @@ class GUI_FrameDataOverlay():
 
         is_windows_7 = 'Windows-7' in platform.platform()
         self.tekken_config = ConfigReader("frame_data_overlay")
-        self.is_draggable_window = self.tekken_config.get_property("independent_window_mode", True, lambda x: not "0" in str(x))
-        self.is_minimize_on_lost_focus = self.tekken_config.get_property("minimize_on_lost_focus", True, lambda x: not "0" in str(x))
-        self.is_transparency = self.tekken_config.get_property("transparency", not is_windows_7, lambda x: not "0" in str(x))
-        self.enable_nerd_data = self.tekken_config.get_property("data_for_nerds", False, lambda x: not "0" in str(x))
+        self.is_draggable_window = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.overlay_as_draggable_window.name, False)
+        self.is_minimize_on_lost_focus = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.minimize_on_focus_loss.name, True)
+        self.is_transparency = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.force_transparency.name, not is_windows_7)
+        self.enable_nerd_data = self.tekken_config.get_property(DisplaySettings.config_name(), "data_for_nerds", False)
 
         self.launcher = FrameDataLauncher(self.enable_nerd_data)
 
@@ -132,10 +146,6 @@ class GUI_FrameDataOverlay():
             self.toplevel = Tk()
         else:
             self.toplevel = Toplevel()
-
-
-
-
 
         self.toplevel.wm_title("Tekken Bot: Frame Data Overlay")
 
@@ -205,9 +215,18 @@ class GUI_FrameDataOverlay():
         self.text.configure(state="normal")
         self.text.delete("1.0", "end")
         #self.text.insert("1.0", "{:^5}|{:^8}|{:^9}|{:^7}|{:^5}|{:^5}|{:^8}|{:^5}|{:^5}|{:^7}|{:^5}|{}\n".format(" input ", "type", "startup", "block", "hit", "CH", "active", "track", "tot", "rec", "stun", "notes"))
-        self.redirector.populate_column_names([True] * 99)
+        #self.redirector.populate_column_names(self.get_data_columns())
+        self.redirector.set_columns_to_print(self.get_data_columns())
 
         self.text.configure(state="disabled")
+
+    def get_data_columns(self):
+        booleans_for_columns = []
+        for enum in DataColumns:
+            bool = self.tekken_config.get_property(DataColumns.config_name(), enum.name, True)
+            booleans_for_columns.append(bool)
+        return booleans_for_columns
+
 
     def redirect_stdout(self):
         sys.stdout = self.redirector
@@ -308,9 +327,22 @@ class GUI_FrameDataOverlay():
     def set_columns_to_print(self, columns_to_print):
         self.redirector.set_columns_to_print(columns_to_print)
 
+    def update_column_to_print(self, enum, value):
+        self.tekken_config.set_property(DataColumns.config_name(), enum.name, value)
+        self.write_config_file()
+
+
+    def write_config_file(self):
+        self.tekken_config.write()
+
+
+
+
+
 if __name__ == '__main__':
     #root = Tk()
     app = GUI_FrameDataOverlay(None)
     app.update_launcher()
     app.hide()
+    app.write_config_file()
     app.toplevel.mainloop()

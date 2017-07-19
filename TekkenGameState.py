@@ -54,7 +54,7 @@ class TekkenGameReader:
         self.module_address = 0
         self.original_facing = None
         self.config_reader = ConfigReader('memory_address')
-        self.player_data_pointer_offset = self.config_reader.get_property('player_data_pointer_offset', MemoryAddressOffsets.player_data_pointer_offset.value, lambda x: int(x, 16))
+        self.player_data_pointer_offset = self.config_reader.get_property('Address', 'player_data_pointer_offset', MemoryAddressOffsets.player_data_pointer_offset.value)#, #lambda x: int(x, 16))
 
     def ReacquireEverything(self):
         self.needReacquireModule = True
@@ -106,6 +106,7 @@ class TekkenGameReader:
         return pid.value == self.pid
 
     def GetWindowRect(self):
+        #see https://stackoverflow.com/questions/21175922/enumerating-windows-trough-ctypes-in-python for clues for doing this without needing focus using WindowsEnum
         if self.IsForegroundPID():
             rect = c.wintypes.RECT()
             c.windll.user32.GetWindowRect(c.windll.user32.GetForegroundWindow(), c.byref(rect))
