@@ -47,3 +47,5 @@ class Command(Enum):
 
 
     ReleaseAll = 999
+
+    ResetPractice = 10000

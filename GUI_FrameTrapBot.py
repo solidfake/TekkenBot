@@ -44,7 +44,7 @@ class GUI_FrameTrapBot(Tk):
 
         self.frame_bot.frame.grid(row=0, column=0)
 
-        self.note.add(self.frame_bot.frame, text = "Frame Data Bot")
+        self.note.add(self.frame_bot.frame, text = "Frame Trap Bot")
         self.note.add(self.dummy_tab1, text="dummy bot")
         self.note.add(self.dummy_tab2, text="dummy bot")
         self.note.add(self.dummy_tab3, text="dummy bot")
@@ -86,6 +86,22 @@ class FrameTrapBotTab():
     def __init__(self, notebook):
         self.frame = Frame(notebook)
         self.launcher = TekkenBotLauncher(BotFrameTrap, False)
+
+        self.notation_display = NotationDisplayEntry(self.frame, self.launcher.GetBot())
+        self.notation_display.frame.grid(row=0, column=0, sticky=N + S + E + W)
+
+        Style().configure('TFrame', background='black')
+
+
+
+    def update(self):
+        self.launcher.GetBot().SetFrameTrapCommandFromNotationString(self.notation_display.entry_var.get())
+        self.launcher.Update()
+
+class NotationDisplayEntry():
+    def __init__(self, parent, bot):
+        self.bot = bot
+        self.frame = Frame(parent)
         self.entry_var = StringVar()
         self.entry_var.set("+4")
         self.entry = Entry(self.frame, textvariable=self.entry_var, font=("Consolas", 44))
@@ -97,22 +113,17 @@ class FrameTrapBotTab():
 
         self.button_record.grid(row=1, column=0, sticky=W)
         self.entry.grid(row=0, column=0, sticky=N + S + E + W)
-        Style().configure('TFrame', background='black')
 
     def record_button(self, event):
         if not self.recording:
-            self.launcher.GetBot().Record()
+            self.bot.Record()
             print('pressed record')
         else:
-            notation = self.launcher.GetBot().Stop()
+            notation = self.bot.Stop()
             self.entry_var.set(notation)
             print('stopped record')
 
         self.recording = not self.recording
-
-    def update(self):
-        self.launcher.GetBot().SetFrameTrapCommandFromNotationString(self.entry_var.get())
-        self.launcher.Update()
 
 if __name__ == '__main__':
     app = GUI_FrameTrapBot()

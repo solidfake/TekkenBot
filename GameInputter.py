@@ -53,6 +53,7 @@ class Buttons(Enum):
     BUTTON_DOWN = 8
     BUTTON_RB = 9
     BUTTON_ACCEPT = 10
+    BUTTON_SELECT = 11
 
 
 
@@ -70,7 +71,8 @@ class GameControllerInputter:
         Buttons.BUTTON_UP : Keys_P2.UP,
         Buttons.BUTTON_DOWN : Keys_P2.DOWN,
         Buttons.BUTTON_RB : Keys_P2.RB,
-        Buttons.BUTTON_ACCEPT : Keys_P2.A
+        Buttons.BUTTON_ACCEPT : Keys_P2.A,
+        Buttons.BUTTON_SELECT : Keys_P2.SELECT
     }
 
     p1_controls = {
@@ -83,7 +85,8 @@ class GameControllerInputter:
         Buttons.BUTTON_UP: Keys_P1.UP,
         Buttons.BUTTON_DOWN: Keys_P1.DOWN,
         Buttons.BUTTON_RB: Keys_P1.RB,
-        Buttons.BUTTON_ACCEPT: Keys_P1.A
+        Buttons.BUTTON_ACCEPT: Keys_P1.A,
+        Buttons.BUTTON_SELECT: Keys_P1.SELECT
     }
 
 
@@ -162,6 +165,9 @@ class GameControllerInputter:
     def TapAccept(self):
         self.TapButton(self.controls[Buttons.BUTTON_ACCEPT])
 
+    def TapSelect(self):
+        self.TapButton(self.controls[Buttons.BUTTON_SELECT])
+
     def TapRageArt(self):
         self.TapButton(self.controls[Buttons.BUTTON_RB])
 
@@ -213,6 +219,9 @@ class GameControllerInputter:
     def Release4(self):
         self.ReleaseButton(self.controls[Buttons.BUTTON_4])
 
+    def ResetPractice(self):
+        self.TapAccept()
+        self.TapSelect()
 
     def ReleaseButton(self, button):
         self.ReleaseKeyIfActive(button)
@@ -262,6 +271,8 @@ class GameControllerInputter:
     def ReleaseKeyIfActive(self, hexKeyCode):
         if (self.isTekkenActiveWindow):
             ArtificalKeyboard.ReleaseKey(hexKeyCode)
+
+
 
     def ReleaseAllButtons(self):
         #print("releasing all buttons")

@@ -173,6 +173,10 @@ class BotCommands:
     def MashContinue(self):
         self.AddCommand(UniversalCommands.MASH_CONTINUE)
 
+    def ResetPractice(self):
+        self.ClearCommands()
+        self.AddCommand([(Command.ReleaseAll, 0), (Command.Wait, 2), (Command.ResetPractice, 0), (Command.Wait, 1)])
+
     def AddCommand(self, buffer):
         if self.IsAvailable():
             self.commandBuffer = list(buffer)
@@ -205,6 +209,9 @@ class BotCommands:
 
         if command == Command.Accept:
             self.inputController.TapAccept()
+        if command == Command.ResetPractice:
+            self.inputController.TapAccept()
+            self.inputController.TapSelect()
 
         if command == Command.HoldBack:
             self.inputController.HoldBack()
