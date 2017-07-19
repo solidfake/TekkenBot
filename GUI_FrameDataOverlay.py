@@ -279,7 +279,7 @@ class GUI_FrameDataOverlay():
             if tekken_rect != None:
                 x = (tekken_rect.right + tekken_rect.left)/2 - self.w/2
                 y = tekken_rect.top
-                self.geometry('%dx%d+%d+%d' % (self.w, self.h, x, y))
+                self.toplevel.geometry('%dx%d+%d+%d' % (self.w, self.h, x, y))
                 if not self.overlay_visible:
                     self.show()
             else:
@@ -298,11 +298,11 @@ class GUI_FrameDataOverlay():
 
     def hide(self):
         if self.is_minimize_on_lost_focus and not self.is_draggable_window:
-            self.withdraw()
+            self.toplevel.withdraw()
             self.overlay_visible = False
 
     def show(self):
-        self.deiconify()
+        self.toplevel.deiconify()
         self.overlay_visible = True
 
     def set_columns_to_print(self, columns_to_print):
