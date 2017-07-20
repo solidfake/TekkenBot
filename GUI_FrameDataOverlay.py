@@ -33,9 +33,12 @@ class DataColumns(Enum):
 
 
 class DisplaySettings(Enum):
-    minimize_on_focus_loss = 0
-    force_transparency = 1
-    overlay_as_draggable_window = 2
+    overlay_as_draggable_window = 0
+    minimize_on_focus_loss = 1
+    transparency = 2
+    live_frame_data = 3
+
+
 
     def config_name():
         return "DisplaySettings"
@@ -164,8 +167,9 @@ class GUI_FrameDataOverlay():
         self.tekken_config = ConfigReader("frame_data_overlay")
         self.is_draggable_window = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.overlay_as_draggable_window.name, False)
         self.is_minimize_on_lost_focus = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.minimize_on_focus_loss.name, True)
-        self.is_transparency = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.force_transparency.name, not is_windows_7)
+        self.is_transparency = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.transparency.name, not is_windows_7)
         self.enable_nerd_data = self.tekken_config.get_property(DisplaySettings.config_name(), "data_for_nerds", False)
+        self.show_live_framedata = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.live_frame_data.name, True)
 
         self.launcher = FrameDataLauncher(self.enable_nerd_data)
 
@@ -231,9 +235,9 @@ class GUI_FrameDataOverlay():
         self.l_seperator = self.create_padding_frame(2)
         self.r_seperator = self.create_padding_frame(4)
 
-
-        self.l_live_recovery = self.create_live_recovery(fa_p1_label, 0)
-        self.r_live_recovery = self.create_live_recovery(fa_p2_label, 0)
+        if self.show_live_framedata:
+            self.l_live_recovery = self.create_live_recovery(fa_p1_label, 0)
+            self.r_live_recovery = self.create_live_recovery(fa_p2_label, 0)
 
 
         self.text = self.create_textbox(3)
@@ -310,15 +314,16 @@ class GUI_FrameDataOverlay():
         time1 = time.time()
         self.launcher.Update()
 
-        if len(self.launcher.gameState.stateLog) > 1:
-            l_recovery = str(self.launcher.gameState.GetOppFramesTillNextMove() - self.launcher.gameState.GetBotFramesTillNextMove())
-            r_recovery = str(self.launcher.gameState.GetBotFramesTillNextMove() - self.launcher.gameState.GetOppFramesTillNextMove())
-            if not '-' in l_recovery:
-                l_recovery = '+' + l_recovery
-            if not '-' in r_recovery:
-                r_recovery = '+' + r_recovery
-            self.l_live_recovery.set(l_recovery)
-            self.r_live_recovery.set(r_recovery)
+        if self.show_live_framedata:
+            if len(self.launcher.gameState.stateLog) > 1:
+                l_recovery = str(self.launcher.gameState.GetOppFramesTillNextMove() - self.launcher.gameState.GetBotFramesTillNextMove())
+                r_recovery = str(self.launcher.gameState.GetBotFramesTillNextMove() - self.launcher.gameState.GetOppFramesTillNextMove())
+                if not '-' in l_recovery:
+                    l_recovery = '+' + l_recovery
+                if not '-' in r_recovery:
+                    r_recovery = '+' + r_recovery
+                self.l_live_recovery.set(l_recovery)
+                self.r_live_recovery.set(r_recovery)
 
 
         if not self.is_draggable_window:
