@@ -52,6 +52,7 @@ class GUI_TekkenBotPrime(Tk):
         self.geometry(str(720) + 'x' + str(720))
 
         self.overlay.update_launcher()
+        self.overlay.hide()
 
 
 
@@ -89,6 +90,7 @@ class GUI_TekkenBotPrime(Tk):
         self.overlay.toplevel.destroy()
         self.overlay = fdo.GUI_FrameDataOverlay(self)
         self.overlay.update_launcher()
+        self.overlay.hide()
 
 class TextRedirector(object):
     def __init__(self, widget, tag="stdout"):
