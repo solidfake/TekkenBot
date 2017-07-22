@@ -68,7 +68,8 @@ class PlayerDataAddress(Enum):
 
     rage_flag = 0x99A
 
-    mystery_state = 0x000
+    #mystery_state = 0x534
+    mystery_state = 0x994
 
     juggle_height = 0x11D8
 
@@ -80,10 +81,16 @@ class PlayerDataAddress(Enum):
 class NonPlayerDataAddressesEnum(Enum):
     OPPONENT_NAME = 1
 
+    P1_CHAR_SELECT = 10
+    P2_CHAR_SELECT = 11
 
+    STAGE_SELECT = 20
 class NonPlayerDataAddressesTuples:
     offsets = {
         NonPlayerDataAddressesEnum.OPPONENT_NAME : (0x03339C20, 0x0, 0x8, 0x114),
+        NonPlayerDataAddressesEnum.P1_CHAR_SELECT: (0x0333A228, 0x80, 0x3CC),
+        NonPlayerDataAddressesEnum.P2_CHAR_SELECT : (0x0333A228, 0x80, 0x584),
+        NonPlayerDataAddressesEnum.STAGE_SELECT: (0x0333A228, 0x80, 0x78),
     }
 
 
@@ -91,38 +98,47 @@ class NonPlayerDataAddressesTuples:
 def IsDataAFloat(dataEnum):
     return dataEnum in {PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z}
 
-CHEAT_ENGINE_BLOCK = '<CheatEntry> <ID>{id}</ID> <Description>"{name}"</Description> <VariableType>{variable_type}</VariableType> <Address>"TekkenGame-Win64-Shipping.exe"+{base_address}</Address> <Offsets> <Offset>{offset}</Offset> <Offset>0</Offset> </Offsets> </CheatEntry>'
+CHEAT_ENGINE_BLOCK = '<CheatEntry> <ID>{id}</ID> <Description>"{name}"</Description> <VariableType>{variable_type}</VariableType> <Address>"TekkenGame-Win64-Shipping.exe"+{base_address}</Address> <Offsets> {offsets} </Offsets> </CheatEntry>'
+GENERIC_OFFSET_BLOCK =  "<Offset>{offset}</Offset>"
 
-def PrintCheatEngineBlock(id, name, base_address, offset, data_is_float = False):
+def PrintCheatEngineBlock(id, name, base_address, offset_list, data_is_float = False):
         if data_is_float:
             variable_type = 'Float'
         else:
             variable_type = '4 Bytes'
-        print(CHEAT_ENGINE_BLOCK.replace('{id}', str(id)).replace('{name}', name).replace('{variable_type}', variable_type).replace('{base_address}', format(base_address, 'x')).replace('{offset}', format(offset, 'x')))
+
+        offset_string = ""
+        for offset in offset_list:
+            offset_string = GENERIC_OFFSET_BLOCK.replace('{offset}', format(offset, 'x')) + offset_string
+        print(CHEAT_ENGINE_BLOCK.replace('{id}', str(id)).replace('{name}', name).replace('{variable_type}', variable_type).replace('{base_address}', format(base_address, 'x')).replace('{offsets}', offset_string))
 
 if __name__ == "__main__":
     id = 999
 
+    for key, value in NonPlayerDataAddressesTuples.offsets.items():
+        id += 1
+        PrintCheatEngineBlock(id, key.name, value[0], value[1:], False)
+
     for enum in MemoryAddressOffsets:
         id += 1
         if enum != MemoryAddressOffsets.player_data_pointer_offset:
-            PrintCheatEngineBlock(id, enum.name, MemoryAddressOffsets.player_data_pointer_offset.value, enum.value)
+            PrintCheatEngineBlock(id, enum.name, MemoryAddressOffsets.player_data_pointer_offset.value, [0, enum.value])
 
     for enum in GameDataAddress:
         id += 1
-        PrintCheatEngineBlock(id, enum.name, MemoryAddressOffsets.player_data_pointer_offset.value, enum.value)
+        PrintCheatEngineBlock(id, enum.name, MemoryAddressOffsets.player_data_pointer_offset.value, [0, enum.value])
 
     for enum in PlayerDataAddress:
         id += 1
-        PrintCheatEngineBlock(id, "p1_" + enum.name, MemoryAddressOffsets.player_data_pointer_offset.value, enum.value, IsDataAFloat(enum))
+        PrintCheatEngineBlock(id, "p1_" + enum.name, MemoryAddressOffsets.player_data_pointer_offset.value, [0, enum.value], IsDataAFloat(enum))
         id += 1
         PrintCheatEngineBlock(id, "p2_" + enum.name, MemoryAddressOffsets.player_data_pointer_offset.value,
-                              enum.value + MemoryAddressOffsets.p2_data_offset.value, IsDataAFloat(enum))
+                              [0, enum.value + MemoryAddressOffsets.p2_data_offset.value], IsDataAFloat(enum))
 
     for enum in EndBlockPlayerDataAddress:
         id += 1
-        PrintCheatEngineBlock(id, "p1_" + enum.name, MemoryAddressOffsets.player_data_pointer_offset.value, enum.value,
+        PrintCheatEngineBlock(id, "p1_" + enum.name, MemoryAddressOffsets.player_data_pointer_offset.value, [0, enum.value],
                               IsDataAFloat(enum))
         id += 1
         PrintCheatEngineBlock(id, "p2_" + enum.name, MemoryAddressOffsets.player_data_pointer_offset.value,
-                              enum.value + MemoryAddressOffsets.p2_end_block_offset.value, IsDataAFloat(enum))
+                              [0, enum.value + MemoryAddressOffsets.p2_end_block_offset.value], IsDataAFloat(enum))
