@@ -14,28 +14,33 @@ class BotRecorder():
         self.toplevel = Tk()
         self.recorder = MatchRecorder()
         self.game_state = TekkenGameState()
-        self.playback("match_1500581255.50204")
+
         self.playback_going = False
         self.is_recording = False #set this to true to record some matches
         self.is_playback_mode = True
+
+
 
 
     def update_launcher(self):
 
         time1 = time.time()
 
+        buffer = 4
 
-        successful = self.game_state.Update()
+
+        successful = self.game_state.Update(buffer)
         if successful and self.game_state.IsGameHappening():
 
 
             if self.game_state.WasTimerReset():
                 print("timer reset")
                 if self.is_recording:
-                    self.recorder.PrintInputLog("match_" + str(time.time()))
+                    self.recorder.PrintInputLog()
                 self.playback_going = False
 
-            if self.game_state.DidTimerStartTicking():
+            if self.game_state.DidTimerStartTicking(buffer + 60):
+                self.playback("2017_Jul_20_22.15.36S_ALISAvKING")
                 print("ticking begins")
                 if self.is_recording:
                     self.recorder = MatchRecorder()
@@ -69,8 +74,8 @@ class BotRecorder():
             p1_commands = fr.readline().strip()
             p2_commands = fr.readline().strip()
 
-        p1_bot.AddCommand(ParseMoveList(p1_commands))
-        p2_bot.AddCommand(ParseMoveList(p2_commands))
+        p1_bot.AddCommand([(Command.ReleaseAll, 0), (Command.Wait, 1)] + ParseMoveList(p1_commands) + [(Command.ReleaseAll, 1)])
+        p2_bot.AddCommand([(Command.ReleaseAll, 0), (Command.Wait, 1)] + ParseMoveList(p2_commands) + [(Command.ReleaseAll, 1)])
 
         self.p1_controller = p1_controller
         self.p2_controller = p2_controller

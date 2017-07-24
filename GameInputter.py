@@ -195,6 +195,9 @@ class GameControllerInputter:
     def Hold4(self):
         self.HoldButton(self.controls[Buttons.BUTTON_4])
 
+    def HoldRage(self):
+        self.HoldButton(self.controls[Buttons.BUTTON_RB])
+
     def ReleaseForward(self):
         self.ReleaseButton(self.forward)
 
@@ -218,6 +221,9 @@ class GameControllerInputter:
 
     def Release4(self):
         self.ReleaseButton(self.controls[Buttons.BUTTON_4])
+
+    def ReleaseRage(self):
+        self.ReleaseButton(self.controls[Buttons.BUTTON_RB])
 
     def ResetPractice(self):
         self.TapAccept()

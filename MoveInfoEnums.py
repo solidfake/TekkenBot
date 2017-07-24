@@ -188,7 +188,47 @@ class InputAttackCodes(Enum):
     x1x2x3x4 = 7680
     xRAGE = 8192
 
+class CharacterCodes(Enum):
+    PAUL = 0
+    LAW = 1
+    KING = 2
+    YOSHIMITSU = 3
+    HWOARANG  = 4
+    XIAOYU = 5
+    JIN = 6
+    BRYAN = 7
+    HEIHACHI = 8
+    KAZUYA = 9
+    STEVE = 10
+    JACK_7 = 11
+    ASUKA = 12
+    DEVIL_JIN = 13
+    FENG = 14
+    LILI = 15
+    DRAGUNOV = 16
+    LEO = 17
+    LARS = 18
+    ALISA = 19
+    CLAUDIO  = 20
+    KATARINA = 21
+    LUCKY_CHLOE = 22
+    SHAHEEN = 23
+    JOSIE = 24
+    GIGAS = 25
+    KAZUMI = 26
+    DEVIL_KAZUMI = 27 #not selectable
+    NINA = 28
+    MASTER_RAVEN = 29
+    LEE = 30
+    BOB = 31
+    AKUMA = 32
+    KUMA = 33
+    PANDA = 34
+    EDDY = 35
+    ELIZA = 36
+    MIGUEL = 37
 
+    NO_SELECTION = 255
 
 
 class UniversalAnimationCodes(Enum):

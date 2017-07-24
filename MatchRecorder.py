@@ -3,6 +3,7 @@ from TekkenGameState import TekkenGameState
 from ButtonCommandEnum import Command
 from MoveInfoEnums import InputDirectionCodes
 from MoveInfoEnums import InputAttackCodes
+import time
 
 class MatchRecorder:
     NOTATION = {
@@ -24,25 +25,32 @@ class MatchRecorder:
         Command.Release1: '+1-',
         Command.Release2: '+2-',
         Command.Release3: '+3-',
-        Command.Release4: '+4-'
+        Command.Release4: '+4-',
+
+        Command.HoldRage: 'R',
+        Command.ReleaseRage: '=R',
     }
 
     def __init__(self):
         self.input_log = []
+        self.p1_name = "UNKNOWN"
+        self.p2_name = "UNKNOWN"
 
 
     def Update(self, gameState:TekkenGameState):
+        self.p1_name = gameState.GetBotName()
+        self.p2_name = gameState.GetOppName()
+
         bot_input = gameState.GetBotInputState()
         opp_input = gameState.GetOppInputState()
         #self.input_log.append(bot_input[0].name + "," + bot_input[1].name + "|" + opp_input[0].name + "," + opp_input[1].name)
         self.input_log.append((bot_input, opp_input))
 
-    def GetInputAsCommands(self):
+    def GetInputAsCommands(self, index):
         commands = []
-        previous_input = None
+        previous_input = [(InputDirectionCodes.N, InputAttackCodes.N, False), (InputDirectionCodes.N, InputAttackCodes.N, False)]
         for input in self.input_log:
-            if previous_input != None:
-                commands += self.TransitionToCommandFromCommand(input[1], previous_input[1])
+            commands += self.TransitionToCommandFromCommand(input[index], previous_input[index])
             previous_input = input
         #print(self.CompressCommands(commands))
         return self.CompressCommands(commands)
@@ -64,8 +72,8 @@ class MatchRecorder:
 
 
 
-    def GetInputAsNotation(self):
-        commands = self.GetInputAsCommands()
+    def GetInputAsNotation(self, index):
+        commands = self.GetInputAsCommands(index)
         notation = self.GetCommandsAsNotation(commands)
         return notation
 
@@ -99,6 +107,15 @@ class MatchRecorder:
         command += self.CheckForString('3', prev_att, new_att, Command.Hold3, Command.Release3)
         command += self.CheckForString('4', prev_att, new_att, Command.Hold4, Command.Release4)
 
+        new_rage = input[2]
+        prev_rage = prev_input[2]
+
+        if new_rage and not prev_rage:
+            command.append((Command.HoldRage, 0))
+
+        if prev_rage and not new_rage:
+            command.append((Command.ReleaseRage, 0))
+
         command.append((Command.Wait, 1))
 
         return command
@@ -112,12 +129,13 @@ class MatchRecorder:
         return command
 
 
-
-    def PrintInputLog(self, filename):
+    REPLAY_DIR = "TekkenData/Replays/"
+    def PrintInputLog(self):
         print("Recording match...")
-        with open(filename, 'w') as fw:
-            for input in self.input_log:
-                fw.write(input + "\n")
+
+        with open(MatchRecorder.REPLAY_DIR + str(time.strftime('%Y_%b_%d_%H.%M.%SS_') + self.p1_name + 'v' + self.p2_name), 'w') as fw:
+            fw.write(self.GetInputAsNotation(0) + "\n")
+            fw.write(self.GetInputAsNotation(1) + "\n")
         print("...match recorded")
 
 

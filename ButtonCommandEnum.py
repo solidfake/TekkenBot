@@ -36,6 +36,9 @@ class Command(Enum):
     Release3 = 112
     Release4 = 113
 
+    HoldRage = 120
+    ReleaseRage = 121
+
 
 
     HitConfirm = 200

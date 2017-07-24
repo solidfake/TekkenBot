@@ -119,6 +119,8 @@ def ConvertNotationToCommands(notation:str, timingOccurances:int):
         commands.append((Command.ReleaseBack, 0))
     elif '-F' in notation:
         commands.append((Command.ReleaseForward, 0))
+    elif '-R' in notation:
+        commands.append((Command.ReleaseRage, 0))
     else:
         if 'u' in notation:
             commands.append((Command.TapUp, 0))
@@ -136,6 +138,8 @@ def ConvertNotationToCommands(notation:str, timingOccurances:int):
             commands.append((Command.HoldBack, 0))
         if 'F' in notation:
             commands.append((Command.HoldForward, 0))
+        if 'R' in notation:
+            commands.append((Command.HoldRage, 0))
 
         commands += GetAttackCommands(notation)
 

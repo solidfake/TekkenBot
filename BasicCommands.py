@@ -81,8 +81,9 @@ class UniversalCommands:
     ))
 
 class BotCommands:
-    def __init__(self, inputController):
+    def __init__(self, inputController, is_playback_mode = False):
         self.updateFrame = 0
+        self.is_playback_mode = is_playback_mode
         self.isBusy = False
         self.inputController = inputController
         self.commandBuffer = []
@@ -93,10 +94,10 @@ class BotCommands:
     def Update(self, gameState: TekkenGameState):
         #self.UpdateInputDelay(gameState)
 
-        if self.updateFrame > 120:
+        if self.updateFrame > 120 and not self.is_playback_mode:
             self.ClearCommands()
 
-        if gameState.DidBotJustTakeDamage():
+        if gameState.DidBotJustTakeDamage() and not self.is_playback_mode:
             self.ClearCommands()
 
         self.UpdateCommandBuffer(gameState)
@@ -247,6 +248,11 @@ class BotCommands:
             self.inputController.Release3()
         if command == Command.Release4:
             self.inputController.Release4()
+
+        if command == Command.HoldRage:
+            self.inputController.HoldRage()
+        if command == Command.ReleaseRage:
+            self.inputController.ReleaseRage()
 
         if command == Command.HoldDownBack:
             self.inputController.HoldBack()
