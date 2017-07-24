@@ -100,31 +100,43 @@ class TekkenEncyclopedia:
             gameState.FlipMirror()
 
     def DetermineGameStats(self, gameState: TekkenGameState):
-
-        if gameState.WasFightReset():
-            print(gameState.stateLog[-2].bot.damage_taken)
-            summary = RoundSummary(self.GameEvents)
-            self.GameEvents = []
-
         frames_ago = 4
-
         if self.current_game_event == None:
-            if gameState.DidOppComboCounterJustStartXFramesAgo(frames_ago):  # if we operate slightly in the past, dropped frames are less of an issue since we recover them from the rollback log
+            if gameState.DidOppComboCounterJustStartXFramesAgo(frames_ago):
                 gameState.BackToTheFuture(frames_ago)
 
+                combo_counter_damage = gameState.GetOppComboDamageXFramesAgo(1)
+
+                was_unblockable = gameState.IsOppAttackUnblockable()
+                was_antiair = gameState.IsOppAttackAntiair()
                 was_block_punish = gameState.DidBotStartGettingPunishedXFramesAgo(1)
+                perfect_punish = False
+                if was_block_punish:
+                    perfect_punish = gameState.WasBotMoveOnLastFrameXFramesAgo(2)
                 was_counter_hit = gameState.IsBotGettingCounterHit()
                 was_ground_hit = gameState.IsBotGettingHitOnGround()
 
-                was_whiff_punish = gameState.GetBotStartupXFramesAgo(3) > 0
+                was_whiff_punish = gameState.GetBotStartupXFramesAgo(2) > 0
 
                 was_low_hit = gameState.IsOppAttackLow()
                 was_mid_hit_on_crouching = gameState.IsOppAttackMid() and gameState.IsBotCrouching()
                 was_throw = gameState.IsBotBeingThrown()
 
+                was_damaged_during_attack = gameState.DidOppTakeDamageDuringStartup()
+
+
+
                 gameState.ReturnToPresent()
 
-                if was_block_punish:
+                if was_unblockable:
+                    hit = GameStatEventEntry.EntryType.UNBLOCKABLE
+                elif was_antiair:
+                    hit = GameStatEventEntry.EntryType.ANTIAIR
+                elif was_throw:
+                    hit = GameStatEventEntry.EntryType.THROW
+                elif was_damaged_during_attack:
+                    hit = GameStatEventEntry.EntryType.POWER_CRUSHED
+                elif was_block_punish:
                     hit = GameStatEventEntry.EntryType.PUNISH
                 elif was_counter_hit:
                     hit = GameStatEventEntry.EntryType.COUNTER
@@ -136,20 +148,38 @@ class TekkenEncyclopedia:
                     hit = GameStatEventEntry.EntryType.LOW
                 elif was_mid_hit_on_crouching:
                     hit = GameStatEventEntry.EntryType.MID
-                elif was_throw:
-                    hit = GameStatEventEntry.EntryType.THROW
                 else:
                     hit = GameStatEventEntry.EntryType.NO_BLOCK
-                self.current_game_event = GameStatEventEntry(hit)
+                self.current_game_event = GameStatEventEntry(hit, combo_counter_damage)
+
+                #print("event open")
+            else:
+                bot_damage_taken = gameState.DidBotJustTakeDamage(frames_ago + 1)
+                if bot_damage_taken > 0:
+                    print('armored')
+                    game_event = GameStatEventEntry(GameStatEventEntry.EntryType.ARMORED, 0) #this is probably gonna break for Yoshimitsu's self damage moves
+                    game_event.close_entry(1, bot_damage_taken, 0)
+
+                    self.GameEvents.append(game_event)
+
+
+
         else:
-            if gameState.DidOppComboCounterJustEndXFramesAgo(frames_ago):
+
+            if gameState.DidOppComboCounterJustEndXFramesAgo(frames_ago) or gameState.WasFightReset():
                 hits = gameState.GetOppComboHitsXFramesAgo(frames_ago + 1)
                 damage = gameState.GetOppComboDamageXFramesAgo(frames_ago + 1)
                 juggle = gameState.GetOppJuggleDamageXFramesAgo(frames_ago + 1)
                 self.current_game_event.close_entry(hits, damage, juggle)
                 self.GameEvents.append(self.current_game_event)
                 self.current_game_event = None
+                #print("event closed")
 
+
+        if gameState.WasFightReset():
+            if (gameState.GetTimer(frames_ago) < 3600 and len(self.GameEvents) > 0) or True:
+                summary = RoundSummary(self.GameEvents, gameState.GetOppRoundSummary(frames_ago))
+            self.GameEvents = []
 
 
 
@@ -398,37 +428,65 @@ class GameStatEventEntry:
         GROUND = 7
         NO_BLOCK = 8
 
+        ARMORED = 10
+
+        UNBLOCKABLE = 12
+
+        ANTIAIR = 14
+        POWER_CRUSHED = 15
 
         #Not implemented
         LOW_PARRY = 9
-        ARMORED = 10
-        CRUSHED = 11
-        UNBLOCKABLE = 12
         OUT_OF_THE_AIR = 13
 
 
 
-    def __init__(self, hit_type : EntryType):
+    class PunishType(Enum):
+        NONE = 0
+        PERFECT = 1
+        JAB = 2
+        JAB_ON_LAUNCH_PUNISHIBLE = 3
+
+
+
+
+    def __init__(self, hit_type : EntryType, combo_counter_damage):
         self.hit_type = hit_type
+        self.damage_already_on_combo_counter = combo_counter_damage
+
 
     def close_entry(self, total_hits, total_damage, juggle_damage):
         self.total_hits = total_hits
-        self.total_damage = total_damage
+        self.total_damage = max(0, total_damage - self.damage_already_on_combo_counter)
         self.juggle_damage = juggle_damage
 
 
 
 class RoundSummary:
-    def __init__(self, events):
+    def __init__(self, events, round_variables):
         self.events = events
         self.collated_events = self.collate_events(events)
-        print(self.collated_events)
+        total_damage = 0
+        sources, types = self.collated_events
+        print('{} combos for {} damage'.format(types[0][0], types[0][1]))
+        #print('{} pokes for {} damage'.format(types[1][0], types[1][1]))
+        for event, hits, damage in sources:
+            if damage > 0:
+                print('{} {} for {} damage'.format(hits, event.name, damage))
+                total_damage += damage
+
+
+        print('total damage dealt {} ({})'.format(round_variables[1], total_damage))
 
 
     def collate_events(self, events):
+        hits_into_juggles = 0
+        hits_into_pokes = 0
         damage_from_juggles = 0
         damage_from_pokes = 0
         sources = []
+
+
 
         for entry in GameStatEventEntry.EntryType:
             occurances = 0
@@ -439,12 +497,15 @@ class RoundSummary:
                     damage += event.total_damage
                     if event.juggle_damage > 0:
                         damage_from_juggles += event.total_damage
+                        hits_into_juggles += 1
                     else:
                         damage_from_pokes += event.total_damage
+                        hits_into_pokes += 1
             sources.append((entry, occurances, damage))
 
         sources.sort(key=lambda x: x[2], reverse=True)
-        return sources
+        types = [(hits_into_juggles, damage_from_juggles), (hits_into_pokes, damage_from_pokes)]
+        return sources, types
 
 
 

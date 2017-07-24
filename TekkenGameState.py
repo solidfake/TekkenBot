@@ -117,6 +117,9 @@ class TekkenGameReader:
     def HasWorkingPID(self):
         return self.pid > -1
 
+
+
+
     def GetUpdatedState(self, rollback_frame = 0):
         gameSnapshot = None
 
@@ -148,6 +151,13 @@ class TekkenGameReader:
                 if player_data_base_address == 0:
                     if not self.needReaquireGameState:
                         print("No fight detected. Gamestate not updated.")
+
+                    #addresses = NonPlayerDataAddressesTuples.offsets[NonPlayerDataAddressesEnum.P2_CHAR_SELECT]
+                    #value = self.module_address
+                    #for offset in addresses:
+                        #value = self.GetValueFromAddress(processHandle, value + offset, is64bit=True)
+                    #print(value)
+
                     self.needReaquireGameState = True
 
                 else:
@@ -274,6 +284,11 @@ class BotSnapshot:
         self.combo_damage = d[EndBlockPlayerDataAddress.display_combo_damage]
         self.juggle_damage = d[EndBlockPlayerDataAddress.display_juggle_damage]
 
+        try:
+            self.character_name = CharacterCodes(d[PlayerDataAddress.char_id]).name
+        except:
+            self.character_name = "UNKNOWN"
+
 
     def PrintYInfo(self):
         #print("h: " + str(self.highest_y) + " l: " + str(self.lowest_y) + ' d: ' + str(self.highest_y - self.lowest_y))
@@ -311,7 +326,10 @@ class BotSnapshot:
         return self.attack_type == AttackType.MID
 
     def IsAttackUnblockable(self):
-        return self.attack_type in {AttackType.UNBLOCKABLE_HIGH, AttackType.UNBLOCKABLE_LOW, AttackType.UNBLOCKABLE_MID}
+        return self.attack_type in {AttackType.HIGH_UNBLOCKABLE, AttackType.LOW_UNBLOCKABLE, AttackType.MID_UNBLOCKABLE}
+
+    def IsAttackAntiair(self):
+        return self.attack_type == AttackType.ANTIAIR_ONLY
 
     def IsAttackThrow(self):
         return self.throw_flag == 1
@@ -425,8 +443,8 @@ class TekkenGameState:
 
         self.futureStateLog = None
 
-    def Update(self):
-        gameData = self.gameReader.GetUpdatedState()
+    def Update(self, buffer = 0):
+        gameData = self.gameReader.GetUpdatedState(buffer)
 
         if(gameData != None):
             if len(self.stateLog) == 0 or gameData.frame_count != self.stateLog[-1].frame_count: #we don't run perfectly in sync, if we get back the same frame, throw it away
@@ -439,9 +457,9 @@ class TekkenGameState:
                         pass
                         #print("DROPPED FRAMES: " + str(frames_lost))
 
-                for i in range(min(7, frames_lost)):
+                for i in range(min(7 - buffer, frames_lost)):
                     #print("RETRIEVING FRAMES")
-                    droppedState = self.gameReader.GetUpdatedState(min(7, frames_lost) - i)
+                    droppedState = self.gameReader.GetUpdatedState(min(7, frames_lost + buffer) - i)
                     self.AppendGamedata(droppedState)
 
                 self.AppendGamedata(gameData)
@@ -502,6 +520,8 @@ class TekkenGameState:
         else:
             return False
 
+
+
     def DidOppComboCounterJustEndXFramesAgo(self, framesAgo):
         if len(self.stateLog) > framesAgo:
             return self.stateLog[0 - framesAgo].opp.combo_counter == 0 and self.stateLog[0 - framesAgo - 1].opp.combo_counter > 0
@@ -529,6 +549,13 @@ class TekkenGameState:
     def DidBotStartGettingPunishedXFramesAgo(self, framesAgo):
         if len(self.stateLog) > framesAgo:
             return self.stateLog[0 - framesAgo].bot.IsPunish()
+        else:
+            return False
+
+    def WasBotMoveOnLastFrameXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            print ('{}  {}'.format(self.stateLog[0 - framesAgo].bot.move_timer, self.stateLog[0 - framesAgo].bot.recovery))
+            return self.stateLog[0 - framesAgo].bot.move_timer == self.stateLog[0 - framesAgo].bot.recovery - 1
         else:
             return False
 
@@ -610,6 +637,9 @@ class TekkenGameState:
 
     def IsOppAttackUnblockable(self):
         return self.stateLog[-1].opp.IsAttackUnblockable()
+
+    def IsOppAttackAntiair(self):
+        return self.stateLog[-1].opp.IsAttackAntiair()
 
     def IsOppAttackThrow(self):
         return self.stateLog[-1].opp.IsAttackThrow()
@@ -844,11 +874,30 @@ class TekkenGameState:
     def IsOppWallSplat(self):
         return self.stateLog[-1].opp.IsWallSplat()
 
-    def DidBotJustTakeDamage(self):
-        if(len(self.stateLog) > 2):
-            return self.stateLog[-1].bot.damage_taken > self.stateLog[-2].bot.damage_taken
+    def DidBotJustTakeDamage(self, framesAgo = 1):
+        if(len(self.stateLog) > framesAgo ):
+            return max(0, self.stateLog[0 - framesAgo].bot.damage_taken - self.stateLog[0 - framesAgo - 1].bot.damage_taken)
         else:
-            return False
+            return 0
+
+    def DidOppJustTakeDamage(self, framesAgo=1):
+        if (len(self.stateLog) > framesAgo):
+            return max(0, self.stateLog[0 - framesAgo].opp.damage_taken - self.stateLog[0 - framesAgo - 1].opp.damage_taken)
+        else:
+            return 0
+
+    def DidOppTakeDamageDuringStartup(self):
+        current_damage_taken = self.stateLog[-1].opp.damage_taken
+        current_move_timer = self.stateLog[-1].opp.move_timer
+        for state in reversed(self.stateLog):
+            if state.opp.damage_taken < current_damage_taken:
+                return True
+            if current_move_timer < state.opp.move_timer:
+                return False
+            else:
+                current_move_timer = state.opp.move_timer
+        return False
+
 
     def DidBotTimerInterruptXMovesAgo(self, framesAgo):
         if len(self.stateLog) > framesAgo:
@@ -968,6 +1017,12 @@ class TekkenGameState:
     def GetOppInputState(self):
         return self.stateLog[-1].opp.GetInputState()
 
+    def GetBotName(self):
+        return self.stateLog[-1].bot.character_name
+
+    def GetOppName(self):
+        return self.stateLog[-1].opp.character_name
+
     def GetBotThrowTech(self, activeFrames):
         for state in reversed(self.stateLog[-activeFrames:]):
             tech = state.bot.throw_tech
@@ -1056,11 +1111,34 @@ class TekkenGameState:
     def IsFightOver(self):
         return self.duplicateFrameObtained > 5
 
+    def WasTimerReset(self):
+        if len(self.stateLog) > 2:
+            return self.stateLog[-1].timer_frames_remaining  > self.stateLog[-2].timer_frames_remaining
+        else:
+            return False
+
+    def DidTimerStartTicking(self, buffer):
+        return self.stateLog[-1].timer_frames_remaining == 3600 - 1 - buffer
+
     def WasFightReset(self):
         if len(self.stateLog) > 2:
             return self.stateLog[-1].frame_count < self.stateLog[-2].frame_count
         else:
             return False
+
+    def GetTimer(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[-framesAgo].timer_frames_remaining
+        else:
+            return False
+
+    def GetOppRoundSummary(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            opp = self.stateLog[-framesAgo].opp
+            bot = self.stateLog[-framesAgo].bot
+            return (opp.wins, bot.damage_taken)
+        else:
+            return (0, 0)
 
     def IsForegroundPID(self):
         return self.gameReader.IsForegroundPID()
