@@ -16,8 +16,15 @@ class GUI_TekkenBotPrime(Tk):
         self.menu = Menu(self)
         self.configure(menu=self.menu)
 
-        self.text = Text(self, wrap="char")
+        self.text = Text(self, wrap="word")
         sys.stdout = TextRedirector(self.text, "stdout")
+
+        try:
+            with open("TekkenData/tekken_bot_readme.txt") as fr:
+                lines = fr.readlines()
+            for line in lines: print(line)
+        except:
+            print("Error reading readme file.")
 
         self.overlay = fdo.GUI_FrameDataOverlay(self)
 
