@@ -52,6 +52,15 @@ class PlayerDataAddress(Enum):
     x = 0xBF0
     y = 0xBF4
     z = 0xBF8
+    hitbox1 = 0xBFC
+    hitbox2 = 0xC00
+    hitbox3 = 0xC04
+    hitbox4 = 0xC08
+    hitbox5 = 0xC0C
+
+    activebox_x = 0x1050
+    activebox_y = 0x1054
+    activebox_z = 0x1058
 
     health_percent = 0x11D8
     # raw_array_start = 0xABC #this is the raw 'buttons' pressed before they are assigned to 1,2,3,4, 1+2, etc
@@ -96,7 +105,7 @@ class NonPlayerDataAddressesTuples:
 
 
 def IsDataAFloat(dataEnum):
-    return dataEnum in {PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z}
+    return dataEnum in {PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z, PlayerDataAddress.activebox_x, PlayerDataAddress.activebox_y, PlayerDataAddress.activebox_z}
 
 CHEAT_ENGINE_BLOCK = '<CheatEntry> <ID>{id}</ID> <Description>"{name}"</Description> <VariableType>{variable_type}</VariableType> <Address>"TekkenGame-Win64-Shipping.exe"+{base_address}</Address> <Offsets> {offsets} </Offsets> </CheatEntry>'
 GENERIC_OFFSET_BLOCK =  "<Offset>{offset}</Offset>"

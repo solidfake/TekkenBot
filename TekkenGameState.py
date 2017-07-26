@@ -183,8 +183,8 @@ class TekkenGameReader:
                     for offset_enum in PlayerDataAddress:
                         #p1_value = self.GetValueFromAddress(processHandle, player_data_second_address + data.value, IsDataAFloat(data))
                         #p2_value = self.GetValueFromAddress(processHandle, player_data_second_address + MemoryAddressOffsets.p2_data_offset.value + data.value, IsDataAFloat(data))
-                        p1_value = self.GetValueFromFrame(player_data_frame, offset_enum.value)
-                        p2_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, MemoryAddressOffsets.p2_data_offset.value)
+                        p1_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, 0, IsDataAFloat(offset_enum))
+                        p2_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, MemoryAddressOffsets.p2_data_offset.value, IsDataAFloat(offset_enum))
                         p1_bot.player_data_dict[offset_enum] = p1_value
                         p2_bot.player_data_dict[offset_enum] = p2_value
 
@@ -200,19 +200,23 @@ class TekkenGameReader:
                     timer_in_frames = self.GetValueFromFrame(player_data_frame, GameDataAddress.timer_in_frames.value)
 
 
-                    #for startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z):
-                    #    positionOffset = 32  # our xyz coordinate is 32 bytes, a 4 byte x, y, and z value followed by five 4 byte values that don't change
-                    #    p1_coord_array = []
-                    #    p2_coord_array = []
-                    #    for i in range(16):
-                    #        #p1_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset), True))
-                    #        #p2_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset) + MemoryAddressOffsets.p2_data_offset.value, True))
-                    #        p1_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), False, True))
-                    #        p2_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), True, True))
-                    #    p1_bot.player_data_dict[startingAddress] = p1_coord_array
-                    #    p2_bot.player_data_dict[startingAddress] = p2_coord_array
-                    #    #print("numpy.array([" + xyz_coord + "])")
-                    ##print("--------------------")
+                    for startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z):#, PlayerDataAddress.hitbox1, PlayerDataAddress.hitbox2, PlayerDataAddress.hitbox3, PlayerDataAddress.hitbox4, PlayerDataAddress.hitbox5):
+                        positionOffset = 32  # our xyz coordinate is 32 bytes, a 4 byte x, y, and z value followed by five 4 byte values that don't change
+                        p1_coord_array = []
+                        p2_coord_array = []
+                        for i in range(23):
+                            #p1_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset), True))
+                            #p2_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset) + MemoryAddressOffsets.p2_data_offset.value, True))
+                            p1_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), 0, startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z)))
+                            p2_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), MemoryAddressOffsets.p2_data_offset.value, startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z)))
+                        p1_bot.player_data_dict[startingAddress] = p1_coord_array
+                        p2_bot.player_data_dict[startingAddress] = p2_coord_array
+                        #print("numpy.array(" + str(p1_coord_array) + ")")
+                    #list = p1_bot.player_data_dict[PlayerDataAddress.y]
+                    #print('{} [{}]'.format(max(list), list.index(max(list))))
+                    #print("--------------------")
+
+
 
 
 
@@ -242,7 +246,7 @@ class BotSnapshot:
 
     def Bake(self):
         d = self.player_data_dict
-        self.xyz = (d[PlayerDataAddress.x], d[PlayerDataAddress.y], d[PlayerDataAddress.z])
+        #self.xyz = (d[PlayerDataAddress.x], d[PlayerDataAddress.y], d[PlayerDataAddress.z])
         self.move_id = d[PlayerDataAddress.move_id]
         self.simple_state = SimpleMoveStates(d[PlayerDataAddress.simple_move_state])
         self.attack_type = AttackType(d[PlayerDataAddress.attack_type])
@@ -274,6 +278,11 @@ class BotSnapshot:
 
         #self.highest_y = max(d[PlayerDataAddress.y])
         #self.lowest_y = min(d[PlayerDataAddress.y])
+
+        #self.hitboxes = [d[PlayerDataAddress.hitbox1], d[PlayerDataAddress.hitbox2], d[PlayerDataAddress.hitbox3], d[PlayerDataAddress.hitbox4], d[PlayerDataAddress.hitbox5]]
+        self.skeleton = (d[PlayerDataAddress.x], d[PlayerDataAddress.y], d[PlayerDataAddress.z])
+
+        self.active_xyz = (d[PlayerDataAddress.activebox_x], d[PlayerDataAddress.activebox_y], d[PlayerDataAddress.activebox_z])
 
         self.is_jump = d[PlayerDataAddress.jump_flags] & JumpFlagBitmask.JUMP.value == JumpFlagBitmask.JUMP.value
         self.hit_outcome = HitOutcome(d[PlayerDataAddress.hit_outcome])
@@ -426,7 +435,9 @@ class GameSnapshot:
 
 
     def GetDist(self):
-        return math.hypot(self.bot.xyz[0] - self.opp.xyz[0], self.bot.xyz[2] - self.opp.xyz[2])
+        #print('{}, {} : {}, {}'.format(self.bot.skeleton[0][22], self.opp.skeleton[0][22], self.bot.skeleton[2][22], self.opp.skeleton[2][22]))
+        return math.hypot(self.bot.skeleton[0][22] - self.opp.skeleton[0][22], self.bot.skeleton[2][22] - self.opp.skeleton[2][22])
+
 
 
 
@@ -1139,6 +1150,41 @@ class TekkenGameState:
             return (opp.wins, bot.damage_taken)
         else:
             return (0, 0)
+
+    def GetRangeOfMove(self):
+        move_timer = self.stateLog[-1].opp.move_timer
+        opp_id = self.stateLog[-1].opp.move_id
+        for state in reversed(self.stateLog):
+            starting_skeleton = state.opp.skeleton
+            bot_skeleton = state.bot.skeleton
+            #old_dist = state.GetDist()
+            if move_timer < state.opp.move_timer:
+                break
+            if opp_id != state.opp.move_id:
+                break
+            move_timer = state.opp.move_timer
+        ending_skeleton = self.stateLog[-1].opp.skeleton
+
+        avg_ss_x = sum(starting_skeleton[0]) / len(starting_skeleton[0])
+        avg_ss_z = sum(starting_skeleton[2]) / len(starting_skeleton[2])
+        avg_bs_x = sum(bot_skeleton[0]) / len(bot_skeleton[0])
+        avg_bs_z = sum(bot_skeleton[2]) / len(bot_skeleton[2])
+
+        vector_towards_bot = (avg_bs_x - avg_ss_x, avg_bs_z - avg_ss_z)
+
+        toward_bot_magnitude = math.sqrt(pow(vector_towards_bot[0], 2) + pow(vector_towards_bot[1], 2))
+        unit_vector_towards_bot = (vector_towards_bot[0]/toward_bot_magnitude, vector_towards_bot[1]/toward_bot_magnitude)
+
+        movements = [(ai_x - bi_x, ai_z- bi_z)for ai_x, bi_x, ai_z, bi_z in zip(ending_skeleton[0], starting_skeleton[0], ending_skeleton[2], starting_skeleton[2])]
+        dotproducts = []
+        for movement in movements:
+            dotproducts.append(movement[0] * unit_vector_towards_bot[0] + movement[1] * unit_vector_towards_bot[1])
+
+        max_product = max(dotproducts)
+        max_index = dotproducts.index(max_product)
+        return max_index, max_product
+
+
 
     def IsForegroundPID(self):
         return self.gameReader.IsForegroundPID()

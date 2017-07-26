@@ -84,9 +84,15 @@ class TekkenEncyclopedia:
                 if gameState.stateLog[-1].bot.stun_state != gameState.stateLog[-2].bot.stun_state:
                     pass
                     #print('{}'.format(gameState.stateLog[-1].bot.stun_state))
-                if gameState.stateLog[-1].bot.throw_tech != gameState.stateLog[-2].bot.throw_tech:
+                if gameState.stateLog[-1].opp.active_xyz != gameState.stateLog[-2].opp.active_xyz:
                     pass
-                    #print(gameState.stateLog[-1].bot.throw_tech)
+                    #print(gameState.stateLog[-1].opp.active_xyz)
+                #for i, (h1, h2) in enumerate(zip(gameState.stateLog[-1].opp.hitboxes, gameState.stateLog[-2].opp.hitboxes)):
+                #    if h1 != h2:
+                #        for j, (b1, b2) in enumerate(zip(h1, h2)):
+                #            if b1 != b2:
+                #                print('{}, {}: {}'.format(j, i, b1))
+                #        print('------')
 
         #self.CheckJumpFrameDataFallback(gameState)
 
@@ -266,6 +272,8 @@ class TekkenEncyclopedia:
 
                     frameDataEntry.tracking = gameState.GetOppTrackingType(frameDataEntry.startup)
 
+                    #print(gameState.GetRangeOfMove())
+
                     gameState.ReturnToPresent()
 
                     #frameDataEntry.throwTech = gameState.GetBotThrowTech(frameDataEntry.activeFrames + frameDataEntry.startup)
@@ -295,6 +303,7 @@ class TekkenEncyclopedia:
                         prefix = "p2: "
 
                     print(prefix + str(frameDataEntry))
+
 
                     # print(gameState.stateLog[-1].opp.startup)
                     # print(time_till_recovery_bot)
