@@ -33,12 +33,11 @@ class DataColumns(Enum):
 
 
 class DisplaySettings(Enum):
+    overlay_on_bottom = -1
     overlay_as_draggable_window = 0
-    minimize_on_focus_loss = 1
-    transparency = 2
-    live_frame_data = 3
-
-
+    only_appears_when_Tekken_7_has_focus = 1
+    transparent_background = 2
+    tiny_live_frame_data_numbers = 3
 
     def config_name():
         return "DisplaySettings"
@@ -172,10 +171,11 @@ class GUI_FrameDataOverlay():
         is_windows_7 = 'Windows-7' in platform.platform()
         self.tekken_config = ConfigReader("frame_data_overlay")
         self.is_draggable_window = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.overlay_as_draggable_window.name, False)
-        self.is_minimize_on_lost_focus = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.minimize_on_focus_loss.name, True)
-        self.is_transparency = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.transparency.name, not is_windows_7)
+        self.is_minimize_on_lost_focus = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.only_appears_when_Tekken_7_has_focus.name, True)
+        self.is_transparency = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.transparent_background.name, not is_windows_7)
+        self.is_overlay_on_top = not self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.overlay_on_bottom.name, False)
         self.enable_nerd_data = self.tekken_config.get_property(DisplaySettings.config_name(), "data_for_nerds", False)
-        self.show_live_framedata = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.live_frame_data.name, True)
+        self.show_live_framedata = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.tiny_live_frame_data_numbers.name, True)
         self.mode = OverlayMode.FrameData
 
         self.launcher = FrameDataLauncher(self.enable_nerd_data)
@@ -336,7 +336,10 @@ class GUI_FrameDataOverlay():
             tekken_rect = self.launcher.gameState.gameReader.GetWindowRect()
             if tekken_rect != None:
                 x = (tekken_rect.right + tekken_rect.left)/2 - self.w/2
-                y = tekken_rect.top
+                if self.is_overlay_on_top:
+                    y = tekken_rect.top
+                else:
+                    y = tekken_rect.bottom - self.h - 10
                 self.toplevel.geometry('%dx%d+%d+%d' % (self.w, self.h, x, y))
                 if not self.overlay_visible:
                     self.show()
