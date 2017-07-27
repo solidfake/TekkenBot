@@ -44,6 +44,10 @@ class DisplaySettings(Enum):
         return "DisplaySettings"
 
 
+class OverlayMode(Enum):
+    FrameData = 0
+    StatTracker = 1
+
 class ColorSchemeEnum(Enum):
     background = 0
     transparent = 1
@@ -84,6 +88,9 @@ class TextRedirector(object):
         self.widget.tag_config("p1", foreground=CurrentColorScheme.dict[ColorSchemeEnum.p1_text])
         self.widget.tag_config("p2", foreground=CurrentColorScheme.dict[ColorSchemeEnum.p2_text])
         self.columns_to_print = [True] * len(DataColumns)
+        self.mode = OverlayMode.FrameData
+
+        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_slight_minus])
 
     def set_columns_to_print(self, booleans_for_columns):
         self.columns_to_print = booleans_for_columns
@@ -94,9 +101,12 @@ class TextRedirector(object):
         for i, enum in enumerate(DataColumns):
             if booleans_for_columns[i]:
                 column_names += "| {} ".format(enum.name)
+        self.set_first_column(column_names)
+
+    def set_first_column(self, first_column_string):
         self.widget.configure(state="normal")
         self.widget.delete("1.0", "2.0")
-        self.widget.insert("1.0", column_names + '\n')
+        self.widget.insert("1.0", first_column_string + '\n')
         self.widget.configure(state="disabled")
 
 
@@ -104,35 +114,34 @@ class TextRedirector(object):
         self.stdout.write(output_str)
 
         lines = int(self.widget.index('end-1c').split('.')[0])
-        if lines > 4:
-            r = lines - 4
+        max_lines = 5
+        if lines > max_lines:
+            r = lines - max_lines
             for _ in range(r):
                 self.widget.configure(state="normal")
                 self.widget.delete('2.0', '3.0')
                 self.widget.configure(state="disabled")
 
 
-        text_tag = None
+
         if 'NOW:' in output_str:
+
             data = output_str.split('NOW:')[0]
             fa = output_str.split('NOW:')[1][:3]
-            if '?' not in fa:
-                if int(fa) <= -14:
-                    #self.style.configure('.', background='#ff0066')
-                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_very_punishible])
-                elif int(fa) <= -10:
-                    #self.style.configure('.', background='#ff6600')
-                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_punishible])
-                elif int(fa) <= -5:
-                    #self.style.configure('.', background='#cca300')
-                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_safe_minus])
+            if self.mode == OverlayMode.FrameData:
+                if '?' not in fa:
+                    if int(fa) <= -14:
+                        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_very_punishible])
+                    elif int(fa) <= -10:
+                        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_punishible])
+                    elif int(fa) <= -5:
+                        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_safe_minus])
+                    elif int(fa) < 0:
+                        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_slight_minus])
+                    else:
+                        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_plus])
 
-                elif int(fa) < 0:
-                    #self.style.configure('.', background='#ccff33')
-                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_slight_minus])
-                else:
-                    #self.style.configure('.', background='#0099ff')
-                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_plus])
+            text_tag = None
             if "p1:" in output_str:
                 self.fa_p1_var.set(fa)
                 data = data.replace('p1:', '')
@@ -147,15 +156,12 @@ class TextRedirector(object):
                 if self.columns_to_print[i]:
                     out += '|' + col
 
-
-
-        else:
-            out = output_str
-
-        self.widget.configure(state="normal")
-        self.widget.insert("end", out, text_tag)
-        self.widget.configure(state="disabled")
-        self.widget.see('0.0')
+            out += "\n"
+            self.widget.configure(state="normal")
+            self.widget.insert("end", out, text_tag)
+            self.widget.configure(state="disabled")
+            self.widget.see('0.0')
+            self.widget.yview('moveto', '.02')
 
 
 
@@ -170,6 +176,7 @@ class GUI_FrameDataOverlay():
         self.is_transparency = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.transparency.name, not is_windows_7)
         self.enable_nerd_data = self.tekken_config.get_property(DisplaySettings.config_name(), "data_for_nerds", False)
         self.show_live_framedata = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.live_frame_data.name, True)
+        self.mode = OverlayMode.FrameData
 
         self.launcher = FrameDataLauncher(self.enable_nerd_data)
 
@@ -183,7 +190,6 @@ class GUI_FrameDataOverlay():
 
         self.toplevel.attributes("-topmost", True)
 
-        #self.background_color = '#002B36'
         self.background_color = CurrentColorScheme.dict[ColorSchemeEnum.background]
 
         if self.is_transparency:
@@ -199,7 +205,7 @@ class GUI_FrameDataOverlay():
 
 
         self.w = 1000
-        self.h = 96
+        self.h = 86
 
         if self.enable_nerd_data:
             self.w += 400
@@ -296,7 +302,7 @@ class GUI_FrameDataOverlay():
         return attack_type_var
 
     def create_textbox(self, col):
-        textbox = Text(self.toplevel, font=("Consolas, 14"), wrap=NONE, highlightthickness=0, relief='flat')
+        textbox = Text(self.toplevel, font=("Consolas, 14"), wrap=NONE, highlightthickness=0, pady=0, relief='flat')
         # self.text.pack(side="top", fill="both", expand=True)
         textbox.grid(row=0, column=col, rowspan=2, sticky=N + S + W + E)
         #textbox.configure(background='black')
