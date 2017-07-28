@@ -1,7 +1,8 @@
 from enum import Enum
 
 class MemoryAddressOffsets(Enum):
-    player_data_pointer_offset = 0x03362540 #pc patch 2
+    player_data_pointer_offset = 0x03363540
+    #player_data_pointer_offset = 0x03362540 #pc patch 2
     #player_data_pointer_offset =  0x03360450 #pc patch 1
     #player_data_pointer_offset = 0x0337A450 #pc patch 0
     player_data_second_pointer_offset = 0
