@@ -93,14 +93,43 @@ class NonPlayerDataAddressesEnum(Enum):
 
     P1_CHAR_SELECT = 10
     P2_CHAR_SELECT = 11
-
     STAGE_SELECT = 20
+
+    Matchlist0_PlayerName = 101
+    Matchlist0_PING = 102
+    Matchlist0_CharId = 103
+    Matchlist0_Rank = 104
+    Matchlist0_Wins = 105
+
+    WARMUP_PLAYER_NAME1 = 201
+    WARMUP_PLAYER_WINS1 = 202
+    WARMUP_PLAYER_NAME2 = 203
+    WARMUP_PLAYER_WINS2 = 204
+
+
+
+
+
+
 class NonPlayerDataAddressesTuples:
     offsets = {
-        NonPlayerDataAddressesEnum.OPPONENT_NAME : (0x03339C20, 0x0, 0x8, 0x114),
-        NonPlayerDataAddressesEnum.P1_CHAR_SELECT: (0x0333A228, 0x80, 0x3CC),
-        NonPlayerDataAddressesEnum.P2_CHAR_SELECT : (0x0333A228, 0x80, 0x584),
-        NonPlayerDataAddressesEnum.STAGE_SELECT: (0x0333A228, 0x80, 0x78),
+        NonPlayerDataAddressesEnum.OPPONENT_NAME : (0x0333AC20, 0x0, 0x8, 0x114),
+
+        NonPlayerDataAddressesEnum.P1_CHAR_SELECT: (0x0333B228, 0x80, 0x3CC),
+        NonPlayerDataAddressesEnum.P2_CHAR_SELECT : (0x0333B228, 0x80, 0x584),
+        NonPlayerDataAddressesEnum.STAGE_SELECT: (0x0333B228, 0x80, 0x78),
+
+        NonPlayerDataAddressesEnum.Matchlist0_PlayerName: (0x03336410, 0x2C0, 0x138),
+        NonPlayerDataAddressesEnum.Matchlist0_PING: (0x03336410, 0x2C0, 0x114),
+        NonPlayerDataAddressesEnum.Matchlist0_CharId: (0x03336410, 0x2C0, 0x180),
+        NonPlayerDataAddressesEnum.Matchlist0_Rank: (0x03336410, 0x2C0, 0x184),
+        NonPlayerDataAddressesEnum.Matchlist0_Wins: (0x03336410, 0x2C0, 0x188),
+
+        NonPlayerDataAddressesEnum.WARMUP_PLAYER_NAME1: (0x0333B8A0, 0x50, 0x0),
+        NonPlayerDataAddressesEnum.WARMUP_PLAYER_WINS1: (0x0333B8A0, 0x50, -0x34),
+        NonPlayerDataAddressesEnum.WARMUP_PLAYER_NAME2: (0x0333B8A0, 0x50, 0x140),
+        NonPlayerDataAddressesEnum.WARMUP_PLAYER_WINS2: (0x0333B8A0, 0x50, 0x10C),
+
     }
 
 
@@ -128,6 +157,8 @@ if __name__ == "__main__":
     for key, value in NonPlayerDataAddressesTuples.offsets.items():
         id += 1
         PrintCheatEngineBlock(id, key.name, value[0], value[1:], False)
+
+    print("\n\n")
 
     for enum in MemoryAddressOffsets:
         id += 1
