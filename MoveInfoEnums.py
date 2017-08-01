@@ -98,6 +98,7 @@ class ThrowTechs(Enum):
 
 class StunStates(Enum):
     NONE = 0
+    UNKNOWN_2 = 2 #Lili BT/Jumping/Kicks?
     BLOCK = 0x01000100
     GETTING_HIT = 0x100
     DOING_THE_HITTING = 0x10000
