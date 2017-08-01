@@ -3,6 +3,7 @@ from tkinter.ttk import *
 import GUI_FrameDataOverlay as fdo
 import GUI_Overlay as ovr
 import GUI_TimelineOverlay as tlo
+import GUI_CommandInputOverlay as cio
 import ConfigReader
 from _FrameDataLauncher import FrameDataLauncher
 import time
@@ -116,8 +117,12 @@ class GUI_TekkenBotPrime(Tk):
             self.mode = OverlayMode.FrameData
             self.stop_overlay()
             self.start_overlay()
-        if mode == OverlayMode.Timeline.name:
-            self.mode = OverlayMode.Timeline
+        #if mode == OverlayMode.Timeline.name:
+        #    self.mode = OverlayMode.Timeline
+        #    self.stop_overlay()
+        #    self.start_overlay()
+        if mode == OverlayMode.CommandInput.name:
+            self.mode = OverlayMode.CommandInput
             self.stop_overlay()
             self.start_overlay()
 
@@ -151,8 +156,11 @@ class GUI_TekkenBotPrime(Tk):
         if self.mode == OverlayMode.FrameData:
             self.overlay = fdo.GUI_FrameDataOverlay(self, self.launcher)
             self.overlay.hide()
-        if self.mode == OverlayMode.Timeline:
-            self.overlay = tlo.GUI_TimelineOverlay(self, self.launcher)
+        #if self.mode == OverlayMode.Timeline:
+        #    self.overlay = tlo.GUI_TimelineOverlay(self, self.launcher)
+        #    self.overlay.hide()
+        if self.mode == OverlayMode.CommandInput:
+            self.overlay = cio.GUI_CommandInputOverlay(self, self.launcher)
             self.overlay.hide()
 
 
@@ -163,8 +171,8 @@ class GUI_TekkenBotPrime(Tk):
 
     def update_launcher(self):
         time1 = time.time()
-        self.launcher.Update()
-        if self.overlay != None:
+        successful_update = self.launcher.Update()
+        if self.overlay != None and successful_update:
             self.overlay.update_state()
         #self.graph.update_state()
         time2 = time.time()
@@ -198,7 +206,8 @@ class TextRedirector(object):
 class OverlayMode(Enum):
     Off = 0
     FrameData = 1
-    Timeline = 2
+    #Timeline = 2
+    CommandInput = 3
 
 if __name__ == '__main__':
     app = GUI_TekkenBotPrime()
