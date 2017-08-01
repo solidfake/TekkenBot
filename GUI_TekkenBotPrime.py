@@ -6,9 +6,12 @@ import GUI_TimelineOverlay as tlo
 import ConfigReader
 from _FrameDataLauncher import FrameDataLauncher
 import time
+from enum import Enum
 
 class GUI_TekkenBotPrime(Tk):
     def __init__(self):
+        self.overlay = None
+
         Tk.__init__(self)
         self.wm_title("Tekken Bot Prime")
         self.iconbitmap('TekkenData/tekken_bot_close.ico')
@@ -54,11 +57,18 @@ class GUI_TekkenBotPrime(Tk):
         self.menu.add_cascade(label="Display", menu=self.display_menu)
 
         self.color_scheme_menu = Menu(self.menu)
-        self.radio_var = StringVar()
+        self.scheme_var = StringVar()
         for section in self.color_scheme_config.parser.sections():
             if section not in ("Comments", "Current"):
-                self.color_scheme_menu.add_radiobutton(label=section, variable=self.radio_var, value=section, command=lambda : self.changed_color_scheme(self.radio_var.get()))
+                self.color_scheme_menu.add_radiobutton(label=section, variable=self.scheme_var, value=section, command=lambda : self.changed_color_scheme(self.scheme_var.get()))
         self.menu.add_cascade(label="Color Scheme", menu=self.color_scheme_menu)
+
+        self.overlay_mode_menu = Menu(self.menu)
+        self.overlay_var = StringVar()
+        for mode in OverlayMode:
+            self.overlay_mode_menu.add_radiobutton(label=mode.name, variable=self.overlay_var, value=mode.name, command=lambda : self.changed_mode(self.overlay_var.get()))
+        self.menu.add_cascade(label="Mode", menu=self.overlay_mode_menu)
+        self.mode = OverlayMode.FrameData
 
 
 
@@ -76,7 +86,8 @@ class GUI_TekkenBotPrime(Tk):
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def write_to_overlay(self, string):
-        if 'NOW' in string:
+        #if 'NOW' in string:
+        if self.overlay != None:
             self.overlay.redirector.write(string)
         #if 'HIT' in string:
             #self.graph.redirector.write(string)
@@ -96,31 +107,65 @@ class GUI_TekkenBotPrime(Tk):
         if do_reboot:
             self.reboot_overlay()
 
+    def changed_mode(self, mode):
+
+        if mode == OverlayMode.Off.name:
+            self.mode = OverlayMode.Off
+            self.stop_overlay()
+        if mode == OverlayMode.FrameData.name:
+            self.mode = OverlayMode.FrameData
+            self.stop_overlay()
+            self.start_overlay()
+        if mode == OverlayMode.Timeline.name:
+            self.mode = OverlayMode.Timeline
+            self.stop_overlay()
+            self.start_overlay()
+
+
+
     def changed_columns(self):
         generated_columns = []
         for enum in fdo.DataColumns:
             var = self.checkbox_dict[enum]
             generated_columns.append(var.get())
-            self.overlay.update_column_to_print(enum, var.get())
-        self.overlay.set_columns_to_print(generated_columns)
+            if self.mode == OverlayMode.FrameData:
+                self.overlay.update_column_to_print(enum, var.get())
+        if self.mode == OverlayMode.FrameData:
+            self.overlay.set_columns_to_print(generated_columns)
 
     def changed_display(self):
         for enum in ovr.DisplaySettings:
             var = self.checkbox_dict[enum]
-            self.overlay.tekken_config.set_property(ovr.DisplaySettings.config_name(), enum.name, var.get())
-        self.overlay.tekken_config.write()
+            if self.overlay != None:
+                self.overlay.tekken_config.set_property(ovr.DisplaySettings.config_name(), enum.name, var.get())
+        if self.overlay != None:
+            self.overlay.tekken_config.write()
         self.reboot_overlay()
 
+    def stop_overlay(self):
+        if self.overlay != None:
+            self.overlay.toplevel.destroy()
+        self.overlay = None
+
+    def start_overlay(self):
+        if self.mode == OverlayMode.FrameData:
+            self.overlay = fdo.GUI_FrameDataOverlay(self, self.launcher)
+            self.overlay.hide()
+        if self.mode == OverlayMode.Timeline:
+            self.overlay = tlo.GUI_TimelineOverlay(self, self.launcher)
+            self.overlay.hide()
+
+
+
     def reboot_overlay(self):
-        self.overlay.restore_stdout()
-        self.overlay.toplevel.destroy()
-        self.overlay = fdo.GUI_FrameDataOverlay(self, self.launcher)
-        self.overlay.hide()
+        self.stop_overlay()
+        self.start_overlay()
 
     def update_launcher(self):
         time1 = time.time()
         self.launcher.Update()
-        self.overlay.update_state()
+        if self.overlay != None:
+            self.overlay.update_state()
         #self.graph.update_state()
         time2 = time.time()
         elapsed_time = 1000 * (time2 - time1)
@@ -149,6 +194,11 @@ class TextRedirector(object):
 
     def flush(self):
         pass
+
+class OverlayMode(Enum):
+    Off = 0
+    FrameData = 1
+    Timeline = 2
 
 if __name__ == '__main__':
     app = GUI_TekkenBotPrime()

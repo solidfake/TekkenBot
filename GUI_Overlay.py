@@ -47,7 +47,8 @@ class CurrentColorScheme:
     }
 
 class Overlay:
-    def __init__(self, master, xy_size, window_name, config_filename):
+    def __init__(self, master, xy_size, window_name):
+        config_filename = "frame_data_overlay"
         self.tekken_config = ConfigReader(config_filename)
         is_windows_7 = 'Windows-7' in platform.platform()
         self.is_draggable_window = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.overlay_as_draggable_window.name, False)

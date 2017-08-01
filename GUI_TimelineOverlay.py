@@ -74,9 +74,7 @@ class GUI_TimelineOverlay(GUI_Overlay.Overlay):
     def __init__(self, master, launcher):
         print("Launching overlay...")
 
-        GUI_Overlay.Overlay.__init__(self, master, (1800, 86), "Tekken Bot: Frame Data Overlay", "frame_data_overlay")
-
-        self.is_overlay_on_top = True
+        GUI_Overlay.Overlay.__init__(self, master, (1800, 86), "Tekken Bot: Frame Data Overlay")
 
         #self.launcher = FrameDataLauncher(self.enable_nerd_data)
         self.launcher = launcher

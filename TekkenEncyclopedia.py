@@ -8,7 +8,7 @@ from MoveInfoEnums import ThrowTechs
 from MoveInfoEnums import ComplexMoveStates
 from TekkenGameState import TekkenGameState
 import time
-
+from enum import Enum
 
 class TekkenEncyclopedia:
     def __init__(self, isPlayerOne = False, print_extended_frame_data = False):
@@ -39,7 +39,7 @@ class TekkenEncyclopedia:
         self.stat_dict['char_stats'] = {}
         self.stat_dict['matchup_stats'] = {}
         self.stat_dict['opponent_stats'] = {}
-        with open(self.stat_filename, 'r') as fr:
+        with open(self.stat_filename, 'r', encoding='utf-8') as fr:
             lines = fr.readlines()
         for line in lines:
             if '|' in line:
@@ -303,7 +303,7 @@ class TekkenEncyclopedia:
                     match_result = '{} | {} | {} | vs | {} | {} | {}-{} | {}'.format(result, player_name, player_char, opponent_name, opponent_char, player_wins, opponent_wins, time.strftime('%Y_%m_%d_%H.%M'))
                     print(match_result)
                     self.AddStat(result, player_char, opponent_name, opponent_char)
-                    with open(self.stat_filename, "a") as fa:
+                    with open(self.stat_filename, "a", encoding='utf-8') as fa:
                         fa.write(match_result + '\n')
             if (gameState.GetTimer(frames_ago) < 3600 and len(self.GameEvents) > 0) or True:
                 summary = RoundSummary(self.GameEvents, gameState.GetOppRoundSummary(frames_ago))
@@ -421,6 +421,7 @@ class TekkenEncyclopedia:
                     frameDataEntry.hitRecovery = time_till_recovery_opp
                     frameDataEntry.blockRecovery = time_till_recovery_bot
 
+
                     prefix = self.GetPlayerString()
 
                     print(prefix + str(frameDataEntry))
@@ -537,15 +538,6 @@ class FrameDataEntry:
         return non_nerd_string + notes_string + now_string
 
 
-        #return "" + str(self.input).rjust(len('input')) + " |" + str(self.hitType)[:7] +  "|" + str(self.calculated_startup).center(len('startup')) + "|" + str(self.damage).center(len('  damage ')) + "| " + self.WithPlusIfNeeded(self.onBlock).center(len('block')) + "|" \
-               #+ self.WithPlusIfNeeded(self.onNormalHit) +  " |" + (str(self.currentActiveFrame) + "/" + str(self.activeFrames) ).center(len(' active ')) + '| ' + notes \
-               #+ " NOW:" + str(self.currentFrameAdvantage)
-
-                #+ " Recovery: " + str(self.recovery)
-                # + " Block Stun: " + str(self.blockFrames)
-                #" CH: " + self.WithPlusIfNeeded(self.onCounterHit) +
-
-from enum import Enum
 
 class GameStatEventEntry:
     class EntryType(Enum):

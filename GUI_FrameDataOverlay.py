@@ -72,7 +72,7 @@ class TextRedirector(object):
         #self.stdout.write(output_str)
 
         lines = int(self.widget.index('end-1c').split('.')[0])
-        max_lines = 4
+        max_lines = 5
         if lines > max_lines:
             r = lines - max_lines
             for _ in range(r):
@@ -125,7 +125,7 @@ class GUI_FrameDataOverlay(GUI_Overlay.Overlay):
     def __init__(self, master, launcher):
         print("Launching overlay...")
 
-        GUI_Overlay.Overlay.__init__(self, master, (1000, 86), "Tekken Bot: Frame Data Overlay", "frame_data_overlay")
+        GUI_Overlay.Overlay.__init__(self, master, (1000, 86), "Tekken Bot: Frame Data Overlay")
 
         self.show_live_framedata = self.tekken_config.get_property(GUI_Overlay.DisplaySettings.config_name(), GUI_Overlay.DisplaySettings.tiny_live_frame_data_numbers.name, True)
         self.mode = OverlayMode.FrameData
