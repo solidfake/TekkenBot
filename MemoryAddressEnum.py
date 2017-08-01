@@ -90,6 +90,7 @@ class PlayerDataAddress(Enum):
 
 class NonPlayerDataAddressesEnum(Enum):
     OPPONENT_NAME = 1
+    OPPONENT_SIDE = 2
 
     P1_CHAR_SELECT = 10
     P2_CHAR_SELECT = 11
@@ -114,6 +115,7 @@ class NonPlayerDataAddressesEnum(Enum):
 class NonPlayerDataAddressesTuples:
     offsets = {
         NonPlayerDataAddressesEnum.OPPONENT_NAME : (0x0333AC20, 0x0, 0x8, 0x114),
+        NonPlayerDataAddressesEnum.OPPONENT_SIDE: (0x0333AC20, 0x0, 0x8, 0x70),  #0 means they are player 1, 1 means they are player 2
 
         NonPlayerDataAddressesEnum.P1_CHAR_SELECT: (0x0333B228, 0x80, 0x3CC),
         NonPlayerDataAddressesEnum.P2_CHAR_SELECT : (0x0333B228, 0x80, 0x584),

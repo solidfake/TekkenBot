@@ -1,7 +1,11 @@
 from tkinter import *
 from tkinter.ttk import *
 import GUI_FrameDataOverlay as fdo
+import GUI_Overlay as ovr
+import GUI_TimelineOverlay as tlo
 import ConfigReader
+from _FrameDataLauncher import FrameDataLauncher
+import time
 
 class GUI_TekkenBotPrime(Tk):
     def __init__(self):
@@ -17,7 +21,9 @@ class GUI_TekkenBotPrime(Tk):
         self.configure(menu=self.menu)
 
         self.text = Text(self, wrap="word")
-        sys.stdout = TextRedirector(self.text, "stdout")
+        self.stdout = sys.stdout
+        sys.stdout = TextRedirector(self.text, sys.stdout, self.write_to_overlay, "stdout")
+        self.text.tag_configure("stderr", foreground="#b22222")
 
         try:
             with open("TekkenData/tekken_bot_readme.txt") as fr:
@@ -26,7 +32,13 @@ class GUI_TekkenBotPrime(Tk):
         except:
             print("Error reading readme file.")
 
-        self.overlay = fdo.GUI_FrameDataOverlay(self)
+        print("Tekken Bot Starting...")
+        self.launcher = FrameDataLauncher(False)
+
+        self.overlay = fdo.GUI_FrameDataOverlay(self, self.launcher)
+        #self.graph = tlo.GUI_TimelineOverlay(self, self.launcher)
+
+        # sys.stderr = TextRedirector(self.text, "stderr")
 
         self.checkbox_dict = {}
         self.column_menu = Menu(self.menu)
@@ -36,8 +48,8 @@ class GUI_TekkenBotPrime(Tk):
         self.menu.add_cascade(label='Columns', menu=self.column_menu)
 
         self.display_menu = Menu(self.menu)
-        for enum in fdo.DisplaySettings:
-            default = self.overlay.tekken_config.get_property(fdo.DisplaySettings.config_name(), enum.name, False)
+        for enum in ovr.DisplaySettings:
+            default = self.overlay.tekken_config.get_property(ovr.DisplaySettings.config_name(), enum.name, False)
             self.add_checkbox(self.display_menu, enum, enum.name, default, self.changed_display)
         self.menu.add_cascade(label="Display", menu=self.display_menu)
 
@@ -58,9 +70,16 @@ class GUI_TekkenBotPrime(Tk):
 
         self.geometry(str(720) + 'x' + str(720))
 
-        self.overlay.update_launcher()
+        self.update_launcher()
         self.overlay.hide()
 
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def write_to_overlay(self, string):
+        if 'NOW' in string:
+            self.overlay.redirector.write(string)
+        #if 'HIT' in string:
+            #self.graph.redirector.write(string)
 
 
     def add_checkbox(self, menu, lookup_key, display_string, default_value, button_command):
@@ -86,29 +105,50 @@ class GUI_TekkenBotPrime(Tk):
         self.overlay.set_columns_to_print(generated_columns)
 
     def changed_display(self):
-        for enum in fdo.DisplaySettings:
+        for enum in ovr.DisplaySettings:
             var = self.checkbox_dict[enum]
-            self.overlay.tekken_config.set_property(fdo.DisplaySettings.config_name(), enum.name, var.get())
+            self.overlay.tekken_config.set_property(ovr.DisplaySettings.config_name(), enum.name, var.get())
         self.overlay.tekken_config.write()
         self.reboot_overlay()
 
     def reboot_overlay(self):
         self.overlay.restore_stdout()
         self.overlay.toplevel.destroy()
-        self.overlay = fdo.GUI_FrameDataOverlay(self)
-        self.overlay.update_launcher()
+        self.overlay = fdo.GUI_FrameDataOverlay(self, self.launcher)
         self.overlay.hide()
 
+    def update_launcher(self):
+        time1 = time.time()
+        self.launcher.Update()
+        self.overlay.update_state()
+        #self.graph.update_state()
+        time2 = time.time()
+        elapsed_time = 1000 * (time2 - time1)
+        self.after(max(2, 8 - int(round(elapsed_time))), self.update_launcher)
+
+    def on_closing(self):
+        sys.stdout = self.stdout
+        self.destroy()
+
+
+
 class TextRedirector(object):
-    def __init__(self, widget, tag="stdout"):
+    def __init__(self, widget, stdout, callback_function, tag="stdout"):
         self.widget = widget
+        self.stdout = stdout
         self.tag = tag
+        self.callback_function = callback_function
 
     def write(self, str):
+
         self.widget.configure(state="normal")
         self.widget.insert("end", str, (self.tag,))
         self.widget.configure(state="disabled")
         self.widget.see('end')
+        self.callback_function(str)
+
+    def flush(self):
+        pass
 
 if __name__ == '__main__':
     app = GUI_TekkenBotPrime()

@@ -51,34 +51,46 @@ class TekkenGameReader:
         self.pid = -1
         self.needReaquireGameState = True
         self.needReacquireModule = True
+        self.flagToReacquireNames = True
         self.module_address = 0
         self.original_facing = None
+        self.opponent_name = None
+        self.is_player_player_one = None
         self.config_reader = ConfigReader('memory_address')
         self.player_data_pointer_offset = self.config_reader.get_property('Address', 'player_data_pointer_offset', MemoryAddressOffsets.player_data_pointer_offset.value)#, #lambda x: int(x, 16))
 
     def ReacquireEverything(self):
         self.needReacquireModule = True
         self.needReaquireGameState = True
+        self.flagToReacquireNames = True
         self.pid = -1
 
-    def GetValueFromAddress(self, processHandle, address, isFloat=False, is64bit=False):
-        data = c.c_ulonglong()
-        bytesRead = c.c_ulonglong()
+    def GetValueFromAddress(self, processHandle, address, isFloat=False, is64bit=False, isString=False):
+        if isString:
+            data = c.create_string_buffer(16)
+            bytesRead = c.c_ulonglong(16)
+        elif is64bit:
+            data = c.c_ulonglong()
+            bytesRead = c.c_ulonglong()
+        else:
+            data = c.c_ulong()
+            bytesRead = c.c_ulonglong(4)
+
         successful = ReadProcessMemory(processHandle, address, c.byref(data), c.sizeof(data), c.byref(bytesRead))
         if not successful:
             e = GetLastError()
             print("ReadProcessMemory Error: Code " + str(e))
             self.ReacquireEverything()
 
-        if not is64bit:
-            value = int(data.value) % pow(2, 32)
-        else:
-            value = int(data.value)
+        value = data.value
 
-        if not isFloat:
-            return (value)
+        if isFloat:
+            return struct.unpack("<f", value)[0]
+        elif isString:
+            return value.decode('utf-8')
         else:
-            return struct.unpack("<f", struct.pack("<I", (value)))[0]
+            return int(value)
+
 
     def GetPlayerDataFrame(self, processHandle, address):
         data = c.create_string_buffer(MemoryAddressOffsets.rollback_frame_offset.value)
@@ -99,6 +111,16 @@ class TekkenGameReader:
         else:
             return struct.unpack("<f", bytes)[0]
 
+    def GetValueAtEndOfPointerTrail(self, processHandle, enum:NonPlayerDataAddressesEnum, isString):
+        addresses = NonPlayerDataAddressesTuples.offsets[enum]
+        value = self.module_address
+        for i, offset in enumerate(addresses):
+            if i + 1 < len(addresses):
+                value = self.GetValueFromAddress(processHandle, value + offset, is64bit=True)
+            else:
+                value = self.GetValueFromAddress(processHandle, value + offset, isString=isString)
+        return value
+
     def IsForegroundPID(self):
         pid = c.wintypes.DWORD()
         active = c.windll.user32.GetForegroundWindow()
@@ -116,9 +138,6 @@ class TekkenGameReader:
 
     def HasWorkingPID(self):
         return self.pid > -1
-
-
-
 
     def GetUpdatedState(self, rollback_frame = 0):
         gameSnapshot = None
@@ -151,16 +170,11 @@ class TekkenGameReader:
                 if player_data_base_address == 0:
                     if not self.needReaquireGameState:
                         print("No fight detected. Gamestate not updated.")
-
-                    #addresses = NonPlayerDataAddressesTuples.offsets[NonPlayerDataAddressesEnum.P2_CHAR_SELECT]
-                    #value = self.module_address
-                    #for offset in addresses:
-                        #value = self.GetValueFromAddress(processHandle, value + offset, is64bit=True)
-                    #print(value)
-
                     self.needReaquireGameState = True
+                    self.flagToReacquireNames = True
 
                 else:
+
                     last_eight_frames = []
 
                     second_address_base = self.GetValueFromAddress(processHandle, player_data_base_address, is64bit = True)
@@ -229,7 +243,18 @@ class TekkenGameReader:
 
                     p1_bot.Bake()
                     p2_bot.Bake()
-                    gameSnapshot = GameSnapshot(p1_bot, p2_bot, best_frame_count, timer_in_frames, bot_facing)
+
+                    if self.flagToReacquireNames:
+                        if(p1_bot.character_name != CharacterCodes.NOT_YET_LOADED.name and p2_bot.character_name != CharacterCodes.NOT_YET_LOADED.name):
+                            self.opponent_name = self.GetValueAtEndOfPointerTrail(processHandle, NonPlayerDataAddressesEnum.OPPONENT_NAME, True)
+                            self.opponent_side = self.GetValueAtEndOfPointerTrail(processHandle, NonPlayerDataAddressesEnum.OPPONENT_SIDE, False)
+                            self.is_player_player_one = (self.opponent_side == 1)
+                            #print(self.opponent_char_id)
+                            #print(self.is_player_player_one)
+                            self.flagToReacquireNames = False
+
+                    gameSnapshot = GameSnapshot(p1_bot, p2_bot, best_frame_count, timer_in_frames, bot_facing, self.opponent_name, self.is_player_player_one)
+
             finally:
                 CloseHandle(processHandle)
 
@@ -320,6 +345,9 @@ class BotSnapshot:
 
     def IsGettingGroundHit(self):
         return self.hit_outcome in (HitOutcome.GROUNDED_FACE_DOWN, HitOutcome.GROUNDED_FACE_UP)
+
+    def IsGettingWallSplatted(self):
+        return self.simple_state in (SimpleMoveStates.WALL_SPLAT_18, SimpleMoveStates.WALL_SPLAT_19)
 
     def IsGettingHit(self):
         return self.stun_state in (StunStates.BEING_PUNISHED, StunStates.GETTING_HIT)
@@ -423,15 +451,17 @@ class BotSnapshot:
 
 
 class GameSnapshot:
-    def __init__(self, bot, opp, frame_count, timer_in_frames, facing_bool):
+    def __init__(self, bot, opp, frame_count, timer_in_frames, facing_bool, opponent_name, is_player_player_one):
         self.bot = bot
         self.opp = opp
         self.frame_count = frame_count
         self.facing_bool = facing_bool
         self.timer_frames_remaining = timer_in_frames
+        self.opponent_name = opponent_name
+        self.is_player_player_one = is_player_player_one
 
     def FromMirrored(self):
-        return GameSnapshot(self.opp, self.bot, self.frame_count, self.timer_frames_remaining, self.facing_bool)
+        return GameSnapshot(self.opp, self.bot, self.frame_count, self.timer_frames_remaining, self.facing_bool, self.opponent_name, self.is_player_player_one)
 
 
     def GetDist(self):
@@ -521,6 +551,9 @@ class TekkenGameState:
             return isPlayerOneOnLeft
         else:
             return not isPlayerOneOnLeft
+
+    def GetBotHealth(self):
+        return max(0, 170 - self.stateLog[-1].bot.damage_taken)
 
     def GetDist(self):
         return self.stateLog[-1].GetDist()
@@ -841,6 +874,9 @@ class TekkenGameState:
     def IsBotBeingKnockedDown(self):
         return self.stateLog[-1].bot.IsBeingKnockedDown()
 
+    def IsBotBeingWallSplatted(self):
+        return self.stateLog[-1].bot.IsGettingWallSplatted()
+
     def GetOppDamage(self):
         return self.stateLog[-1].opp.attack_damage
 
@@ -1132,8 +1168,9 @@ class TekkenGameState:
         return self.stateLog[-1].timer_frames_remaining == 3600 - 1 - buffer
 
     def WasFightReset(self):
+        false_reset_buffer = 0
         if len(self.stateLog) > 2:
-            return self.stateLog[-1].frame_count < self.stateLog[-2].frame_count
+            return self.stateLog[-1].frame_count < self.stateLog[-2].frame_count and self.stateLog[-2].frame_count > false_reset_buffer
         else:
             return False
 
@@ -1142,6 +1179,9 @@ class TekkenGameState:
             return self.stateLog[-framesAgo].timer_frames_remaining
         else:
             return False
+
+    def GetRoundNumber(self):
+        return self.stateLog[-1].opp.wins + self.stateLog[-1].bot.wins
 
     def GetOppRoundSummary(self, framesAgo):
         if len(self.stateLog) > framesAgo:
@@ -1157,7 +1197,7 @@ class TekkenGameState:
         for state in reversed(self.stateLog):
             starting_skeleton = state.opp.skeleton
             bot_skeleton = state.bot.skeleton
-            #old_dist = state.GetDist()
+            old_dist = state.GetDist()
             if move_timer < state.opp.move_timer:
                 break
             if opp_id != state.opp.move_id:
@@ -1183,6 +1223,8 @@ class TekkenGameState:
         max_product = max(dotproducts)
         max_index = dotproducts.index(max_product)
         return max_index, max_product
+
+        #return old_dist
 
 
 

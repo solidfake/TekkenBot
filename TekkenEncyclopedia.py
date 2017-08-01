@@ -7,7 +7,7 @@ from MoveInfoEnums import AttackType
 from MoveInfoEnums import ThrowTechs
 from MoveInfoEnums import ComplexMoveStates
 from TekkenGameState import TekkenGameState
-import sys
+import time
 
 
 class TekkenEncyclopedia:
@@ -26,7 +26,74 @@ class TekkenEncyclopedia:
         self.stored_opp_recovery = 0
         self.stored_bot_recovery = 0
 
+        self.was_fight_being_reacquired = True
+        self.is_match_recorded = False
 
+        self.stat_filename = "TekkenData/matches.txt"
+        if self.isPlayerOne:
+            self.LoadStats()
+
+
+    def LoadStats(self):
+        self.stat_dict = {}
+        self.stat_dict['char_stats'] = {}
+        self.stat_dict['matchup_stats'] = {}
+        self.stat_dict['opponent_stats'] = {}
+        with open(self.stat_filename, 'r') as fr:
+            lines = fr.readlines()
+        for line in lines:
+            if '|' in line:
+                args = line.split('|')
+                result = args[0].strip()
+                player_char = args[2].strip()
+                opponent_name = args[4].strip()
+                opponent_char = args[5].strip()
+                self.AddStat(result, player_char, opponent_name, opponent_char)
+
+    def AddStat(self, result, player_char, opponent_name, opponent_char):
+
+        if not opponent_char in self.stat_dict['char_stats']:
+            self.stat_dict['char_stats'][opponent_char] = [0, 0, 0]
+        if not opponent_name in self.stat_dict['opponent_stats']:
+            self.stat_dict['opponent_stats'][opponent_name] = [0, 0, 0]
+        matchup_string = "{} vs {}".format(player_char, opponent_char)
+        if not matchup_string in self.stat_dict['matchup_stats']:
+            self.stat_dict['matchup_stats'][matchup_string] = [0, 0, 0]
+
+        if 'WIN' in result:
+            index = 0
+        elif 'LOSS' in result:
+            index = 1
+        else:
+            index = 2
+
+        self.stat_dict['char_stats'][opponent_char][index] += 1
+        self.stat_dict['opponent_stats'][opponent_name][index] += 1
+        self.stat_dict['matchup_stats'][matchup_string][index] += 1
+
+    def RecordFromStat(self, catagory, lookup):
+        try:
+
+            stats = self.stat_dict[catagory][lookup]
+            wins = stats[0]
+            losses = stats[1]
+            draws= stats[2]
+
+        except:
+            wins = 0
+            losses = 0
+            draws = 0
+
+        if draws <= 0:
+            return "{} - {}".format(wins, losses)
+        else:
+            return "{} - {} - {}".format(wins, losses, draws)
+
+    def GetPlayerString(self, reverse = False):
+        if (self.isPlayerOne and not reverse) or (not self.isPlayerOne and reverse):
+            return "p1: "
+        else:
+            return "p2: "
 
 
     def GetFrameAdvantage(self, moveId, isOnBlock = True):
@@ -56,9 +123,9 @@ class TekkenEncyclopedia:
             #print(gameState.stateLog[-1].bot.recovery)
 
             if len(gameState.stateLog) > 2:
-                if gameState.stateLog[-1].opp.complex_state != gameState.stateLog[-2].opp.complex_state:
+                if gameState.stateLog[-1].bot.simple_state != gameState.stateLog[-2].bot.simple_state :
                     pass
-                    #print(gameState.stateLog[-1].opp.complex_state)
+                    #print(gameState.stateLog[-1].bot.simple_state )
                 if gameState.stateLog[-1].opp.simple_state != gameState.stateLog[-2].opp.simple_state:
                     #print(gameState.stateLog[-1].opp.simple_state)
                     pass
@@ -98,7 +165,7 @@ class TekkenEncyclopedia:
 
         self.DetermineFrameData(gameState)
 
-        #self.DetermineGameStats(gameState)
+        self.DetermineGameStats(gameState)
 
 
 
@@ -156,37 +223,94 @@ class TekkenEncyclopedia:
                     hit = GameStatEventEntry.EntryType.MID
                 else:
                     hit = GameStatEventEntry.EntryType.NO_BLOCK
-                self.current_game_event = GameStatEventEntry(hit, combo_counter_damage)
+                self.current_game_event = GameStatEventEntry(gameState.stateLog[-1].timer_frames_remaining, self.GetPlayerString(True), hit, combo_counter_damage)
 
                 #print("event open")
             else:
                 bot_damage_taken = gameState.DidBotJustTakeDamage(frames_ago + 1)
                 if bot_damage_taken > 0:
-                    print('armored')
-                    game_event = GameStatEventEntry(GameStatEventEntry.EntryType.ARMORED, 0) #this is probably gonna break for Yoshimitsu's self damage moves
-                    game_event.close_entry(1, bot_damage_taken, 0)
+                    #print('armored')
+                    game_event = GameStatEventEntry(gameState.stateLog[-1].timer_frames_remaining, self.GetPlayerString(True), GameStatEventEntry.EntryType.ARMORED, 0) #this is probably gonna break for Yoshimitsu's self damage moves
+                    game_event.close_entry(gameState.stateLog[-1].timer_frames_remaining, 1, bot_damage_taken, 0, len(self.GameEvents))
 
                     self.GameEvents.append(game_event)
 
 
 
         else:
-
             if gameState.DidOppComboCounterJustEndXFramesAgo(frames_ago) or gameState.WasFightReset():
                 hits = gameState.GetOppComboHitsXFramesAgo(frames_ago + 1)
                 damage = gameState.GetOppComboDamageXFramesAgo(frames_ago + 1)
                 juggle = gameState.GetOppJuggleDamageXFramesAgo(frames_ago + 1)
-                self.current_game_event.close_entry(hits, damage, juggle)
+                self.current_game_event.close_entry(gameState.stateLog[-1].timer_frames_remaining, hits, damage, juggle, len(self.GameEvents))
                 self.GameEvents.append(self.current_game_event)
                 self.current_game_event = None
                 #print("event closed")
 
 
+
+
+
         if gameState.WasFightReset():
+            #print("p1: NOW:0")
+            #print("p2: NOW:0")
+            if self.isPlayerOne:
+                if gameState.gameReader.flagToReacquireNames == False and self.was_fight_being_reacquired:
+                    self.is_match_recorded = False
+
+                    if gameState.stateLog[-1].is_player_player_one:
+                        opponent_char = gameState.stateLog[-1].bot.character_name
+                        player_char = gameState.stateLog[-1].opp.character_name
+                    else:
+                        opponent_char = gameState.stateLog[-1].opp.character_name
+                        player_char = gameState.stateLog[-1].bot.character_name
+
+
+                    opponent_name = gameState.stateLog[-1].opponent_name
+
+                    print("vs {}: {}".format(opponent_char, self.RecordFromStat('char_stats', opponent_char)))
+                    print("vs {}: {}".format(opponent_name, self.RecordFromStat('opponent_stats', opponent_name)))
+                    print("{} vs {}: {}".format(player_char, opponent_char, self.RecordFromStat("matchup_stats", "{} vs {}".format(player_char, opponent_char))))
+
+
+                round_number = gameState.GetRoundNumber()
+                print("!ROUND | {} | HIT".format(round_number))
+                if (gameState.stateLog[-1].bot.wins == 3 or gameState.stateLog[-1].opp.wins == 3) and not self.is_match_recorded:
+                    self.is_match_recorded = True
+
+                    player_name = "You"
+                    p1_char_name = gameState.stateLog[-1].opp.character_name
+                    p1_wins = gameState.stateLog[-1].opp.wins
+
+                    opponent_name = gameState.stateLog[-1].opponent_name
+                    p2_char_name = gameState.stateLog[-1].bot.character_name
+                    p2_wins = gameState.stateLog[-1].bot.wins
+
+                    if gameState.stateLog[-1].is_player_player_one:
+                        player_char, player_wins = p1_char_name, p1_wins
+                        opponent_char, opponent_wins = p2_char_name, p2_wins
+                    else:
+                        player_char, player_wins = p2_char_name, p2_wins
+                        opponent_char, opponent_wins = p1_char_name, p1_wins
+
+                    if player_wins == opponent_wins:
+                        result = 'DRAW'
+                    elif player_wins > opponent_wins:
+                        result = 'WIN'
+                    else:
+                        result = "LOSS"
+
+                    match_result = '{} | {} | {} | vs | {} | {} | {}-{} | {}'.format(result, player_name, player_char, opponent_name, opponent_char, player_wins, opponent_wins, time.strftime('%Y_%m_%d_%H.%M'))
+                    print(match_result)
+                    self.AddStat(result, player_char, opponent_name, opponent_char)
+                    with open(self.stat_filename, "a") as fa:
+                        fa.write(match_result + '\n')
             if (gameState.GetTimer(frames_ago) < 3600 and len(self.GameEvents) > 0) or True:
                 summary = RoundSummary(self.GameEvents, gameState.GetOppRoundSummary(frames_ago))
+
             self.GameEvents = []
 
+        self.was_fight_being_reacquired = gameState.gameReader.flagToReacquireNames
 
 
     def DetermineFrameData(self, gameState):
@@ -217,7 +341,7 @@ class TekkenEncyclopedia:
                 self.second_opinion = False
                 self.second_opinion_timer = 0
         #if gameState.IsOppWhiffingXFramesAgo(self.active_frame_wait + 1)) and \
-        if (gameState.IsBotBlocking() or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotBeingKnockedDown()): #or  gameState.IsBotStartedBeingJuggled() or gameState.IsBotJustGrounded()):
+        if (gameState.IsBotBlocking() or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotBeingKnockedDown() or gameState.IsBotBeingWallSplatted()): #or  gameState.IsBotStartedBeingJuggled() or gameState.IsBotJustGrounded()):
             # print(gameState.stateLog[-1].bot.move_id)
             #print(gameState.stateLog[-1].bot.move_timer)
             #print(gameState.stateLog[-1].bot.recovery)
@@ -297,10 +421,7 @@ class TekkenEncyclopedia:
                     frameDataEntry.hitRecovery = time_till_recovery_opp
                     frameDataEntry.blockRecovery = time_till_recovery_bot
 
-                    if self.isPlayerOne:
-                        prefix = "p1: "
-                    else:
-                        prefix = "p2: "
+                    prefix = self.GetPlayerString()
 
                     print(prefix + str(frameDataEntry))
 
@@ -357,8 +478,8 @@ class FrameDataEntry:
         s = ""
         for input in inputTuple:
             s += (input[0].name + input[1].name.replace('x', '+')).replace('N', '')
-        #if input[2]:
-            #s += "+RA"
+        if input[2]:
+            s += "+R"
         return s
 
     def __repr__(self):
@@ -459,15 +580,20 @@ class GameStatEventEntry:
 
 
 
-    def __init__(self, hit_type : EntryType, combo_counter_damage):
+    def __init__(self, time_in_frames, player_string, hit_type : EntryType, combo_counter_damage):
+        self.start_time = time_in_frames
+        self.player_string = player_string
         self.hit_type = hit_type
         self.damage_already_on_combo_counter = combo_counter_damage
 
 
-    def close_entry(self, total_hits, total_damage, juggle_damage):
+    def close_entry(self, time_in_frames, total_hits, total_damage, juggle_damage, times_hit):
+        self.end_time = time_in_frames
         self.total_hits = total_hits
         self.total_damage = max(0, total_damage - self.damage_already_on_combo_counter)
         self.juggle_damage = juggle_damage
+
+        print('{} {} | {} | {} | {} | {} | HIT'.format(self.player_string, self.hit_type.name, self.total_damage, self.total_hits, self.start_time, self.end_time))
 
 
 
@@ -477,15 +603,15 @@ class RoundSummary:
         self.collated_events = self.collate_events(events)
         total_damage = 0
         sources, types = self.collated_events
-        print('{} combos for {} damage'.format(types[0][0], types[0][1]))
+        #print('{} combos for {} damage'.format(types[0][0], types[0][1]))
         #print('{} pokes for {} damage'.format(types[1][0], types[1][1]))
         for event, hits, damage in sources:
             if damage > 0:
-                print('{} {} for {} damage'.format(hits, event.name, damage))
+                #print('{} {} for {} damage'.format(hits, event.name, damage))
                 total_damage += damage
 
 
-        print('total damage dealt {} ({})'.format(round_variables[1], total_damage))
+        #print('total damage dealt {} ({})'.format(round_variables[1], total_damage))
 
 
     def collate_events(self, events):

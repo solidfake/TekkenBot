@@ -9,7 +9,7 @@ class AttackType(Enum):
     #UNKNOWN_6 = 6 #????? may not exist
     HIGH = 5
     SMID = 4
-    PROJ = 3 #Also on Akuma's dps and one of King's throws. Shows as a special mid in practice mode, unknown what properties this has that are different than smid
+    PROJ = 3 #Special mids that can't be parried. Unknown if/what other properties they share.
     MID = 2
     LOW = 1
     NA = 0 #This move is not an attack
@@ -45,7 +45,7 @@ class SimpleMoveStates(Enum):
 
     WALL_SPLAT_18 = 18
     WALL_SPLAT_19 = 19
-    FLOOR_BREAK_BOUNCE_20 = 20  #??? not sure on this one
+    TECH_ROLL_OR_FLOOR_BREAK = 20
 
     UNKNOWN_23 = 23 #Kuma
 
@@ -228,8 +228,9 @@ class CharacterCodes(Enum):
     ELIZA = 36
     MIGUEL = 37
 
-    NO_SELECTION = 255
+    NOT_YET_LOADED = 71 #value when a match starts for (??) frames until char_id loads
 
+    NO_SELECTION = 255 #value if cursor is not shown
 
 class UniversalAnimationCodes(Enum):
     NEUTRAL = 32769

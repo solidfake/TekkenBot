@@ -5,13 +5,10 @@ A transparent frame data display that sits on top of Tekken.exe in windowed or b
 
 from tkinter import *
 from tkinter.ttk import *
-from _FrameDataLauncher import FrameDataLauncher
 import sys
-from ConfigReader import ConfigReader
-import platform
-import time
 from enum import Enum
-
+import GUI_Overlay
+from GUI_Overlay import CurrentColorScheme, ColorSchemeEnum
 
 
 class DataColumns(Enum):
@@ -31,50 +28,12 @@ class DataColumns(Enum):
     def config_name():
         return "DataColumns"
 
-
-class DisplaySettings(Enum):
-    overlay_on_bottom = -1
-    overlay_as_draggable_window = 0
-    only_appears_when_Tekken_7_has_focus = 1
-    transparent_background = 2
-    tiny_live_frame_data_numbers = 3
-
-    def config_name():
-        return "DisplaySettings"
-
-
 class OverlayMode(Enum):
     FrameData = 0
     StatTracker = 1
 
-class ColorSchemeEnum(Enum):
-    background = 0
-    transparent = 1
-    p1_text = 2
-    p2_text = 3
-    system_text = 4
-    advantage_plus = 5
-    advantage_slight_minus = 6
-    advantage_safe_minus = 7
-    advantage_punishible = 8
-    advantage_very_punishible = 9
-    advantage_text = 10
 
 
-class CurrentColorScheme:
-    dict = {
-        ColorSchemeEnum.background : 'gray10',
-        ColorSchemeEnum.transparent: 'white',
-        ColorSchemeEnum.p1_text: '#93A1A1',
-        ColorSchemeEnum.p2_text: '#586E75',
-        ColorSchemeEnum.system_text: 'lawn green',
-        ColorSchemeEnum.advantage_plus: 'DodgerBlue2',
-        ColorSchemeEnum.advantage_slight_minus: 'ivory2',
-        ColorSchemeEnum.advantage_safe_minus: 'ivory2',
-        ColorSchemeEnum.advantage_punishible: 'orchid2',
-        ColorSchemeEnum.advantage_very_punishible: 'deep pink',
-        ColorSchemeEnum.advantage_text: 'black',
-    }
 
 
 class TextRedirector(object):
@@ -110,18 +69,16 @@ class TextRedirector(object):
 
 
     def write(self, output_str):
-        self.stdout.write(output_str)
+        #self.stdout.write(output_str)
 
         lines = int(self.widget.index('end-1c').split('.')[0])
-        max_lines = 5
+        max_lines = 4
         if lines > max_lines:
             r = lines - max_lines
             for _ in range(r):
                 self.widget.configure(state="normal")
                 self.widget.delete('2.0', '3.0')
                 self.widget.configure(state="disabled")
-
-
 
         if 'NOW:' in output_str:
 
@@ -164,57 +121,18 @@ class TextRedirector(object):
 
 
 
-class GUI_FrameDataOverlay():
-    def __init__(self, master):
-        print("Tekken Bot Starting...")
+class GUI_FrameDataOverlay(GUI_Overlay.Overlay):
+    def __init__(self, master, launcher):
+        print("Launching overlay...")
 
-        is_windows_7 = 'Windows-7' in platform.platform()
-        self.tekken_config = ConfigReader("frame_data_overlay")
-        self.is_draggable_window = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.overlay_as_draggable_window.name, False)
-        self.is_minimize_on_lost_focus = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.only_appears_when_Tekken_7_has_focus.name, True)
-        self.is_transparency = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.transparent_background.name, not is_windows_7)
-        self.is_overlay_on_top = not self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.overlay_on_bottom.name, False)
-        self.enable_nerd_data = self.tekken_config.get_property(DisplaySettings.config_name(), "data_for_nerds", False)
-        self.show_live_framedata = self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.tiny_live_frame_data_numbers.name, True)
+        GUI_Overlay.Overlay.__init__(self, master, (1000, 86), "Tekken Bot: Frame Data Overlay", "frame_data_overlay")
+
+        self.show_live_framedata = self.tekken_config.get_property(GUI_Overlay.DisplaySettings.config_name(), GUI_Overlay.DisplaySettings.tiny_live_frame_data_numbers.name, True)
         self.mode = OverlayMode.FrameData
 
-        self.launcher = FrameDataLauncher(self.enable_nerd_data)
+        #self.launcher = FrameDataLauncher(self.enable_nerd_data)
+        self.launcher = launcher
 
-        self.overlay_visible = False
-        if master == None:
-            self.toplevel = Tk()
-        else:
-            self.toplevel = Toplevel()
-
-        self.toplevel.wm_title("Tekken Bot: Frame Data Overlay")
-
-        self.toplevel.attributes("-topmost", True)
-
-        self.background_color = CurrentColorScheme.dict[ColorSchemeEnum.background]
-
-        if self.is_transparency:
-            self.tranparency_color = CurrentColorScheme.dict[ColorSchemeEnum.transparent]
-            self.toplevel.wm_attributes("-transparentcolor", self.tranparency_color)
-            self.toplevel.attributes("-alpha", "0.75")
-        else:
-            if is_windows_7:
-                print("Windows 7 detected. Disabling transparency.")
-            self.tranparency_color = self.background_color
-        self.toplevel.configure(background=self.tranparency_color)
-
-
-
-        self.w = 1000
-        self.h = 86
-
-        if self.enable_nerd_data:
-            self.w += 400
-
-        self.toplevel.geometry( str(self.w) + 'x' + str(self.h))
-
-        self.toplevel.iconbitmap('TekkenData/tekken_bot_close.ico')
-        if not self.is_draggable_window:
-            self.toplevel.overrideredirect(True)
 
 
         self.s = Style()
@@ -265,13 +183,6 @@ class GUI_FrameDataOverlay():
             booleans_for_columns.append(bool)
         return booleans_for_columns
 
-
-    def redirect_stdout(self):
-        sys.stdout = self.redirector
-
-    def restore_stdout(self):
-        sys.stdout = self.stdout
-
     def create_padding_frame(self, col):
         padding = Frame(self.toplevel, width=10)
         padding.grid(row=0, column=col, rowspan=2, sticky=N + S + W + E)
@@ -316,10 +227,8 @@ class GUI_FrameDataOverlay():
         return textbox
 
 
-    def update_launcher(self):
-        time1 = time.time()
-        self.launcher.Update()
-
+    def update_state(self):
+        GUI_Overlay.Overlay.update_state(self)
         if self.show_live_framedata:
             if len(self.launcher.gameState.stateLog) > 1:
                 l_recovery = str(self.launcher.gameState.GetOppFramesTillNextMove() - self.launcher.gameState.GetBotFramesTillNextMove())
@@ -332,59 +241,9 @@ class GUI_FrameDataOverlay():
                 self.r_live_recovery.set(r_recovery)
 
 
-        if not self.is_draggable_window:
-            tekken_rect = self.launcher.gameState.gameReader.GetWindowRect()
-            if tekken_rect != None:
-                x = (tekken_rect.right + tekken_rect.left)/2 - self.w/2
-                if self.is_overlay_on_top:
-                    y = tekken_rect.top
-                else:
-                    y = tekken_rect.bottom - self.h - 10
-                self.toplevel.geometry('%dx%d+%d+%d' % (self.w, self.h, x, y))
-                if not self.overlay_visible:
-                    self.show()
-            else:
-                if self.overlay_visible:
-                    self.hide()
-
-        if self.launcher.gameState.gameReader.GetNeedReacquireState():
-            self.restore_stdout()
-        else:
-            self.redirect_stdout()
-
-
-        time2 = time.time()
-        elapsed_time = 1000 * (time2 - time1)
-        self.toplevel.after(max(2, 8 - int(round(elapsed_time))), self.update_launcher)
-
-    def hide(self):
-        if self.is_minimize_on_lost_focus and not self.is_draggable_window:
-            self.toplevel.withdraw()
-            self.overlay_visible = False
-
-    def show(self):
-        self.toplevel.deiconify()
-        self.overlay_visible = True
-
     def set_columns_to_print(self, columns_to_print):
         self.redirector.set_columns_to_print(columns_to_print)
 
     def update_column_to_print(self, enum, value):
         self.tekken_config.set_property(DataColumns.config_name(), enum.name, value)
         self.write_config_file()
-
-
-    def write_config_file(self):
-        self.tekken_config.write()
-
-
-
-
-
-if __name__ == '__main__':
-    #root = Tk()
-    app = GUI_FrameDataOverlay(None)
-    app.update_launcher()
-    app.hide()
-    app.write_config_file()
-    app.toplevel.mainloop()
