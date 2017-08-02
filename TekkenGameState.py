@@ -87,7 +87,11 @@ class TekkenGameReader:
         if isFloat:
             return struct.unpack("<f", value)[0]
         elif isString:
-            return value.decode('utf-8')
+            try:
+                return value.decode('utf-8')
+            except:
+                print("ERROR: Couldn't decode string from memory")
+                return "ERROR"
         else:
             return int(value)
 
