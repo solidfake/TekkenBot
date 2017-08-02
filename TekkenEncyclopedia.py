@@ -29,7 +29,7 @@ class TekkenEncyclopedia:
         self.was_fight_being_reacquired = True
         self.is_match_recorded = False
 
-        self.stat_filename = "TekkenData/matches.txt"
+        self.stat_filename = "TekkenData/matches_2.txt"
         if self.isPlayerOne:
             self.LoadStats()
 
@@ -39,16 +39,19 @@ class TekkenEncyclopedia:
         self.stat_dict['char_stats'] = {}
         self.stat_dict['matchup_stats'] = {}
         self.stat_dict['opponent_stats'] = {}
-        with open(self.stat_filename, 'r', encoding='utf-8') as fr:
-            lines = fr.readlines()
-        for line in lines:
-            if '|' in line:
-                args = line.split('|')
-                result = args[0].strip()
-                player_char = args[2].strip()
-                opponent_name = args[4].strip()
-                opponent_char = args[5].strip()
-                self.AddStat(result, player_char, opponent_name, opponent_char)
+        try:
+            with open(self.stat_filename, 'r', encoding='utf-8') as fr:
+                lines = fr.readlines()
+            for line in lines:
+                if '|' in line:
+                    args = line.split('|')
+                    result = args[0].strip()
+                    player_char = args[2].strip()
+                    opponent_name = args[4].strip()
+                    opponent_char = args[5].strip()
+                    self.AddStat(result, player_char, opponent_name, opponent_char)
+        except FileNotFoundError:
+            pass
 
     def AddStat(self, result, player_char, opponent_name, opponent_char):
 
