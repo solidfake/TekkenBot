@@ -134,7 +134,6 @@ class GUI_FrameDataOverlay(GUI_Overlay.Overlay):
         self.launcher = launcher
 
 
-
         self.s = Style()
         self.s.theme_use('alt')
         self.s.configure('.', background=self.background_color)
@@ -214,16 +213,9 @@ class GUI_FrameDataOverlay(GUI_Overlay.Overlay):
 
     def create_textbox(self, col):
         textbox = Text(self.toplevel, font=("Consolas, 14"), wrap=NONE, highlightthickness=0, pady=0, relief='flat')
-        # self.text.pack(side="top", fill="both", expand=True)
         textbox.grid(row=0, column=col, rowspan=2, sticky=N + S + W + E)
-        #textbox.configure(background='black')
-        #textbox.configure(background='white')
         textbox.configure(background=self.background_color)
-
         textbox.configure(foreground=CurrentColorScheme.dict[ColorSchemeEnum.system_text])
-        #textbox.configure(foreground='dark khaki')
-        #textbox.configure(foreground='#839496')
-        #textbox.configure(foreground='#657B83')
         return textbox
 
 

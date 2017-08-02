@@ -496,7 +496,7 @@ class TekkenGameState:
                     frames_lost = gameData.frame_count - self.stateLog[-1].frame_count - 1
                     if frames_lost > 0:
                         pass
-                        print("DROPPED FRAMES: " + str(frames_lost))
+                        #print("DROPPED FRAMES: " + str(frames_lost))
 
                 for i in range(min(7 - buffer, frames_lost)):
                     #print("RETRIEVING FRAMES")

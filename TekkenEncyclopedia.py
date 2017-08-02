@@ -258,19 +258,8 @@ class TekkenEncyclopedia:
                 if gameState.gameReader.flagToReacquireNames == False and self.was_fight_being_reacquired:
                     self.is_match_recorded = False
 
-                    if gameState.stateLog[-1].is_player_player_one:
-                        opponent_char = gameState.stateLog[-1].bot.character_name
-                        player_char = gameState.stateLog[-1].opp.character_name
-                    else:
-                        opponent_char = gameState.stateLog[-1].opp.character_name
-                        player_char = gameState.stateLog[-1].bot.character_name
-
-
-                    opponent_name = gameState.stateLog[-1].opponent_name
-
-                    print("vs {}: {}".format(opponent_char, self.RecordFromStat('char_stats', opponent_char)))
-                    print("vs {}: {}".format(opponent_name, self.RecordFromStat('opponent_stats', opponent_name)))
-                    print("{} vs {}: {}".format(player_char, opponent_char, self.RecordFromStat("matchup_stats", "{} vs {}".format(player_char, opponent_char))))
+                    for entry in self.get_matchup_record(gameState):
+                        print(entry)
 
 
                 round_number = gameState.GetRoundNumber()
@@ -301,7 +290,7 @@ class TekkenEncyclopedia:
                         result = "LOSS"
 
                     match_result = '{} | {} | {} | vs | {} | {} | {}-{} | {}'.format(result, player_name, player_char, opponent_name, opponent_char, player_wins, opponent_wins, time.strftime('%Y_%m_%d_%H.%M'))
-                    print(match_result)
+                    print("{}".format(match_result))
                     self.AddStat(result, player_char, opponent_name, opponent_char)
                     with open(self.stat_filename, "a", encoding='utf-8') as fa:
                         fa.write(match_result + '\n')
@@ -312,6 +301,19 @@ class TekkenEncyclopedia:
 
         self.was_fight_being_reacquired = gameState.gameReader.flagToReacquireNames
 
+    def get_matchup_record(self, gameState):
+        if gameState.stateLog[-1].is_player_player_one:
+            opponent_char = gameState.stateLog[-1].bot.character_name
+            player_char = gameState.stateLog[-1].opp.character_name
+        else:
+            opponent_char = gameState.stateLog[-1].opp.character_name
+            player_char = gameState.stateLog[-1].bot.character_name
+        opponent_name = gameState.stateLog[-1].opponent_name
+        return [
+                ("!RECORD | vs {}: {}".format(opponent_char, self.RecordFromStat('char_stats', opponent_char))),
+                ("!RECORD | vs {}: {}".format(opponent_name, self.RecordFromStat('opponent_stats', opponent_name))),
+                ("!RECORD | {} vs {}: {}".format(player_char, opponent_char, self.RecordFromStat("matchup_stats", "{} vs {}".format(player_char, opponent_char))))
+            ]
 
     def DetermineFrameData(self, gameState):
         opp_id = gameState.GetOppMoveId()

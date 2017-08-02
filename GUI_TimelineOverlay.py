@@ -79,7 +79,7 @@ class GUI_TimelineOverlay(GUI_Overlay.Overlay):
         #self.launcher = FrameDataLauncher(self.enable_nerd_data)
         self.launcher = launcher
 
-        self.canvas = Canvas(self.toplevel, width=self.w, height=self.h, bg='black')
+        self.canvas = Canvas(self.toplevel, width=self.w, height=self.h, bg='black', highlightthickness=0, relief='flat')
         # figures out how the canvas sits in the window
         self.canvas.pack()
 

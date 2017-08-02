@@ -4,6 +4,7 @@ import GUI_FrameDataOverlay as fdo
 import GUI_Overlay as ovr
 import GUI_TimelineOverlay as tlo
 import GUI_CommandInputOverlay as cio
+import GUI_MatchStatOverlay as mso
 import ConfigReader
 from _FrameDataLauncher import FrameDataLauncher
 import time
@@ -27,6 +28,8 @@ class GUI_TekkenBotPrime(Tk):
         self.text = Text(self, wrap="word")
         self.stdout = sys.stdout
         sys.stdout = TextRedirector(self.text, sys.stdout, self.write_to_overlay, "stdout")
+        self.stderr = sys.stderr
+        sys.stderr = TextRedirector(self.text, sys.stderr, self.write_to_error, "stderr")
         self.text.tag_configure("stderr", foreground="#b22222")
 
         try:
@@ -42,7 +45,7 @@ class GUI_TekkenBotPrime(Tk):
         self.overlay = fdo.GUI_FrameDataOverlay(self, self.launcher)
         #self.graph = tlo.GUI_TimelineOverlay(self, self.launcher)
 
-        # sys.stderr = TextRedirector(self.text, "stderr")
+
 
         self.checkbox_dict = {}
         self.column_menu = Menu(self.menu)
@@ -93,6 +96,8 @@ class GUI_TekkenBotPrime(Tk):
         #if 'HIT' in string:
             #self.graph.redirector.write(string)
 
+    def write_to_error(self, string):
+        self.stderr.write(string)
 
     def add_checkbox(self, menu, lookup_key, display_string, default_value, button_command):
         var = BooleanVar()
@@ -110,20 +115,11 @@ class GUI_TekkenBotPrime(Tk):
 
     def changed_mode(self, mode):
 
-        if mode == OverlayMode.Off.name:
-            self.mode = OverlayMode.Off
-            self.stop_overlay()
-        if mode == OverlayMode.FrameData.name:
-            self.mode = OverlayMode.FrameData
-            self.stop_overlay()
-            self.start_overlay()
-        #if mode == OverlayMode.Timeline.name:
-        #    self.mode = OverlayMode.Timeline
-        #    self.stop_overlay()
-        #    self.start_overlay()
-        if mode == OverlayMode.CommandInput.name:
-            self.mode = OverlayMode.CommandInput
-            self.stop_overlay()
+        self.stop_overlay()
+
+        self.mode = OverlayMode[mode]
+
+        if self.mode != OverlayMode.Off:
             self.start_overlay()
 
 
@@ -162,6 +158,9 @@ class GUI_TekkenBotPrime(Tk):
         if self.mode == OverlayMode.CommandInput:
             self.overlay = cio.GUI_CommandInputOverlay(self, self.launcher)
             self.overlay.hide()
+        if self.mode == OverlayMode.MatchupRecord:
+            self.overlay = mso.GUI_MatchStatOverlay(self, self.launcher)
+            self.overlay.hide()
 
 
 
@@ -181,6 +180,7 @@ class GUI_TekkenBotPrime(Tk):
 
     def on_closing(self):
         sys.stdout = self.stdout
+        sys.stderr = self.stderr
         self.destroy()
 
 
@@ -208,6 +208,7 @@ class OverlayMode(Enum):
     FrameData = 1
     #Timeline = 2
     CommandInput = 3
+    MatchupRecord = 4
 
 if __name__ == '__main__':
     app = GUI_TekkenBotPrime()
