@@ -9,6 +9,7 @@ import ConfigReader
 from _FrameDataLauncher import FrameDataLauncher
 import time
 from enum import Enum
+import VersionChecker
 
 class GUI_TekkenBotPrime(Tk):
     def __init__(self):
@@ -32,6 +33,8 @@ class GUI_TekkenBotPrime(Tk):
         self.stderr = sys.stderr
         sys.stderr = TextRedirector(self.text, sys.stderr, self.write_to_error, "stderr")
         self.text.tag_configure("stderr", foreground="#b22222")
+
+        VersionChecker.check_version()
 
         try:
             with open("TekkenData/tekken_bot_readme.txt") as fr:
@@ -80,6 +83,10 @@ class GUI_TekkenBotPrime(Tk):
         self.menu.add_cascade(label="Mode", menu=self.overlay_mode_menu)
         self.mode = OverlayMode.FrameData
 
+        self.tekken_bot_menu = Menu(self.menu)
+        self.tekken_bot_menu.add_command(label=VersionChecker.CURRENT_VERSION)
+        self.tekken_bot_menu.add_command(label="Release Notes", command=self.print_release_notes)
+        self.menu.add_cascade(label="Version", menu=self.tekken_bot_menu)
 
 
         self.text.grid(row = 2, column = 0, columnspan=2, sticky=N+S+E+W)
@@ -94,6 +101,9 @@ class GUI_TekkenBotPrime(Tk):
         self.overlay.hide()
 
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def print_release_notes(self):
+        VersionChecker.check_version(force_print=True)
 
     def restart(self):
         self.launcher = FrameDataLauncher(False)
