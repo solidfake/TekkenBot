@@ -16,12 +16,14 @@ def check_version(force_print=False):
             if r.ok:
                 repoItem = json.loads(r.text or r.content)
                 repoTag = repoItem['tag_name']
+                print("")
                 if (repoTag != CURRENT_VERSION):
                     print("A new version of Tekken Bot is available.")
                 if (repoTag != CURRENT_VERSION or force_print):
                     print(repoItem['html_url'])
-                    print("Release Notes:")
-                    print(repoItem['body'])
+                    #print("Release Notes:")
+                    #print(repoItem['body'])
+                    print('')
                 else:
                     print("Tekken Bot is up to date.")
         except:

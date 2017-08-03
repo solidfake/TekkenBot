@@ -10,6 +10,7 @@ from _FrameDataLauncher import FrameDataLauncher
 import time
 from enum import Enum
 import VersionChecker
+import webbrowser
 
 class GUI_TekkenBotPrime(Tk):
     def __init__(self):
@@ -34,7 +35,7 @@ class GUI_TekkenBotPrime(Tk):
         sys.stderr = TextRedirector(self.text, sys.stderr, self.write_to_error, "stderr")
         self.text.tag_configure("stderr", foreground="#b22222")
 
-        VersionChecker.check_version()
+
 
         try:
             with open("TekkenData/tekken_bot_readme.txt") as fr:
@@ -42,6 +43,8 @@ class GUI_TekkenBotPrime(Tk):
             for line in lines: print(line)
         except:
             print("Error reading readme file.")
+
+        VersionChecker.check_version()
 
         print("Tekken Bot Starting...")
         self.launcher = FrameDataLauncher(False)
@@ -85,7 +88,8 @@ class GUI_TekkenBotPrime(Tk):
 
         self.tekken_bot_menu = Menu(self.menu)
         self.tekken_bot_menu.add_command(label=VersionChecker.CURRENT_VERSION)
-        self.tekken_bot_menu.add_command(label="Release Notes", command=self.print_release_notes)
+        self.tekken_bot_menu.add_command(label="Check for new version", command=self.print_release_notes)
+        self.tekken_bot_menu.add_command(label="Download Latest Release", command=self.download_latest_release)
         self.menu.add_cascade(label="Version", menu=self.tekken_bot_menu)
 
 
@@ -104,6 +108,9 @@ class GUI_TekkenBotPrime(Tk):
 
     def print_release_notes(self):
         VersionChecker.check_version(force_print=True)
+
+    def download_latest_release(self):
+        webbrowser.open('https://github.com/roguelike2d/TekkenBot/releases/')
 
     def restart(self):
         self.launcher = FrameDataLauncher(False)
