@@ -27,7 +27,8 @@ class GUI_TekkenBotPrime(Tk):
 
         self.text = Text(self, wrap="word")
         self.stdout = sys.stdout
-        sys.stdout = TextRedirector(self.text, sys.stdout, self.write_to_overlay, "stdout")
+        self.var_print_frame_data_to_file = BooleanVar(value=False)
+        sys.stdout = TextRedirector(self.text, sys.stdout, self.write_to_overlay, self.var_print_frame_data_to_file, "stdout")
         self.stderr = sys.stderr
         sys.stderr = TextRedirector(self.text, sys.stderr, self.write_to_error, "stderr")
         self.text.tag_configure("stderr", foreground="#b22222")
@@ -45,6 +46,11 @@ class GUI_TekkenBotPrime(Tk):
         self.overlay = fdo.GUI_FrameDataOverlay(self, self.launcher)
         #self.graph = tlo.GUI_TimelineOverlay(self, self.launcher)
 
+        self.tekken_bot_menu = Menu(self.menu)
+        self.tekken_bot_menu.add_command(label="Restart", command=self.restart)
+
+        self.tekken_bot_menu.add_checkbutton(label="Print Frame Data To File", onvalue=True, offvalue=False, variable=self.var_print_frame_data_to_file)
+        self.menu.add_cascade(label="Tekken Bot", menu=self.tekken_bot_menu)
 
 
         self.checkbox_dict = {}
@@ -89,8 +95,15 @@ class GUI_TekkenBotPrime(Tk):
 
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
+    def restart(self):
+        self.launcher = FrameDataLauncher(False)
+        self.stop_overlay()
+        self.start_overlay()
+
     def write_to_overlay(self, string):
-        #if 'NOW' in string:
+        if self.var_print_frame_data_to_file.get() and 'NOW:' in string:
+            with open("TekkenData/frame_data_output.txt", 'a') as fa:
+                fa.write(string +'\n')
         if self.overlay != None:
             self.overlay.redirector.write(string)
         #if 'HIT' in string:
@@ -186,11 +199,12 @@ class GUI_TekkenBotPrime(Tk):
 
 
 class TextRedirector(object):
-    def __init__(self, widget, stdout, callback_function, tag="stdout"):
+    def __init__(self, widget, stdout, callback_function, var_print_frame_data_to_file,tag="stdout"):
         self.widget = widget
         self.stdout = stdout
         self.tag = tag
         self.callback_function = callback_function
+        self.var_print_frame_data_to_file = var_print_frame_data_to_file
 
     def write(self, str):
 

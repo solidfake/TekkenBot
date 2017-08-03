@@ -319,32 +319,32 @@ class TekkenEncyclopedia:
             ]
 
     def DetermineFrameData(self, gameState):
-        opp_id = gameState.GetOppMoveId()
-        if self.second_opinion:
-            self.second_opinion_timer += 1
-            landingCanceledFrames = gameState.GetOppMoveInterruptedFrames()
-            if landingCanceledFrames > 0:
-                bot_recovery = (gameState.GetBotRecovery() - gameState.GetBotMoveTimer())
-                opp_recovery = (gameState.GetOppRecovery() - gameState.GetOppMoveTimer())
+
+        #if self.second_opinion:
+            #self.second_opinion_timer += 1
+            #landingCanceledFrames = gameState.GetOppMoveInterruptedFrames()
+            #if landingCanceledFrames > 0:
+                #bot_recovery = (gameState.GetBotRecovery() - gameState.GetBotMoveTimer())
+                #opp_recovery = (gameState.GetOppRecovery() - gameState.GetOppMoveTimer())
                 # fa = (self.stored_bot_recovery - self.second_opinion_timer) - opp_recovery
-                if self.second_opinion_timer < self.stored_bot_recovery:
-                    fa = bot_recovery - opp_recovery
-                else:
-                    fa = (self.stored_bot_recovery - self.second_opinion_timer) - opp_recovery
-                fa_string = self.FrameData[self.stored_opp_id].WithPlusIfNeeded(fa)
+                #if self.second_opinion_timer < self.stored_bot_recovery:
+                    #fa = bot_recovery - opp_recovery
+                #else:
+                    #fa = (self.stored_bot_recovery - self.second_opinion_timer) - opp_recovery
+                #fa_string = self.FrameData[self.stored_opp_id].WithPlusIfNeeded(fa)
 
-                print(self.stored_prefix + "JUMP CANCELED -> " + fa_string + " NOW:" + fa_string)
+                #print(self.stored_prefix + "JUMP CANCELED -> " + fa_string + " NOW:" + fa_string)
 
-                self.second_opinion = False
-                self.second_opinion_timer = 0
+                #self.second_opinion = False
+                #self.second_opinion_timer = 0
 
-            if self.second_opinion_timer > self.stored_opp_recovery:
+            #if self.second_opinion_timer > self.stored_opp_recovery:
                 # print("check {}".format(self.stored_opp_recovery))
                 # print(gameState.stateLog[-1].opp.IsBufferable())
                 # print(gameState.GetOppTechnicalStates(self.stored_opp_recovery)[2])
                 # print(gameState.GetOppTechnicalStates(self.stored_opp_recovery)[3])
-                self.second_opinion = False
-                self.second_opinion_timer = 0
+                #self.second_opinion = False
+                #self.second_opinion_timer = 0
         #if gameState.IsOppWhiffingXFramesAgo(self.active_frame_wait + 1)) and \
         if (gameState.IsBotBlocking() or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotBeingKnockedDown() or gameState.IsBotBeingWallSplatted()): #or  gameState.IsBotStartedBeingJuggled() or gameState.IsBotJustGrounded()):
             # print(gameState.stateLog[-1].bot.move_id)
@@ -364,15 +364,20 @@ class TekkenEncyclopedia:
                 else:
                     gameState.ReturnToPresent()
 
+                    currentActiveFrame = gameState.GetLastActiveFrameHitWasOn(self.active_frame_wait)
+
+                    gameState.BackToTheFuture(self.active_frame_wait)
+
+
+                    opp_id = gameState.GetOppMoveId()
+
                     if opp_id in self.FrameData:
                         frameDataEntry = self.FrameData[opp_id]
                     else:
                         frameDataEntry = FrameDataEntry(self.print_extended_frame_data)
                         self.FrameData[opp_id] = frameDataEntry
 
-                    frameDataEntry.currentActiveFrame = gameState.GetLastActiveFrameHitWasOn(self.active_frame_wait)
-
-                    gameState.BackToTheFuture(self.active_frame_wait)
+                    frameDataEntry.currentActiveFrame = currentActiveFrame
 
                     frameDataEntry.currentFrameAdvantage = '??'
                     frameDataEntry.move_id = opp_id
@@ -523,8 +528,9 @@ class FrameDataEntry:
         if self.calculated_startup != self.startup:
             self.calculated_startup = str(self.calculated_startup) + "?"
 
-        non_nerd_string = "{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{:^3}|{:^3}|{:^3}|{:^3}|".format(
+        non_nerd_string = "{:^5}|{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{:^3}|{:^3}|{:^3}|{:^3}|".format(
             str(self.input),
+            str(self.move_id),
             str(self.hitType)[:7],
             str(self.calculated_startup),
             self.WithPlusIfNeeded(self.onBlock),

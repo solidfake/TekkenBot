@@ -13,17 +13,18 @@ from GUI_Overlay import CurrentColorScheme, ColorSchemeEnum
 
 class DataColumns(Enum):
     input = 0
-    type = 1
-    startup = 2
-    block = 3
-    hit = 4
-    CH = 5
-    active = 6
-    track = 7
-    tot = 8
-    rec = 9
-    stun = 10
-    notes = 11
+    move_id = 1
+    type = 2
+    startup = 3
+    block = 4
+    hit = 5
+    CH = 6
+    active = 7
+    track = 8
+    tot = 9
+    rec = 10
+    stun = 11
+    notes = 12
 
     def config_name():
         return "DataColumns"
