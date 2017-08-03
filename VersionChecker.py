@@ -1,6 +1,6 @@
 import requests
 import json
-CURRENT_VERSION = 'v0.5.1'
+CURRENT_VERSION = 'v0.5.2'
 
 
 def check_version(force_print=False):
