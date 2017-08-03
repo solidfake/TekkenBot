@@ -57,6 +57,7 @@ class Overlay:
         self.is_overlay_on_top = not self.tekken_config.get_property(DisplaySettings.config_name(), DisplaySettings.overlay_on_bottom.name, False)
 
 
+
         self.overlay_visible = False
         if master == None:
             self.toplevel = Tk()
@@ -88,7 +89,8 @@ class Overlay:
 
         self.toplevel.geometry(str(self.w) + 'x' + str(self.h))
 
-    def update_state(self):
+
+    def update_location(self):
         if not self.is_draggable_window:
             tekken_rect = self.launcher.gameState.gameReader.GetWindowRect()
             if tekken_rect != None:
@@ -103,6 +105,9 @@ class Overlay:
             else:
                 if self.overlay_visible:
                     self.hide()
+
+    def update_state(self):
+        pass
 
     def hide(self):
         if self.is_minimize_on_lost_focus and not self.is_draggable_window:

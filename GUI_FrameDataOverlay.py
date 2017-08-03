@@ -221,7 +221,7 @@ class GUI_FrameDataOverlay(GUI_Overlay.Overlay):
 
 
     def update_state(self):
-        GUI_Overlay.Overlay.update_state(self)
+        #GUI_Overlay.Overlay.update_state(self)
         if self.show_live_framedata:
             if len(self.launcher.gameState.stateLog) > 1:
                 l_recovery = str(self.launcher.gameState.GetOppFramesTillNextMove() - self.launcher.gameState.GetBotFramesTillNextMove())

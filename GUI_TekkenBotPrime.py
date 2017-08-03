@@ -201,8 +201,11 @@ class GUI_TekkenBotPrime(Tk):
     def update_launcher(self):
         time1 = time.time()
         successful_update = self.launcher.Update()
-        if self.overlay != None and successful_update:
-            self.overlay.update_state()
+
+        if self.overlay != None:
+            self.overlay.update_location()
+            if successful_update:
+                self.overlay.update_state()
         #self.graph.update_state()
         time2 = time.time()
         elapsed_time = 1000 * (time2 - time1)
