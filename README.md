@@ -9,7 +9,7 @@ A window that can go over the game to display real time move information read fr
 ![Robot feet and bear paws 1](Screenshots/frame_data.png?raw=true)
 
 ### CommandInputOverlay
-Display command inputs, similar to the on alread in Tekken 7 except it gives frame by frame information and includes cancelable frames.
+Display command inputs, similar to the one already in Tekken 7 except it gives frame by frame information and includes cancelable frames.
 ![Robot feet and bear paws 2](Screenshots/command_input.png?raw=true)
 
 ## Bots
