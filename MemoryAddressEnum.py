@@ -9,6 +9,7 @@ class MemoryAddressOffsets(Enum):
     p2_data_offset = 0x66B0
     p2_end_block_offset = 0xC8
     rollback_frame_offset =  0x19F70
+    movelist_size = 2000000
 
 class GameDataAddress(Enum):
     #frame_count = 0x6a0 #resets sometimes on p1 backdash???
@@ -107,7 +108,8 @@ class NonPlayerDataAddressesEnum(Enum):
     WARMUP_PLAYER_NAME2 = 203
     WARMUP_PLAYER_WINS2 = 204
 
-
+    P1_Movelist = 301
+    P2_Movelist = 302
 
 
 
@@ -131,6 +133,11 @@ class NonPlayerDataAddressesTuples:
         NonPlayerDataAddressesEnum.WARMUP_PLAYER_WINS1: (0x0333B8A0, 0x50, -0x34),
         NonPlayerDataAddressesEnum.WARMUP_PLAYER_NAME2: (0x0333B8A0, 0x50, 0x140),
         NonPlayerDataAddressesEnum.WARMUP_PLAYER_WINS2: (0x0333B8A0, 0x50, 0x10C),
+
+        NonPlayerDataAddressesEnum.P1_Movelist: (0x0334F520, 0x2E8),
+        NonPlayerDataAddressesEnum.P2_Movelist: (0x03352320, 0x2E8),
+
+
 
     }
 

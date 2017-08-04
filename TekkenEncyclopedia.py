@@ -136,7 +136,7 @@ class TekkenEncyclopedia:
                     #print(gameState.stateLog[-1].bot.move_id)
                     pass
                 if gameState.stateLog[-1].opp.move_id != gameState.stateLog[-2].opp.move_id:
-                    #print(gameState.stateLog[-1].opp.move_id)
+                    #print("0x{:x}:{}:{}".format(gameState.stateLog[-1].opp.move_id, gameState.stateLog[-1].opp.move_id, gameState.GetOppMoveName(gameState.stateLog[-1].opp.move_id)))
                     pass
                 if gameState.stateLog[-1].opp.throw_tech != gameState.stateLog[-2].opp.throw_tech:
                     pass
@@ -431,10 +431,11 @@ class TekkenEncyclopedia:
                     frameDataEntry.hitRecovery = time_till_recovery_opp
                     frameDataEntry.blockRecovery = time_till_recovery_bot
 
-
+                    frameDataEntry.move_str = gameState.GetOppMoveName(opp_id)
                     prefix = self.GetPlayerString()
 
                     print(prefix + str(frameDataEntry))
+
 
 
                     # print(gameState.stateLog[-1].opp.startup)
@@ -457,6 +458,7 @@ class FrameDataEntry:
     def __init__(self, print_extended = False):
         self.print_extended = print_extended
         self.move_id = '??'
+        self.move_str = '??'
         self.startup = '??'
         self.calculated_startup = -1
         self.hitType = '??'
@@ -528,9 +530,10 @@ class FrameDataEntry:
         if self.calculated_startup != self.startup:
             self.calculated_startup = str(self.calculated_startup) + "?"
 
-        non_nerd_string = "{:^5}|{:^5}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{:^3}|{:^3}|{:^3}|{:^3}|".format(
+        non_nerd_string = "{:^5}|{:^4}|{:^4}|{:^8}|{:^9}|{:^8}|{:^5}|{:^5}|{:^5}|{:^3}|{:^3}|{:^3}|{:^3}|".format(
             str(self.input),
             str(self.move_id),
+            self.move_str,
             str(self.hitType)[:7],
             str(self.calculated_startup),
             self.WithPlusIfNeeded(self.onBlock),

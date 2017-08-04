@@ -58,6 +58,8 @@ class TekkenGameReader:
         self.is_player_player_one = None
         self.config_reader = ConfigReader('memory_address')
         self.player_data_pointer_offset = self.config_reader.get_property('Address', 'player_data_pointer_offset', MemoryAddressOffsets.player_data_pointer_offset.value)#, #lambda x: int(x, 16))
+        self.p1_movelist = []
+        self.p2_movelist = []
 
     def ReacquireEverything(self):
         self.needReacquireModule = True
@@ -96,17 +98,17 @@ class TekkenGameReader:
             return int(value)
 
 
-    def GetPlayerDataFrame(self, processHandle, address):
-        data = c.create_string_buffer(MemoryAddressOffsets.rollback_frame_offset.value)
-        bytesRead = c.c_ulonglong(MemoryAddressOffsets.rollback_frame_offset.value)
+    def GetBlockOfData(self, processHandle, address, size_of_block):
+        data = c.create_string_buffer(size_of_block)
+        bytesRead = c.c_ulonglong(size_of_block)
         successful = ReadProcessMemory(processHandle, address, c.byref(data), c.sizeof(data), c.byref(bytesRead))
         if not successful:
             e = GetLastError()
-            print("Getting Player Data Error: Code " + str(e))
+            print("Getting Block of Data Error: Code " + str(e))
         #print('{} : {}'.format(address, self.GetValueFromFrame(data, PlayerDataAddress.simple_move_state)))
         return data
 
-    def GetValueFromFrame(self, frame, offset, player_2_offset = 0x0, is_float=False):
+    def GetValueFromDataBlock(self, frame, offset, player_2_offset = 0x0, is_float=False):
         address = offset
         address += player_2_offset
         bytes = frame[address: address + 4]
@@ -196,26 +198,26 @@ class TekkenGameReader:
                     p1_bot = BotSnapshot()
                     p2_bot = BotSnapshot()
 
-                    player_data_frame = self.GetPlayerDataFrame(processHandle, player_data_second_address)
+                    player_data_frame = self.GetBlockOfData(processHandle, player_data_second_address, MemoryAddressOffsets.rollback_frame_offset.value)
 
                     for offset_enum in PlayerDataAddress:
                         #p1_value = self.GetValueFromAddress(processHandle, player_data_second_address + data.value, IsDataAFloat(data))
                         #p2_value = self.GetValueFromAddress(processHandle, player_data_second_address + MemoryAddressOffsets.p2_data_offset.value + data.value, IsDataAFloat(data))
-                        p1_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, 0, IsDataAFloat(offset_enum))
-                        p2_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, MemoryAddressOffsets.p2_data_offset.value, IsDataAFloat(offset_enum))
+                        p1_value = self.GetValueFromDataBlock(player_data_frame, offset_enum.value, 0, IsDataAFloat(offset_enum))
+                        p2_value = self.GetValueFromDataBlock(player_data_frame, offset_enum.value, MemoryAddressOffsets.p2_data_offset.value, IsDataAFloat(offset_enum))
                         p1_bot.player_data_dict[offset_enum] = p1_value
                         p2_bot.player_data_dict[offset_enum] = p2_value
 
                     for offset_enum in EndBlockPlayerDataAddress:
-                        p1_value = self.GetValueFromFrame(player_data_frame, offset_enum.value)
-                        p2_value = self.GetValueFromFrame(player_data_frame, offset_enum.value, MemoryAddressOffsets.p2_end_block_offset.value)
+                        p1_value = self.GetValueFromDataBlock(player_data_frame, offset_enum.value)
+                        p2_value = self.GetValueFromDataBlock(player_data_frame, offset_enum.value, MemoryAddressOffsets.p2_end_block_offset.value)
                         p1_bot.player_data_dict[offset_enum] = p1_value
                         p2_bot.player_data_dict[offset_enum] = p2_value
 
 
                     #bot_facing = self.GetValueFromAddress(processHandle, player_data_second_address + GameDataAddress.facing.value, IsDataAFloat(offset_enum))
-                    bot_facing = self.GetValueFromFrame(player_data_frame, GameDataAddress.facing.value)
-                    timer_in_frames = self.GetValueFromFrame(player_data_frame, GameDataAddress.timer_in_frames.value)
+                    bot_facing = self.GetValueFromDataBlock(player_data_frame, GameDataAddress.facing.value)
+                    timer_in_frames = self.GetValueFromDataBlock(player_data_frame, GameDataAddress.timer_in_frames.value)
 
 
                     for startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z):#, PlayerDataAddress.hitbox1, PlayerDataAddress.hitbox2, PlayerDataAddress.hitbox3, PlayerDataAddress.hitbox4, PlayerDataAddress.hitbox5):
@@ -225,8 +227,8 @@ class TekkenGameReader:
                         for i in range(23):
                             #p1_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset), True))
                             #p2_coord_array.append(self.GetValueFromAddress(processHandle, player_data_second_address + startingAddress.value + (i * positionOffset) + MemoryAddressOffsets.p2_data_offset.value, True))
-                            p1_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), 0, startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z)))
-                            p2_coord_array.append(self.GetValueFromFrame(player_data_frame, startingAddress.value + (i * positionOffset), MemoryAddressOffsets.p2_data_offset.value, startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z)))
+                            p1_coord_array.append(self.GetValueFromDataBlock(player_data_frame, startingAddress.value + (i * positionOffset), 0, startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z)))
+                            p2_coord_array.append(self.GetValueFromDataBlock(player_data_frame, startingAddress.value + (i * positionOffset), MemoryAddressOffsets.p2_data_offset.value, startingAddress in (PlayerDataAddress.x, PlayerDataAddress.y, PlayerDataAddress.z)))
                         p1_bot.player_data_dict[startingAddress] = p1_coord_array
                         p2_bot.player_data_dict[startingAddress] = p2_coord_array
                         #print("numpy.array(" + str(p1_coord_array) + ")")
@@ -255,6 +257,17 @@ class TekkenGameReader:
                             self.is_player_player_one = (self.opponent_side == 1)
                             #print(self.opponent_char_id)
                             #print(self.is_player_player_one)
+
+                            self.p1_movelist_block = self.PopulateMovelists(processHandle, NonPlayerDataAddressesEnum.P1_Movelist)
+                            self.p2_movelist_block = self.PopulateMovelists(processHandle, NonPlayerDataAddressesEnum.P2_Movelist)
+
+                            #self.WriteMovelistsToFile(self.p1_movelist_block, p1_bot.character_name)
+                            #self.WriteMovelistsToFile(self.p2_movelist_block, p2_bot.character_name)
+
+                            self.p1_movelist_names = self.p1_movelist_block[0x2E8:200000].split(b'\00') #Todo: figure out the actual size of the name movelist
+                            self.p2_movelist_names = self.p2_movelist_block[0x2E8:200000].split(b'\00')
+                            #print(self.p1_movelist_names[(1572 * 2)])
+
                             self.flagToReacquireNames = False
 
                     gameSnapshot = GameSnapshot(p1_bot, p2_bot, best_frame_count, timer_in_frames, bot_facing, self.opponent_name, self.is_player_player_one)
@@ -263,6 +276,18 @@ class TekkenGameReader:
                 CloseHandle(processHandle)
 
         return gameSnapshot
+
+    def WriteMovelistsToFile(self, movelist, name):
+        with open('RawData/' + name + ".dat", 'wb') as fw:
+            fw.write(movelist)
+
+    def PopulateMovelists(self, processHandle, movelist_enum):
+        movelist_tuple = NonPlayerDataAddressesTuples.offsets[movelist_enum]
+
+        movelist_address = self.GetValueFromAddress(processHandle, self.module_address + movelist_tuple[0], is64bit=True)
+        movelist_block = self.GetBlockOfData(processHandle, movelist_address, MemoryAddressOffsets.movelist_size.value)
+
+        return movelist_block
 
 
     def GetNeedReacquireState(self):
@@ -1229,6 +1254,18 @@ class TekkenGameState:
         return max_index, max_product
 
         #return old_dist
+
+
+
+    def GetOppMoveName(self, move_id):
+        try:
+            if not self.isMirrored:
+                return self.gameReader.p2_movelist_names[(move_id* 2) + 4].decode('utf-8')
+            else:
+                return self.gameReader.p1_movelist_names[(move_id* 2) + 4].decode('utf-8')
+        except:
+            return "ERROR"
+
 
     def IsForegroundPID(self):
         return self.gameReader.IsForegroundPID()

@@ -14,17 +14,18 @@ from GUI_Overlay import CurrentColorScheme, ColorSchemeEnum
 class DataColumns(Enum):
     input = 0
     move_id = 1
-    type = 2
-    startup = 3
-    block = 4
-    hit = 5
-    CH = 6
-    active = 7
-    track = 8
-    tot = 9
-    rec = 10
-    stun = 11
-    notes = 12
+    name = 3
+    type = 4
+    startup = 5
+    block = 6
+    hit = 7
+    CH = 8
+    active = 9
+    track = 10
+    tot = 11
+    rec = 12
+    stun = 13
+    notes = 14
 
     def config_name():
         return "DataColumns"
@@ -124,7 +125,6 @@ class TextRedirector(object):
 
 class GUI_FrameDataOverlay(GUI_Overlay.Overlay):
     def __init__(self, master, launcher):
-        print("Launching overlay...")
 
         GUI_Overlay.Overlay.__init__(self, master, (1000, 86), "Tekken Bot: Frame Data Overlay")
 

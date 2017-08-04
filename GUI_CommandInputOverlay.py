@@ -43,7 +43,7 @@ class GUI_CommandInputOverlay(GUI_Overlay.Overlay):
 
 
     def __init__(self, master, launcher):
-        print("Launching overlay...")
+
 
         GUI_Overlay.Overlay.__init__(self, master, (1200, 86), "Tekken Bot: Command Input Overlay")
 

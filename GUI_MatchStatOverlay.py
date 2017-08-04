@@ -22,7 +22,6 @@ class TextRedirector(object):
 
 class GUI_MatchStatOverlay(GUI_Overlay.Overlay):
     def __init__(self, master, launcher):
-        print("Launching overlay...")
 
         GUI_Overlay.Overlay.__init__(self, master, (600, 70), "Tekken Bot: Match Stats Overlay")
 

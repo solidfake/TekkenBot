@@ -19,7 +19,7 @@ def check_version(force_print=False):
                 print("")
                 if (repoTag != CURRENT_VERSION):
                     print("A new version of Tekken Bot is available.")
-                if (repoTag != CURRENT_VERSION or force_print):
+                #if (repoTag != CURRENT_VERSION or force_print):
                     print(repoItem['html_url'])
                     #print("Release Notes:")
                     #print(repoItem['body'])
