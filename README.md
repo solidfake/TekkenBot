@@ -2,9 +2,15 @@
 AI and tools for playing and understanding Tekken 7.
 
 ## Tools
+Available from https://github.com/roguelike2d/TekkenBot/releases
 
 ### FrameDataOverlay
-A window that can go over the game to display real time move information read from memory. Requires the game to be in windowed or borderless to work or can be run as a standalone window on a second screen. Available from https://github.com/roguelike2d/TekkenBot/releases .
+A window that can go over the game to display real time move information read from memory. Requires the game to be in windowed or borderless to work or can be run as a standalone window on a second screen.
+![Robot feet and bear paws 1](Screenshots/frame_data.png?raw=true)
+
+### CommandInputOverlay
+Display command inputs, similar to the on alread in Tekken 7 except it gives frame by frame information and includes cancelable frames.
+![Robot feet and bear paws 2](Screenshots/command_input.png?raw=true)
 
 ## Bots
 Currently in progress.
