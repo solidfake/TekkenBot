@@ -30,14 +30,6 @@ class DataColumns(Enum):
     def config_name():
         return "DataColumns"
 
-class OverlayMode(Enum):
-    FrameData = 0
-    StatTracker = 1
-
-
-
-
-
 class TextRedirector(object):
     def __init__(self, stdout, widget, style, fa_p1_var, fa_p2_var):
         self.stdout = stdout
@@ -48,7 +40,6 @@ class TextRedirector(object):
         self.widget.tag_config("p1", foreground=CurrentColorScheme.dict[ColorSchemeEnum.p1_text])
         self.widget.tag_config("p2", foreground=CurrentColorScheme.dict[ColorSchemeEnum.p2_text])
         self.columns_to_print = [True] * len(DataColumns)
-        self.mode = OverlayMode.FrameData
 
         self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_slight_minus])
 
@@ -86,18 +77,18 @@ class TextRedirector(object):
 
             data = output_str.split('NOW:')[0]
             fa = output_str.split('NOW:')[1][:3]
-            if self.mode == OverlayMode.FrameData:
-                if '?' not in fa:
-                    if int(fa) <= -14:
-                        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_very_punishible])
-                    elif int(fa) <= -10:
-                        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_punishible])
-                    elif int(fa) <= -5:
-                        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_safe_minus])
-                    elif int(fa) < 0:
-                        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_slight_minus])
-                    else:
-                        self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_plus])
+
+            if '?' not in fa:
+                if int(fa) <= -14:
+                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_very_punishible])
+                elif int(fa) <= -10:
+                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_punishible])
+                elif int(fa) <= -5:
+                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_safe_minus])
+                elif int(fa) < 0:
+                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_slight_minus])
+                else:
+                    self.style.configure('.', background=CurrentColorScheme.dict[ColorSchemeEnum.advantage_plus])
 
             text_tag = None
             if "p1:" in output_str:
@@ -129,7 +120,6 @@ class GUI_FrameDataOverlay(GUI_Overlay.Overlay):
         GUI_Overlay.Overlay.__init__(self, master, (1000, 86), "Tekken Bot: Frame Data Overlay")
 
         self.show_live_framedata = self.tekken_config.get_property(GUI_Overlay.DisplaySettings.config_name(), GUI_Overlay.DisplaySettings.tiny_live_frame_data_numbers.name, True)
-        self.mode = OverlayMode.FrameData
 
         #self.launcher = FrameDataLauncher(self.enable_nerd_data)
         self.launcher = launcher

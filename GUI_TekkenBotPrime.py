@@ -5,6 +5,7 @@ import GUI_Overlay as ovr
 import GUI_TimelineOverlay as tlo
 import GUI_CommandInputOverlay as cio
 import GUI_MatchStatOverlay as mso
+import GUI_DebugInfoOverlay as dio
 import ConfigReader
 from _FrameDataLauncher import FrameDataLauncher
 import time
@@ -191,6 +192,9 @@ class GUI_TekkenBotPrime(Tk):
         if self.mode == OverlayMode.MatchupRecord:
             self.overlay = mso.GUI_MatchStatOverlay(self, self.launcher)
             self.overlay.hide()
+        if self.mode == OverlayMode.DebugInfo:
+            self.overlay = dio.GUI_DebugInfoOverlay(self, self.launcher)
+            self.overlay.hide()
 
 
 
@@ -243,6 +247,7 @@ class OverlayMode(Enum):
     #Timeline = 2
     CommandInput = 3
     MatchupRecord = 4
+    DebugInfo = 5
 
 if __name__ == '__main__':
     app = GUI_TekkenBotPrime()

@@ -1256,13 +1256,28 @@ class TekkenGameState:
         #return old_dist
 
 
+    def GetCurrentBotMoveName(self):
+        move_id = self.stateLog[-1].bot.move_id
+        return self.GetOppMoveName(move_id, is_for_bot=True), self.GetOppMoveName(move_id, is_for_bot=False)
 
-    def GetOppMoveName(self, move_id):
+    def GetCurrentOppMoveName(self):
+        move_id = self.stateLog[-1].opp.move_id
+        return self.GetOppMoveName(move_id, is_for_bot=False), self.GetOppMoveName(move_id, is_for_bot=True)
+
+    def GetOppMoveName(self, move_id, is_for_bot=False):
+
+        if move_id == 32769:
+            return 'stand'
+        if move_id == 32770:
+            return 'crouch'
+
         try:
-            if not self.isMirrored:
-                return self.gameReader.p2_movelist_names[(move_id* 2) + 4].decode('utf-8')
+            if (not self.isMirrored and not is_for_bot) or (self.isMirrored and is_for_bot):
+                movelist = self.gameReader.p2_movelist_names
             else:
-                return self.gameReader.p1_movelist_names[(move_id* 2) + 4].decode('utf-8')
+                movelist = self.gameReader.p1_movelist_names
+
+            return movelist[(move_id * 2) + 4].decode('utf-8')
         except:
             return "ERROR"
 
