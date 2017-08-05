@@ -431,7 +431,7 @@ class TekkenEncyclopedia:
                     frameDataEntry.hitRecovery = time_till_recovery_opp
                     frameDataEntry.blockRecovery = time_till_recovery_bot
 
-                    frameDataEntry.move_str = gameState.GetOppMoveName(opp_id)
+                    frameDataEntry.move_str = gameState.GetCurrentOppMoveName()
                     prefix = self.GetPlayerString()
 
                     print(prefix + str(frameDataEntry))

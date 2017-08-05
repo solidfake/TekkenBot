@@ -60,6 +60,8 @@ class TekkenGameReader:
         self.player_data_pointer_offset = self.config_reader.get_property('Address', 'player_data_pointer_offset', MemoryAddressOffsets.player_data_pointer_offset.value)#, #lambda x: int(x, 16))
         self.p1_movelist = []
         self.p2_movelist = []
+        self.p1_movelist_to_use = None
+        self.p2_movelist_to_use = None
 
     def ReacquireEverything(self):
         self.needReacquireModule = True
@@ -238,7 +240,8 @@ class TekkenGameReader:
 
 
 
-
+                    p1_bot.player_data_dict['use_opponent_movelist'] = p1_bot.player_data_dict[PlayerDataAddress.movelist_to_use] == self.p2_movelist_to_use
+                    p2_bot.player_data_dict['use_opponent_movelist'] = p2_bot.player_data_dict[PlayerDataAddress.movelist_to_use] == self.p1_movelist_to_use
 
                     if self.original_facing == None and best_frame_count > 0:
                         self.original_facing = bot_facing > 0
@@ -257,6 +260,9 @@ class TekkenGameReader:
                             self.is_player_player_one = (self.opponent_side == 1)
                             #print(self.opponent_char_id)
                             #print(self.is_player_player_one)
+
+                            self.p1_movelist_to_use = p1_bot.player_data_dict[PlayerDataAddress.movelist_to_use]
+                            self.p2_movelist_to_use = p2_bot.player_data_dict[PlayerDataAddress.movelist_to_use]
 
                             self.p1_movelist_block = self.PopulateMovelists(processHandle, NonPlayerDataAddressesEnum.P1_Movelist)
                             self.p2_movelist_block = self.PopulateMovelists(processHandle, NonPlayerDataAddressesEnum.P2_Movelist)
@@ -342,10 +348,16 @@ class BotSnapshot:
         self.hit_outcome = HitOutcome(d[PlayerDataAddress.hit_outcome])
         self.mystery_state = d[PlayerDataAddress.mystery_state]
 
+        #self.movelist_to_use = d[PlayerDataAddress.movelist_to_use]
+
         self.wins = d[EndBlockPlayerDataAddress.round_wins]
         self.combo_counter = d[EndBlockPlayerDataAddress.display_combo_counter]
         self.combo_damage = d[EndBlockPlayerDataAddress.display_combo_damage]
         self.juggle_damage = d[EndBlockPlayerDataAddress.display_juggle_damage]
+
+        self.use_opponents_movelist = d['use_opponent_movelist']
+
+
 
         try:
             self.character_name = CharacterCodes(d[PlayerDataAddress.char_id]).name
@@ -1258,24 +1270,28 @@ class TekkenGameState:
 
     def GetCurrentBotMoveName(self):
         move_id = self.stateLog[-1].bot.move_id
-        return self.GetOppMoveName(move_id, is_for_bot=True), self.GetOppMoveName(move_id, is_for_bot=False)
+        return self.GetOppMoveName(move_id, self.stateLog[-1].bot.use_opponents_movelist, is_for_bot=True)
 
     def GetCurrentOppMoveName(self):
         move_id = self.stateLog[-1].opp.move_id
-        return self.GetOppMoveName(move_id, is_for_bot=False), self.GetOppMoveName(move_id, is_for_bot=True)
+        return self.GetOppMoveName(move_id, self.stateLog[-1].opp.use_opponents_movelist, is_for_bot=False)
 
-    def GetOppMoveName(self, move_id, is_for_bot=False):
+    def GetOppMoveName(self, move_id, use_opponents_movelist, is_for_bot=False):
 
-        if move_id == 32769:
-            return 'stand'
-        if move_id == 32770:
-            return 'crouch'
+        if move_id > 30000:
+            return 'Universal_{}'.format(move_id)
 
         try:
             if (not self.isMirrored and not is_for_bot) or (self.isMirrored and is_for_bot):
-                movelist = self.gameReader.p2_movelist_names
+                if not use_opponents_movelist:
+                    movelist = self.gameReader.p2_movelist_names
+                else:
+                    movelist = self.gameReader.p1_movelist_names
             else:
-                movelist = self.gameReader.p1_movelist_names
+                if not use_opponents_movelist:
+                    movelist = self.gameReader.p1_movelist_names
+                else:
+                    movelist = self.gameReader.p2_movelist_names
 
             return movelist[(move_id * 2) + 4].decode('utf-8')
         except:

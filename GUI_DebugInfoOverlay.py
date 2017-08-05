@@ -32,13 +32,13 @@ class GUI_DebugInfoOverlay(GUI_Overlay.Overlay):
         self.textbox_names = [
             'p1_tracking',
             'p1_???',
-            'p1_movename(p1_list)',
-            'p1_movename(p2_list)',
+            'p1_movename',
+            'p1_moveindex',
             'p1_stun_state',
             'p2_stun_state',
 
-            'p2_movename(p1_list)',
-            'p2_movename(p2_list)',
+            'p1_moveindex',
+            'p2_movename',
             'p2_???',
             'p2_tracking',
 
@@ -103,7 +103,7 @@ class GUI_DebugInfoOverlay(GUI_Overlay.Overlay):
             iterate = -1
         self.write_to_textbox(index, tracking_state.name)
         self.write_to_textbox(index + iterate, simple_state.name)
-        self.write_to_textbox(index + 2 * iterate, move_name[0])
-        self.write_to_textbox(index + 3 * iterate, move_name[1])
+        self.write_to_textbox(index + 2 * iterate, move_name)
+        self.write_to_textbox(index + 3 * iterate, str('{:x}'.format(bot.move_id)))
         self.write_to_textbox(index + 4 * iterate, stun_state.name)
 

@@ -65,6 +65,7 @@ class PlayerDataAddress(Enum):
     activebox_z = 0x1058
 
     health_percent = 0x11D8
+    movelist_to_use = 0x1208
     # raw_array_start = 0xABC #this is the raw 'buttons' pressed before they are assigned to 1,2,3,4, 1+2, etc
     input_counter = 0x14E8  # goes up one every new input state, caps at 0x27
     input_attack = 0x14EC
