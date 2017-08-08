@@ -37,7 +37,7 @@ class GUI_CommandInputOverlay(GUI_Overlay.Overlay):
         InputDirectionCodes.b: '←',
         InputDirectionCodes.ub: '↖',
         InputDirectionCodes.N: '★',
-        InputDirectionCodes.FIGHT_START: '!'
+        InputDirectionCodes.NULL: '!'
 
     }
 

@@ -37,7 +37,7 @@ class GUI_DebugInfoOverlay(GUI_Overlay.Overlay):
             'p1_stun_state',
             'p2_stun_state',
 
-            'p1_moveindex',
+            'p2_moveindex',
             'p2_movename',
             'p2_???',
             'p2_tracking',
@@ -55,6 +55,9 @@ class GUI_DebugInfoOverlay(GUI_Overlay.Overlay):
             self.write_to_textbox(i, str(self.textbox_names[i]))
 
         self.redirector = TextRedirector(None)
+        self.prev_move_id = 0
+
+
 
     def create_textbox(self, master, col):
         textbox = Text(master, font=("Consolas, 10"), wrap=NONE, highlightthickness=0, pady=0, relief='flat')
@@ -70,7 +73,7 @@ class GUI_DebugInfoOverlay(GUI_Overlay.Overlay):
             textbox.configure(state="normal")
             textbox.insert("end", out + '\n')
             lines = int(textbox.index('end-1c').split('.')[0])
-            max_lines = 7
+            max_lines = 8
             if lines > max_lines:
                 textbox.delete("2.0", '3.0')
             textbox.configure(state="disabled")
@@ -84,6 +87,11 @@ class GUI_DebugInfoOverlay(GUI_Overlay.Overlay):
             self.draw_debug_info_for_bot(gameState.stateLog[-1].bot, gameState.GetCurrentBotMoveName(), 10, W, True)
             self.draw_debug_info_for_bot(gameState.stateLog[-1].opp, gameState.GetCurrentOppMoveName(), self.w - 10, E, False)
 
+        move_id = gameState.stateLog[-1].opp.move_id
+        if self.prev_move_id != move_id:
+            self.prev_move_id = move_id
+            if move_id < 30000:
+                gameState.stateLog[-1].opp.movelist_parser.print_nodes(move_id)
 
 
     def draw_debug_info_for_bot(self, bot, move_name, x, anchor, left_or_right):
@@ -104,6 +112,6 @@ class GUI_DebugInfoOverlay(GUI_Overlay.Overlay):
         self.write_to_textbox(index, tracking_state.name)
         self.write_to_textbox(index + iterate, simple_state.name)
         self.write_to_textbox(index + 2 * iterate, move_name)
-        self.write_to_textbox(index + 3 * iterate, str('{:x}'.format(bot.move_id)))
+        self.write_to_textbox(index + 3 * iterate, str('0x{:x}'.format(bot.move_id)))
         self.write_to_textbox(index + 4 * iterate, stun_state.name)
 

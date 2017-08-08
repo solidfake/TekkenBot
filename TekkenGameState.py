@@ -26,6 +26,7 @@ from MoveInfoEnums import *
 from MemoryAddressEnum import *
 from ConfigReader import ConfigReader
 from MoveDataReport import MoveDataReport
+import MovelistParser
 
 k32 = c.windll.kernel32
 
@@ -62,6 +63,8 @@ class TekkenGameReader:
         self.p2_movelist = []
         self.p1_movelist_to_use = None
         self.p2_movelist_to_use = None
+        self.p1_movelist_parser = None
+        self.p2_movelist_parser = None
 
     def ReacquireEverything(self):
         self.needReacquireModule = True
@@ -243,6 +246,9 @@ class TekkenGameReader:
                     p1_bot.player_data_dict['use_opponent_movelist'] = p1_bot.player_data_dict[PlayerDataAddress.movelist_to_use] == self.p2_movelist_to_use
                     p2_bot.player_data_dict['use_opponent_movelist'] = p2_bot.player_data_dict[PlayerDataAddress.movelist_to_use] == self.p1_movelist_to_use
 
+                    p1_bot.player_data_dict['movelist_parser'] = self.p1_movelist_parser
+                    p2_bot.player_data_dict['movelist_parser'] = self.p2_movelist_parser
+
                     if self.original_facing == None and best_frame_count > 0:
                         self.original_facing = bot_facing > 0
 
@@ -264,8 +270,11 @@ class TekkenGameReader:
                             self.p1_movelist_to_use = p1_bot.player_data_dict[PlayerDataAddress.movelist_to_use]
                             self.p2_movelist_to_use = p2_bot.player_data_dict[PlayerDataAddress.movelist_to_use]
 
-                            self.p1_movelist_block = self.PopulateMovelists(processHandle, NonPlayerDataAddressesEnum.P1_Movelist)
-                            self.p2_movelist_block = self.PopulateMovelists(processHandle, NonPlayerDataAddressesEnum.P2_Movelist)
+                            self.p1_movelist_block, p1_movelist_address = self.PopulateMovelists(processHandle, NonPlayerDataAddressesEnum.P1_Movelist)
+                            self.p2_movelist_block, p2_movelist_address = self.PopulateMovelists(processHandle, NonPlayerDataAddressesEnum.P2_Movelist)
+
+                            #self.p1_movelist_parser = MovelistParser.MovelistParser(self.p1_movelist_block, p1_movelist_address)
+                            #self.p2_movelist_parser = MovelistParser.MovelistParser(self.p2_movelist_block, p2_movelist_address)
 
                             #self.WriteMovelistsToFile(self.p1_movelist_block, p1_bot.character_name)
                             #self.WriteMovelistsToFile(self.p2_movelist_block, p2_bot.character_name)
@@ -293,7 +302,7 @@ class TekkenGameReader:
         movelist_address = self.GetValueFromAddress(processHandle, self.module_address + movelist_tuple[0], is64bit=True)
         movelist_block = self.GetBlockOfData(processHandle, movelist_address, MemoryAddressOffsets.movelist_size.value)
 
-        return movelist_block
+        return movelist_block, movelist_address
 
 
     def GetNeedReacquireState(self):
@@ -356,6 +365,7 @@ class BotSnapshot:
         self.juggle_damage = d[EndBlockPlayerDataAddress.display_juggle_damage]
 
         self.use_opponents_movelist = d['use_opponent_movelist']
+        self.movelist_parser = d['movelist_parser']
 
 
 
