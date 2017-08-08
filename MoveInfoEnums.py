@@ -155,16 +155,16 @@ class JumpFlagBitmask(Enum):
     JUMP = 0x820000
 
 class InputDirectionCodes(Enum):
-    FIGHT_START = 0
+    NULL = 0
 
-    N = 32
+    N = 0x20
 
-    u = 256
-    ub = 128
-    uf = 512
+    u = 0x100
+    ub = 0x80
+    uf = 0x200
 
-    f = 64
-    b = 16
+    f = 0x40
+    b = 0x10
 
     d = 4
     df = 8
