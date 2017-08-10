@@ -79,6 +79,7 @@ class MovelistParser:
 
         #print ('{:x}'.format(date_address - self.pointer))
         self.char_name = self.bytes[char_name_address:developer_name_address].strip(b'\00').decode('utf-8')
+        print("Parsing movelist for {}".format(self.char_name))
 
         unknown_regions = {}
         for i in range(42, 91, 2):
@@ -110,13 +111,13 @@ class MovelistParser:
         #self.print_nodes(0x180)
 
         #print('{:x}'.format(unknown_regions[54] + self.pointer))
-        print(self.bytes[date_address:timestamp_address])
-        uniques = []
-        for node in self.move_nodes:
-            uniques.append(node.button_press)
-        counter = Counter(uniques)
-        for key, value in sorted(counter.items()):
-            print('{} | {}'.format(key, value))
+        #print(self.bytes[date_address:timestamp_address])
+        #uniques = []
+        #for node in self.move_nodes:
+            #uniques.append(node.button_press)
+        #counter = Counter(uniques)
+        #for key, value in sorted(counter.items()):
+            #print('{} | {}'.format(key, value))
 
         #with open('movelist' + self.char_name + '.txt', 'w') as fw:
             #for node in self.move_nodes:

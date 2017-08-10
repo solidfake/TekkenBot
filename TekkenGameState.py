@@ -647,9 +647,15 @@ class TekkenGameState:
         else:
             return False
 
+    def DidOppStartGettingPunishedXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.IsPunish()
+        else:
+            return False
+
     def WasBotMoveOnLastFrameXFramesAgo(self, framesAgo):
         if len(self.stateLog) > framesAgo:
-            print ('{}  {}'.format(self.stateLog[0 - framesAgo].bot.move_timer, self.stateLog[0 - framesAgo].bot.recovery))
+            #print ('{}  {}'.format(self.stateLog[0 - framesAgo].bot.move_timer, self.stateLog[0 - framesAgo].bot.recovery))
             return self.stateLog[0 - framesAgo].bot.move_timer == self.stateLog[0 - framesAgo].bot.recovery - 1
         else:
             return False
@@ -1116,7 +1122,13 @@ class TekkenGameState:
     def GetOppMoveString(self, move_id, previous_move_id):
         return self.stateLog[-1].opp.movelist_parser.input_for_move(move_id, previous_move_id)
 
-
+    def HasOppReturnedToNeutralFromMoveId(self, move_id):
+        for state in reversed(self.stateLog):
+            if state.opp.move_id == move_id:
+                return False
+            if state.opp.movelist_parser.can_be_done_from_neutral(state.opp.move_id):
+                return True
+        return True
 
     def GetFrameDataOfCurrentOppMove(self):
         if self.stateLog[-1].opp.startup > 0:

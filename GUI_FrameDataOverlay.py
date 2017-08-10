@@ -100,17 +100,18 @@ class TextRedirector(object):
                 data = data.replace('p2:', '')
                 text_tag = 'p2'
 
-            out = ""
-            for i, col in enumerate(data.split('|')):
-                if self.columns_to_print[i]:
-                    out += '|' + col
+            if '|' in output_str:
+                out = ""
+                for i, col in enumerate(data.split('|')):
+                    if self.columns_to_print[i]:
+                        out += '|' + col
 
-            out += "\n"
-            self.widget.configure(state="normal")
-            self.widget.insert("end", out, text_tag)
-            self.widget.configure(state="disabled")
-            self.widget.see('0.0')
-            self.widget.yview('moveto', '.02')
+                out += "\n"
+                self.widget.configure(state="normal")
+                self.widget.insert("end", out, text_tag)
+                self.widget.configure(state="disabled")
+                self.widget.see('0.0')
+                self.widget.yview('moveto', '.02')
 
 
 

@@ -19,12 +19,6 @@ class TekkenEncyclopedia:
         self.print_extended_frame_data = print_extended_frame_data
 
         self.active_frame_wait = 1
-        self.second_opinion = False
-        self.second_opinion_timer = 0
-        self.stored_prefix = ""
-        self.stored_opp_id = 0
-        self.stored_opp_recovery = 0
-        self.stored_bot_recovery = 0
 
         self.was_fight_being_reacquired = True
         self.is_match_recorded = False
@@ -32,6 +26,11 @@ class TekkenEncyclopedia:
         self.stat_filename = "TekkenData/matches_2.txt"
         if self.isPlayerOne:
             self.LoadStats()
+
+        self.current_punish_window = None
+        self.PunishWindows = []
+        self.current_frame_data_entry = None
+        self.previous_frame_data_entry = None
 
 
     def LoadStats(self):
@@ -118,51 +117,6 @@ class TekkenEncyclopedia:
     def Update(self, gameState: TekkenGameState):
         if self.isPlayerOne:
             gameState.FlipMirror()
-            #gameState.stateLog[-1].opp.PrintYInfo()
-            #print(gameState.GetOppTechnicalStates())
-            #print(gameState.stateLog[-1].opp.simple_state)
-            #print(gameState.stateLog[-1].opp.complex_state)
-            #print(gameState.stateLog[-1].bot.move_timer)
-            #print(gameState.stateLog[-1].bot.recovery)
-
-            if len(gameState.stateLog) > 2:
-                if gameState.stateLog[-1].bot.simple_state != gameState.stateLog[-2].bot.simple_state :
-                    pass
-                    #print(gameState.stateLog[-1].bot.simple_state )
-                if gameState.stateLog[-1].opp.simple_state != gameState.stateLog[-2].opp.simple_state:
-                    #print(gameState.stateLog[-1].opp.simple_state)
-                    pass
-                if gameState.stateLog[-1].bot.move_id != gameState.stateLog[-2].bot.move_id:
-                    #print(gameState.stateLog[-1].bot.move_id)
-                    pass
-                if gameState.stateLog[-1].opp.move_id != gameState.stateLog[-2].opp.move_id:
-                    #print("0x{:x}:{}:{}".format(gameState.stateLog[-1].opp.move_id, gameState.stateLog[-1].opp.move_id, gameState.GetOppMoveName(gameState.stateLog[-1].opp.move_id)))
-                    pass
-                if gameState.stateLog[-1].opp.throw_tech != gameState.stateLog[-2].opp.throw_tech:
-                    pass
-                    #print(gameState.stateLog[-1].opp.throw_tech)
-                if gameState.stateLog[-1].bot.stun_state != gameState.stateLog[-2].bot.stun_state:
-                    pass
-                    #print(gameState.stateLog[-1].bot.stun_state)
-                if gameState.stateLog[-1].bot.mystery_state != gameState.stateLog[-2].bot.mystery_state:
-                    pass
-                    #print(gameState.stateLog[-1].opp.mystery_state)
-                    #print('b{}'.format(gameState.stateLog[-1].bot.mystery_state))
-                if gameState.stateLog[-1].opp.mystery_state != gameState.stateLog[-2].opp.mystery_state:
-                    pass
-                    #print(gameState.stateLog[-1].opp.mystery_state)
-                if gameState.stateLog[-1].bot.stun_state != gameState.stateLog[-2].bot.stun_state:
-                    pass
-                    #print('{}'.format(gameState.stateLog[-1].bot.stun_state))
-                if gameState.stateLog[-1].opp.active_xyz != gameState.stateLog[-2].opp.active_xyz:
-                    pass
-                    #print(gameState.stateLog[-1].opp.active_xyz)
-                #for i, (h1, h2) in enumerate(zip(gameState.stateLog[-1].opp.hitboxes, gameState.stateLog[-2].opp.hitboxes)):
-                #    if h1 != h2:
-                #        for j, (b1, b2) in enumerate(zip(h1, h2)):
-                #            if b1 != b2:
-                #                print('{}, {}: {}'.format(j, i, b1))
-                #        print('------')
 
         #self.CheckJumpFrameDataFallback(gameState)
 
@@ -170,10 +124,54 @@ class TekkenEncyclopedia:
 
         self.DetermineGameStats(gameState)
 
+        self.DetermineCoachingTips(gameState)
+
 
 
         if self.isPlayerOne:
             gameState.FlipMirror()
+
+    def DetermineCoachingTips(self, gameState: TekkenGameState):
+        if self.previous_frame_data_entry != self.current_frame_data_entry:
+            self.previous_frame_data_entry = self.current_frame_data_entry
+
+            if self.current_punish_window != None:
+                self.ClosePunishWindow(PunishWindow.Result.NO_WINDOW, do_close_frame_data_entries=False)
+
+            # if int(self.current_frame_data_entry.currentFrameAdvantage) <= 999999:
+            self.current_punish_window = PunishWindow(self.current_frame_data_entry.prefix, self.current_frame_data_entry.move_id, self.current_frame_data_entry.input, int(self.current_frame_data_entry.hitRecovery), int(self.current_frame_data_entry.blockRecovery))
+            self.PunishWindows.append(self.current_punish_window)
+            self.punish_window_counter = 0
+
+        if self.current_punish_window != None:
+            self.punish_window_counter += 1
+            #if self.punish_window_counter > self.current_punish_window.size:
+
+            was_block_punish = gameState.DidOppStartGettingPunishedXFramesAgo(1)
+
+            if was_block_punish:
+                self.ClosePunishWindow(PunishWindow.Result.PERFECT_PUNISH)
+                self.current_punish_window = None
+            elif gameState.HasOppReturnedToNeutralFromMoveId(self.current_punish_window.move_id):
+                self.ClosePunishWindow(PunishWindow.Result.NO_PUNISH)
+            if self.current_punish_window != None:
+                self.current_punish_window.adjust_window(gameState.GetOppFramesTillNextMove(), gameState.GetBotFramesTillNextMove())
+
+            #perfect_punish = False
+            #if was_block_punish:
+                #perfect_punish = gameState.WasBotMoveOnLastFrameXFramesAgo(2)
+
+
+
+
+
+
+    def ClosePunishWindow(self, result, do_close_frame_data_entries = True):
+        self.current_punish_window.close_window(result)
+        self.current_punish_window = None
+        if do_close_frame_data_entries:
+            self.previous_frame_data_entry = None
+            self.current_frame_data_entry = None
 
     def DetermineGameStats(self, gameState: TekkenGameState):
         frames_ago = 4
@@ -319,34 +317,7 @@ class TekkenEncyclopedia:
             ]
 
     def DetermineFrameData(self, gameState):
-
-        #if self.second_opinion:
-            #self.second_opinion_timer += 1
-            #landingCanceledFrames = gameState.GetOppMoveInterruptedFrames()
-            #if landingCanceledFrames > 0:
-                #bot_recovery = (gameState.GetBotRecovery() - gameState.GetBotMoveTimer())
-                #opp_recovery = (gameState.GetOppRecovery() - gameState.GetOppMoveTimer())
-                # fa = (self.stored_bot_recovery - self.second_opinion_timer) - opp_recovery
-                #if self.second_opinion_timer < self.stored_bot_recovery:
-                    #fa = bot_recovery - opp_recovery
-                #else:
-                    #fa = (self.stored_bot_recovery - self.second_opinion_timer) - opp_recovery
-                #fa_string = self.FrameData[self.stored_opp_id].WithPlusIfNeeded(fa)
-
-                #print(self.stored_prefix + "JUMP CANCELED -> " + fa_string + " NOW:" + fa_string)
-
-                #self.second_opinion = False
-                #self.second_opinion_timer = 0
-
-            #if self.second_opinion_timer > self.stored_opp_recovery:
-                # print("check {}".format(self.stored_opp_recovery))
-                # print(gameState.stateLog[-1].opp.IsBufferable())
-                # print(gameState.GetOppTechnicalStates(self.stored_opp_recovery)[2])
-                # print(gameState.GetOppTechnicalStates(self.stored_opp_recovery)[3])
-                #self.second_opinion = False
-                #self.second_opinion_timer = 0
-        #if gameState.IsOppWhiffingXFramesAgo(self.active_frame_wait + 1)) and \
-        if (gameState.IsBotBlocking() or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotBeingKnockedDown() or gameState.IsBotBeingWallSplatted() or gameState.IsBotUsingOppMovelist()): #or  gameState.IsBotStartedBeingJuggled() or gameState.IsBotJustGrounded()):
+        if (gameState.IsBotBlocking() or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotBeingKnockedDown() or gameState.IsBotBeingWallSplatted()): #or gameState.IsBotUsingOppMovelist()): #or  gameState.IsBotStartedBeingJuggled() or gameState.IsBotJustGrounded()):
             # print(gameState.stateLog[-1].bot.move_id)
             #print(gameState.stateLog[-1].bot.move_timer)
             #print(gameState.stateLog[-1].bot.recovery)
@@ -393,11 +364,6 @@ class TekkenEncyclopedia:
                     if gameState.IsOppAttackThrow():
                         frameDataEntry.hitType += "_THROW"
 
-                    #fastestRageMoveFrames = 120
-                    #longestRageMoveFrames = 150
-                    #if frameDataEntry.startup > fastestRageMoveFrames:  # and gameState.DidOpponentUseRageRecently(longestRageMoveFrames):
-                        #frameDataEntry.startup = gameState.GetBotElapsedFramesOfRageMove(frameDataEntry.startup)
-
                     frameDataEntry.recovery = gameState.GetOppRecovery()
 
                     #frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
@@ -434,31 +400,21 @@ class TekkenEncyclopedia:
                     frameDataEntry.blockRecovery = time_till_recovery_bot
 
                     frameDataEntry.move_str = gameState.GetCurrentOppMoveName()
-                    prefix = self.GetPlayerString()
+                    frameDataEntry.prefix = self.GetPlayerString()
 
-                    print(prefix + str(frameDataEntry))
+                    print(str(frameDataEntry))
 
-
-
-                    # print(gameState.stateLog[-1].opp.startup)
-                    # print(time_till_recovery_bot)
-
-                    self.second_opinion = True
-                    self.stored_bot_recovery = time_till_recovery_bot
-                    self.stored_opp_recovery = time_till_recovery_opp
-                    self.stored_prefix = prefix
-                    self.stored_opp_id = opp_id
-                    self.second_opinion_timer = 0
+                    self.current_frame_data_entry = frameDataEntry
 
                     gameState.BackToTheFuture(self.active_frame_wait)
 
                     self.active_frame_wait = 1
                 gameState.ReturnToPresent()
 
-
 class FrameDataEntry:
     def __init__(self, print_extended = False):
         self.print_extended = print_extended
+        self.prefix = '??'
         self.move_id = '??'
         self.move_str = '??'
         self.startup = '??'
@@ -552,7 +508,8 @@ class FrameDataEntry:
 
         notes_string = "{}".format(notes)
         now_string = " NOW:{}".format(str(self.currentFrameAdvantage))
-        return non_nerd_string + notes_string + now_string
+        return self.prefix + non_nerd_string + notes_string + now_string
+
 
 
 
@@ -661,3 +618,50 @@ class RoundSummary:
 
 
 
+class PunishWindow:
+    class Result(Enum):
+        NO_WINDOW = 0
+        NO_PUNISH = 1
+        PERFECT_PUNISH = 2
+        NO_LAUNCH_ON_LAUNCHABLE = 3
+
+    def __init__(self, prefix, move_id, string_name, hit_recovery, block_recovery ):
+        self.prefix = prefix
+        self.move_id = move_id
+        self.name = string_name
+        self.hit_recovery = hit_recovery
+        self.block_recovery = block_recovery
+        self.is_window_locked = False
+        self.original_diff = self.get_frame_advantage()
+        self.upcoming_lock = False
+        self.frames_locked = 0
+
+    def get_frame_advantage(self):
+        if not self.is_window_locked:
+            return self.block_recovery - self.hit_recovery
+        else:
+            return 0 - self.hit_recovery - self.frames_locked
+
+    def adjust_window(self, hit_recovery, block_recovery):
+        #if block_recovery > self.block_recovery:
+
+        self.hit_recovery = hit_recovery
+
+        if self.upcoming_lock:
+            self.frames_locked += 1
+            self.is_window_locked = True
+
+        if not self.is_window_locked:
+            self.block_recovery = block_recovery
+
+        if block_recovery == 0:
+            self.upcoming_lock = True
+
+        if self.get_frame_advantage() != self.original_diff:
+            print('{} NOW:{}'.format(self.prefix, FrameDataEntry.WithPlusIfNeeded(None, self.get_frame_advantage())))
+            self.original_diff = self.get_frame_advantage()
+
+
+    def close_window(self, result : Result):
+        self.result = result
+        print("Closing punish window, result: {}".format(self.result.name))
