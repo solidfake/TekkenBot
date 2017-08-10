@@ -273,8 +273,8 @@ class TekkenGameReader:
                             self.p1_movelist_block, p1_movelist_address = self.PopulateMovelists(processHandle, NonPlayerDataAddressesEnum.P1_Movelist)
                             self.p2_movelist_block, p2_movelist_address = self.PopulateMovelists(processHandle, NonPlayerDataAddressesEnum.P2_Movelist)
 
-                            #self.p1_movelist_parser = MovelistParser.MovelistParser(self.p1_movelist_block, p1_movelist_address)
-                            #self.p2_movelist_parser = MovelistParser.MovelistParser(self.p2_movelist_block, p2_movelist_address)
+                            self.p1_movelist_parser = MovelistParser.MovelistParser(self.p1_movelist_block, p1_movelist_address)
+                            self.p2_movelist_parser = MovelistParser.MovelistParser(self.p2_movelist_block, p2_movelist_address)
 
                             #self.WriteMovelistsToFile(self.p1_movelist_block, p1_bot.character_name)
                             #self.WriteMovelistsToFile(self.p2_movelist_block, p2_bot.character_name)
@@ -1072,6 +1072,52 @@ class TekkenGameState:
 
         return [(InputDirectionCodes.N, InputAttackCodes.N, False)]
 
+    def GetCurrentOppMoveString(self):
+        if self.stateLog[-1].opp.movelist_parser != None:
+            move_id = self.stateLog[-1].opp.move_id
+            previous_move_id = -1
+
+            input_array = []
+
+            i = len(self.stateLog)
+
+            while(True):
+                next_move, last_move_was_empty_cancel = self.GetOppMoveString(move_id, previous_move_id)
+                next_move = str(next_move)
+
+                if last_move_was_empty_cancel:
+                    input_array[-1] = ''
+
+                #if len(next_move) > 0:
+                input_array.append(next_move)
+
+                if self.stateLog[-1].opp.movelist_parser.can_be_done_from_neutral(move_id):
+                    break
+
+                while(True):
+                    i -= 1
+                    if i < 0:
+                        break
+                    if self.stateLog[i].opp.move_id != move_id:
+                        previous_move_id = move_id
+                        move_id = self.stateLog[i].opp.move_id
+                        break
+                if i < 0:
+                    break
+
+
+            clean_input_array = reversed([a for a in input_array if len(a) > 0])
+            return ','.join(clean_input_array)
+        else:
+            return 'N/A'
+
+        #self.stateLog[-1].opp.movelist_parser.can_be_done_from_neutral
+
+    def GetOppMoveString(self, move_id, previous_move_id):
+        return self.stateLog[-1].opp.movelist_parser.input_for_move(move_id, previous_move_id)
+
+
+
     def GetFrameDataOfCurrentOppMove(self):
         if self.stateLog[-1].opp.startup > 0:
             opp = self.stateLog[-1].opp
@@ -1277,6 +1323,8 @@ class TekkenGameState:
 
         #return old_dist
 
+    def IsBotUsingOppMovelist(self):
+        return self.stateLog[-1].bot.use_opponents_movelist
 
     def GetCurrentBotMoveName(self):
         move_id = self.stateLog[-1].bot.move_id

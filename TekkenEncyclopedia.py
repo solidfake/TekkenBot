@@ -346,7 +346,7 @@ class TekkenEncyclopedia:
                 #self.second_opinion = False
                 #self.second_opinion_timer = 0
         #if gameState.IsOppWhiffingXFramesAgo(self.active_frame_wait + 1)) and \
-        if (gameState.IsBotBlocking() or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotBeingKnockedDown() or gameState.IsBotBeingWallSplatted()): #or  gameState.IsBotStartedBeingJuggled() or gameState.IsBotJustGrounded()):
+        if (gameState.IsBotBlocking() or gameState.IsBotGettingHit() or gameState.IsBotBeingThrown() or gameState.IsBotBeingKnockedDown() or gameState.IsBotBeingWallSplatted() or gameState.IsBotUsingOppMovelist()): #or  gameState.IsBotStartedBeingJuggled() or gameState.IsBotJustGrounded()):
             # print(gameState.stateLog[-1].bot.move_id)
             #print(gameState.stateLog[-1].bot.move_timer)
             #print(gameState.stateLog[-1].bot.recovery)
@@ -400,7 +400,9 @@ class TekkenEncyclopedia:
 
                     frameDataEntry.recovery = gameState.GetOppRecovery()
 
-                    frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
+                    #frameDataEntry.input = frameDataEntry.InputTupleToInputString(gameState.GetOppLastMoveInput())
+
+                    frameDataEntry.input = gameState.GetCurrentOppMoveString()
 
                     frameDataEntry.technical_state_reports = gameState.GetOppTechnicalStates(frameDataEntry.startup - 1)
 
@@ -477,6 +479,7 @@ class FrameDataEntry:
         self.hitRecovery = '??'
         self.throwTech = None
         self.tracking = ComplexMoveStates.F_MINUS
+
 
     def WithPlusIfNeeded(self, value):
         try:
