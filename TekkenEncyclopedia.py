@@ -693,5 +693,5 @@ class PunishWindow:
 
     def close_window(self, result : Result):
         self.result = result
-        if result != PunishWindow.Result.NO_PUNISH:
+        if result != PunishWindow.Result.NO_WINDOW:
             print("Closing punish window, result: {}".format(self.result.name))

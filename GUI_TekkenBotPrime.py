@@ -101,7 +101,7 @@ class GUI_TekkenBotPrime(Tk):
         self.grid_columnconfigure(0, weight=1)
         #self.grid_columnconfigure(1, weight=1)
 
-        self.geometry(str(720) + 'x' + str(720))
+        self.geometry(str(920) + 'x' + str(720))
 
         self.update_launcher()
         self.overlay.hide()
