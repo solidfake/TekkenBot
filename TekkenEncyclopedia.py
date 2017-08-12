@@ -23,7 +23,7 @@ class TekkenEncyclopedia:
         self.was_fight_being_reacquired = True
         self.is_match_recorded = False
 
-        self.stat_filename = "TekkenData/matches_2.txt"
+        self.stat_filename = "TekkenData/matches.txt"
         if self.isPlayerOne:
             self.LoadStats()
 
@@ -693,4 +693,5 @@ class PunishWindow:
 
     def close_window(self, result : Result):
         self.result = result
-        print("Closing punish window, result: {}".format(self.result.name))
+        if result != PunishWindow.Result.NO_PUNISH:
+            print("Closing punish window, result: {}".format(self.result.name))
