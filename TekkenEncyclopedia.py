@@ -132,6 +132,7 @@ class TekkenEncyclopedia:
             gameState.FlipMirror()
 
     def DetermineCoachingTips(self, gameState: TekkenGameState):
+
         if self.previous_frame_data_entry != self.current_frame_data_entry:
             self.previous_frame_data_entry = self.current_frame_data_entry
 
@@ -139,28 +140,50 @@ class TekkenEncyclopedia:
                 self.ClosePunishWindow(PunishWindow.Result.NO_WINDOW, do_close_frame_data_entries=False)
 
             # if int(self.current_frame_data_entry.currentFrameAdvantage) <= 999999:
-            self.current_punish_window = PunishWindow(self.current_frame_data_entry.prefix, self.current_frame_data_entry.move_id, self.current_frame_data_entry.input, int(self.current_frame_data_entry.hitRecovery), int(self.current_frame_data_entry.blockRecovery))
+            self.current_punish_window = PunishWindow(self.current_frame_data_entry.prefix,
+                                                      self.current_frame_data_entry.move_id,
+                                                      self.current_frame_data_entry.input,
+                                                      int(self.current_frame_data_entry.hitRecovery),
+                                                      int(self.current_frame_data_entry.blockRecovery),
+                                                      int(self.current_frame_data_entry.activeFrames))
             self.PunishWindows.append(self.current_punish_window)
             self.punish_window_counter = 0
+
+
 
         if self.current_punish_window != None:
             self.punish_window_counter += 1
             #if self.punish_window_counter > self.current_punish_window.size:
 
-            was_block_punish = gameState.DidOppStartGettingPunishedXFramesAgo(1)
+            was_block_punish = gameState.DidOppStartGettingPunishedXFramesAgo(1) or gameState.DidOppStartGettingHitXFramesAgo(1)
 
             if was_block_punish:
-                self.ClosePunishWindow(PunishWindow.Result.PERFECT_PUNISH)
-                self.current_punish_window = None
-            elif gameState.HasOppReturnedToNeutralFromMoveId(self.current_punish_window.move_id):
-                self.ClosePunishWindow(PunishWindow.Result.NO_PUNISH)
+                leeway = (gameState.OppFramesUntilRecoveryXFramesAgo(2) - 1)
+                LAUNCH_PUNISHIBLE = 15
+                BAD_PUNISH_THRESHOLD = 13
+                #if leeway == 0:
+                    #self.ClosePunishWindow(PunishWindow.Result.PERFECT_PUNISH)
+                #else:
+                fa = (-1 * self.current_punish_window.get_frame_advantage())
+                startup = fa - leeway
+                if fa >= LAUNCH_PUNISHIBLE and startup <= BAD_PUNISH_THRESHOLD:
+                    self.ClosePunishWindow(PunishWindow.Result.NO_LAUNCH_ON_LAUNCHABLE)
+                elif fa >= LAUNCH_PUNISHIBLE:
+                    self.ClosePunishWindow(PunishWindow.Result.LAUNCH_ON_LAUNCHABLE)
+                else:
+                    self.ClosePunishWindow(PunishWindow.Result.JAB_ON_NOT_LAUNCHABLE)
+
+            elif gameState.HasOppReturnedToNeutralFromMoveId(self.current_punish_window.move_id) and self.punish_window_counter >= self.current_punish_window.hit_recovery:
+                if self.current_punish_window.get_frame_advantage() <= -10:
+                    self.ClosePunishWindow(PunishWindow.Result.NO_PUNISH)
+                else:
+                    self.ClosePunishWindow(PunishWindow.Result.NO_WINDOW)
             if self.current_punish_window != None:
                 self.current_punish_window.adjust_window(gameState.GetOppFramesTillNextMove(), gameState.GetBotFramesTillNextMove())
 
             #perfect_punish = False
             #if was_block_punish:
                 #perfect_punish = gameState.WasBotMoveOnLastFrameXFramesAgo(2)
-
 
 
 
@@ -186,7 +209,7 @@ class TekkenEncyclopedia:
                 was_block_punish = gameState.DidBotStartGettingPunishedXFramesAgo(1)
                 perfect_punish = False
                 if was_block_punish:
-                    perfect_punish = gameState.WasBotMoveOnLastFrameXFramesAgo(2)
+                    perfect_punish = gameState.BotFramesUntilRecoveryXFramesAgo(2) == 1
                 was_counter_hit = gameState.IsBotGettingCounterHit()
                 was_ground_hit = gameState.IsBotGettingHitOnGround()
 
@@ -624,17 +647,23 @@ class PunishWindow:
         NO_PUNISH = 1
         PERFECT_PUNISH = 2
         NO_LAUNCH_ON_LAUNCHABLE = 3
+        LAUNCH_ON_LAUNCHABLE = 4
+        JAB_ON_NOT_LAUNCHABLE = 5
 
-    def __init__(self, prefix, move_id, string_name, hit_recovery, block_recovery ):
+        NOT_YET_CLOSED =  99
+
+    def __init__(self, prefix, move_id, string_name, hit_recovery, block_recovery, active_frames ):
         self.prefix = prefix
         self.move_id = move_id
         self.name = string_name
         self.hit_recovery = hit_recovery
         self.block_recovery = block_recovery
+        self.active_frames = active_frames
         self.is_window_locked = False
         self.original_diff = self.get_frame_advantage()
         self.upcoming_lock = False
         self.frames_locked = 0
+        self.result = PunishWindow.Result.NOT_YET_CLOSED
 
     def get_frame_advantage(self):
         if not self.is_window_locked:

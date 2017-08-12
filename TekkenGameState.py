@@ -653,12 +653,19 @@ class TekkenGameState:
         else:
             return False
 
-    def WasBotMoveOnLastFrameXFramesAgo(self, framesAgo):
+    def BotFramesUntilRecoveryXFramesAgo(self, framesAgo):
         if len(self.stateLog) > framesAgo:
-            #print ('{}  {}'.format(self.stateLog[0 - framesAgo].bot.move_timer, self.stateLog[0 - framesAgo].bot.recovery))
-            return self.stateLog[0 - framesAgo].bot.move_timer == self.stateLog[0 - framesAgo].bot.recovery - 1
+            return self.stateLog[0 - framesAgo].bot.recovery - self.stateLog[0 - framesAgo].bot.move_timer
         else:
-            return False
+            return 99
+
+    def OppFramesUntilRecoveryXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.recovery - self.stateLog[0 - framesAgo].opp.move_timer
+        else:
+            return 99
+
+
 
     def IsBotBlocking(self):
         return self.stateLog[-1].bot.IsBlocking()
@@ -1012,9 +1019,15 @@ class TekkenGameState:
 
         return False
 
-    def DidBotStartGettingHitXMovesAgo(self, framesAgo):
+    def DidBotStartGettingHitXFramesAgo(self, framesAgo):
         if len(self.stateLog) > framesAgo:
             return self.stateLog[0 - framesAgo].bot.IsGettingHit() and not self.stateLog[0 - framesAgo - 1].bot.IsGettingHit()
+        else:
+            return False
+
+    def DidOppStartGettingHitXFramesAgo(self, framesAgo):
+        if len(self.stateLog) > framesAgo:
+            return self.stateLog[0 - framesAgo].opp.IsGettingHit() and not self.stateLog[0 - framesAgo - 1].opp.IsGettingHit()
         else:
             return False
 
