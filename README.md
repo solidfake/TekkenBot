@@ -29,10 +29,10 @@ Attempts to punish negative attacks with the best avaiable punish. Punishes are 
 ## Project details
 
 ### Prerequisites
-Tekken Bot is developed on Python 3.4.3 and tries to use only core libraries to improve portability, download size, and, someday, optimization. It targets the 64-bit version of Tekken 7 available through Steam on Windows 7/8/10.
+Tekken Bot is developed on Python 3.5 and tries to use only core libraries to improve portability, download size, and, someday, optimization. It targets the 64-bit version of Tekken 7 available through Steam on Windows 7/8/10.
 
 ### Deployment
-Tekken Bot distributable is built using pyinstaller with Python 3.4.3. On Windows, use the included build_project.bat file.
+Tekken Bot distributable is built using pyinstaller with Python 3.5. On Windows, use the included build_project.bat file.
 
 ### Updating Memory Addresses with Cheat Engine after patches
 When Tekken 7.exe is patched on Steam, it may change the location in memory of the relevant addresses. To find the new addresses, use Cheat Engine or another memory editor to locate the values, then find the new pointer addresses:
