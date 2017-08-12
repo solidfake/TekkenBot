@@ -21,6 +21,7 @@ class SimpleMoveStates(Enum):
     STANDING_FORWARD = 1
     STANDING_BACK = 2
     STANDING = 3
+    STEVE = 4 #steve?
 
 
 
