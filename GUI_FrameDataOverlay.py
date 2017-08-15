@@ -12,19 +12,19 @@ from GUI_Overlay import CurrentColorScheme, ColorSchemeEnum
 
 
 class DataColumns(Enum):
-    input = 0
-    move_id = 1
+    XcommX = 0
+    XidX = 1
     name = 3
-    type = 4
-    startup = 5
-    block = 6
-    hit = 7
-    CH = 8
-    active = 9
+    XtypeXX = 4
+    XstX = 5
+    bloX = 6
+    hitX = 7
+    XchXX = 8
+    act = 9
     track = 10
     tot = 11
     rec = 12
-    stun = 13
+    opp = 13
     notes = 14
 
     def config_name():
@@ -51,7 +51,7 @@ class TextRedirector(object):
         column_names = ""
         for i, enum in enumerate(DataColumns):
             if booleans_for_columns[i]:
-                column_names += "| {} ".format(enum.name)
+                column_names += "|{}".format(enum.name.replace('X', ' '))
         self.set_first_column(column_names)
 
     def set_first_column(self, first_column_string):
@@ -204,7 +204,7 @@ class GUI_FrameDataOverlay(GUI_Overlay.Overlay):
         return attack_type_var
 
     def create_textbox(self, col):
-        textbox = Text(self.toplevel, font=("Consolas, 14"), wrap=NONE, highlightthickness=0, pady=0, relief='flat')
+        textbox = Text(self.toplevel, font=("Consolas", 14), wrap=NONE, highlightthickness=0, pady=0, relief='flat')
         textbox.grid(row=0, column=col, rowspan=2, sticky=N + S + W + E)
         textbox.configure(background=self.background_color)
         textbox.configure(foreground=CurrentColorScheme.dict[ColorSchemeEnum.system_text])
