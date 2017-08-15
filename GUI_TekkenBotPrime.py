@@ -65,7 +65,7 @@ class GUI_TekkenBotPrime(Tk):
         self.column_menu = Menu(self.menu)
         for i, enum in enumerate(fdo.DataColumns):
             bool = self.overlay.redirector.columns_to_print[i]
-            self.add_checkbox(self.column_menu, enum, enum.name, bool, self.changed_columns)
+            self.add_checkbox(self.column_menu, enum, "{} ({})".format(enum.name.replace('X', ' ').strip(), fdo.DataColumnsToMenuNames[enum]), bool, self.changed_columns)
         self.menu.add_cascade(label='Columns', menu=self.column_menu)
 
         self.display_menu = Menu(self.menu)

@@ -21,7 +21,7 @@ class DataColumns(Enum):
     hitX = 7
     XchXX = 8
     act = 9
-    track = 10
+    T = 10
     tot = 11
     rec = 12
     opp = 13
@@ -29,6 +29,23 @@ class DataColumns(Enum):
 
     def config_name():
         return "DataColumns"
+
+DataColumnsToMenuNames = {
+    DataColumns.XcommX : 'input command',
+    DataColumns.XidX : 'internal move id number',
+    DataColumns.name: 'internal move name',
+    DataColumns.XtypeXX: 'attack type',
+    DataColumns.XstX: 'startup frames',
+    DataColumns.bloX: 'frame advantage on block',
+    DataColumns.hitX: 'frame advantage on hit',
+    DataColumns.XchXX: 'frame advantage on counter hit',
+    DataColumns.act: 'active frame connected on / total active frames',
+    DataColumns.T: 'how well move tracks during startup',
+    DataColumns.tot: 'total number of frames in move',
+    DataColumns.rec: 'frames before attacker can act',
+    DataColumns.opp: 'frames before defender can act',
+    DataColumns.notes: 'additional move properties',
+}
 
 class TextRedirector(object):
     def __init__(self, stdout, widget, style, fa_p1_var, fa_p2_var):
