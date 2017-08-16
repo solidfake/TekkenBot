@@ -218,7 +218,10 @@ class GUI_TekkenBotPrime(Tk):
         #self.graph.update_state()
         time2 = time.time()
         elapsed_time = 1000 * (time2 - time1)
-        self.after(max(2, 8 - int(round(elapsed_time))), self.update_launcher)
+        if self.launcher.gameState.gameReader.HasWorkingPID():
+            self.after(max(2, 8 - int(round(elapsed_time))), self.update_launcher)
+        else:
+            self.after(1000, self.update_launcher)
 
     def on_closing(self):
         sys.stdout = self.stdout
