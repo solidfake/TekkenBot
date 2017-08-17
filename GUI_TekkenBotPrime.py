@@ -57,7 +57,7 @@ class GUI_TekkenBotPrime(Tk):
         self.tekken_bot_menu = Menu(self.menu)
         self.tekken_bot_menu.add_command(label="Restart", command=self.restart)
 
-        self.tekken_bot_menu.add_checkbutton(label="Print Frame Data To File", onvalue=True, offvalue=False, variable=self.var_print_frame_data_to_file)
+        self.tekken_bot_menu.add_checkbutton(label="Print Frame Data To \"TekkenData/frame_data_output.txt\"", onvalue=True, offvalue=False, variable=self.var_print_frame_data_to_file)
         self.menu.add_cascade(label="Tekken Bot", menu=self.tekken_bot_menu)
 
 
@@ -84,7 +84,7 @@ class GUI_TekkenBotPrime(Tk):
         self.overlay_mode_menu = Menu(self.menu)
         self.overlay_var = StringVar()
         for mode in OverlayMode:
-            self.overlay_mode_menu.add_radiobutton(label=mode.name, variable=self.overlay_var, value=mode.name, command=lambda : self.changed_mode(self.overlay_var.get()))
+            self.overlay_mode_menu.add_radiobutton(label=OverlayModeToDisplayName[mode], variable=self.overlay_var, value=mode.name, command=lambda : self.changed_mode(self.overlay_var.get()))
         self.menu.add_cascade(label="Mode", menu=self.overlay_mode_menu)
         self.mode = OverlayMode.FrameData
 
@@ -190,9 +190,9 @@ class GUI_TekkenBotPrime(Tk):
         if self.mode == OverlayMode.CommandInput:
             self.overlay = cio.GUI_CommandInputOverlay(self, self.launcher)
             self.overlay.hide()
-        #if self.mode == OverlayMode.PunishCoach:
-            #self.overlay = pco.GUI_PunishCoashOverlay(self, self.launcher)
-            #self.overlay.hide()
+        if self.mode == OverlayMode.PunishCoach:
+            self.overlay = pco.GUI_PunishCoashOverlay(self, self.launcher)
+            self.overlay.hide()
         if self.mode == OverlayMode.MatchupRecord:
             self.overlay = mso.GUI_MatchStatOverlay(self, self.launcher)
             self.overlay.hide()
@@ -254,9 +254,18 @@ class OverlayMode(Enum):
     FrameData = 1
     #Timeline = 2
     CommandInput = 3
-    #PunishCoach = 4
+    PunishCoach = 4
     MatchupRecord = 5
     DebugInfo = 6
+
+OverlayModeToDisplayName = {
+    OverlayMode.Off : 'Off',
+    OverlayMode.FrameData: 'Frame Data',
+    OverlayMode.CommandInput: 'Command Inputs (and cancel window)',
+    OverlayMode.PunishCoach: 'Punish Alarm (loud!)',
+    OverlayMode.MatchupRecord: 'Matchup Stats',
+    OverlayMode.DebugInfo: 'Debugging Variables',
+}
 
 if __name__ == '__main__':
     app = GUI_TekkenBotPrime()
