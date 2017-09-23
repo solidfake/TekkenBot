@@ -1,7 +1,7 @@
 from enum import Enum
 
 class MemoryAddressOffsets(Enum):
-    player_data_pointer_offset = 0x033F6B40
+    player_data_pointer_offset = 0x033DECC0
     #player_data_pointer_offset = 0x03363540
     #player_data_pointer_offset = 0x03362540 #pc patch 2
     #player_data_pointer_offset =  0x03360450 #pc patch 1
@@ -118,12 +118,12 @@ class NonPlayerDataAddressesEnum(Enum):
 
 class NonPlayerDataAddressesTuples:
     offsets = {
-        NonPlayerDataAddressesEnum.OPPONENT_NAME : (0x033CD5E0, 0x0, 0x8, 0x114), #LOGGED_IN default value
-        NonPlayerDataAddressesEnum.OPPONENT_SIDE: (0x033CD5E0, 0x0, 0x8, 0x70),  #0 means they are player 1, 1 means they are player 2
+        NonPlayerDataAddressesEnum.OPPONENT_NAME : (0x033B5760, 0x0, 0x8, 0x114), #NOT_LOGGED_IN default value
+        NonPlayerDataAddressesEnum.OPPONENT_SIDE: (0x033B5760, 0x0, 0x8, 0x70),  #0 means they are player 1, 1 means they are player 2
 
-        NonPlayerDataAddressesEnum.P1_CHAR_SELECT: (0x033CDBE8, 0x80, 0x3CC),
-        NonPlayerDataAddressesEnum.P2_CHAR_SELECT : (0x033CDBE8, 0x80, 0x584),
-        NonPlayerDataAddressesEnum.STAGE_SELECT: (0x033CDBE8, 0x80, 0x78),
+        NonPlayerDataAddressesEnum.P1_CHAR_SELECT: (0x033B5760, 0x80, 0x3CC), #Alisa 19, Claudio 20
+        NonPlayerDataAddressesEnum.P2_CHAR_SELECT : (0x033B5760, 0x80, 0x584),
+        NonPlayerDataAddressesEnum.STAGE_SELECT: (0x033B5760, 0x80, 0x78),
 
         #NonPlayerDataAddressesEnum.Matchlist0_PlayerName: (0x03336410, 0x2C0, 0x138),
         #NonPlayerDataAddressesEnum.Matchlist0_PING: (0x03336410, 0x2C0, 0x114),
@@ -131,13 +131,13 @@ class NonPlayerDataAddressesTuples:
         #NonPlayerDataAddressesEnum.Matchlist0_Rank: (0x03336410, 0x2C0, 0x184),
         #NonPlayerDataAddressesEnum.Matchlist0_Wins: (0x03336410, 0x2C0, 0x188),
 
-        NonPlayerDataAddressesEnum.WARMUP_PLAYER_NAME1: (0x033CE288, 0x50, 0x0), #look for name + opponent's name 320 bytes apart in online match
-        NonPlayerDataAddressesEnum.WARMUP_PLAYER_WINS1: (0x033CE288, 0x50, -0x34),
-        NonPlayerDataAddressesEnum.WARMUP_PLAYER_NAME2: (0x033CE288, 0x50, 0x140),
-        NonPlayerDataAddressesEnum.WARMUP_PLAYER_WINS2: (0x033CE288, 0x50, 0x10C),
+        NonPlayerDataAddressesEnum.WARMUP_PLAYER_NAME1: (0x033B6408, 0x50, 0x0), #look for name + opponent's name 320 bytes apart in online match
+        NonPlayerDataAddressesEnum.WARMUP_PLAYER_WINS1: (0x033B6408, 0x50, -0x34),
+        NonPlayerDataAddressesEnum.WARMUP_PLAYER_NAME2: (0x033B6408, 0x50, 0x140),
+        NonPlayerDataAddressesEnum.WARMUP_PLAYER_WINS2: (0x033B6408, 0x50, 0x10C),
 
-        NonPlayerDataAddressesEnum.P1_Movelist: (0x033E2B20, 0x2E8), #there's a pointer to this in player data block
-        NonPlayerDataAddressesEnum.P2_Movelist: (0x033e5920, 0x2E8),
+        NonPlayerDataAddressesEnum.P1_Movelist: (0x033CACA0, 0x2E8), #there's a pointer to this in player data block
+        NonPlayerDataAddressesEnum.P2_Movelist: (0x033CACA0, 0x2E8),
 
 
 
