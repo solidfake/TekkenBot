@@ -99,6 +99,7 @@ class ReloadableConfig():
         to int/hex
         '''
         self.path = self.DATA_FOLDER + file_name + ".ini"
+        self.should_parse = parse_nums
         self.file_name = file_name
 
         self.config = config_from_path(self.path, parse_nums=parse_nums)
@@ -118,8 +119,8 @@ class ReloadableConfig():
     @classmethod
     def reload(cls):
         for config in cls.configs:
-            config.config = config_from_path(config.path, input_dict=config.config)
-            print("Reloaded {}.ini".format(config.file_name))
+            config.config = config_from_path(config.path, input_dict=config.config, parse_nums=config.should_parse)
+            #print("Reloaded {}.ini".format(config.file_name))
 
 
 class CaseInsensitiveDict(dict):
