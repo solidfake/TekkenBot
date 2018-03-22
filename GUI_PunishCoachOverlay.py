@@ -12,7 +12,7 @@ class TextRedirector(object):
         pass
 
 
-class GUI_PunishCoashOverlay(GUI_Overlay.Overlay):
+class GUI_PunishCoachOverlay(GUI_Overlay.Overlay):
 
     def __init__(self, master, launcher):
 
