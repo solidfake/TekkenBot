@@ -35,4 +35,5 @@ def check_version(force_print=False):
 
 
 if __name__ == '__main__':
+    freeze_support()
     check_version()
